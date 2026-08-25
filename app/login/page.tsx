@@ -52,7 +52,7 @@ function LoginForm() {
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      setUser(data);
+      setUser(data, data.token ?? null);
       router.push(redirect || (data.isSeller ? "/seller" : "/dashboard"));
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };

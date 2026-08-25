@@ -71,7 +71,7 @@ export default function RegisterPage() {
         name, email, password,
         phone: phone || undefined,
       });
-      setUser(data);
+      setUser(data, data.token ?? null);
       router.push("/dashboard");
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };

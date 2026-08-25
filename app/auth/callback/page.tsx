@@ -1,14 +1,13 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 
 function CallbackHandler() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const setUser      = useAuthStore((s) => s.setUser);
+  const fetchMe      = useAuthStore((s) => s.fetchMe);
   const called       = useRef(false);
 
   useEffect(() => {
@@ -22,18 +21,18 @@ function CallbackHandler() {
       return;
     }
 
-    // Exchange the URL token for an httpOnly cookie.
-    // This POST is same-origin (frontend → backend), so the browser
-    // stores the Set-Cookie response correctly — unlike a cross-domain redirect.
-    api
-      .post("/auth/verify-token", { token })
-      .then(({ data }) => {
-        setUser(data);
-        router.replace(data.isSeller ? "/seller" : "/dashboard");
-      })
-      .catch(() => {
+    // Store the token immediately — api.ts will attach it as Bearer on the
+    // next request, so fetchMe() will succeed without needing a cookie.
+    setUser(null, token);
+
+    fetchMe().then(() => {
+      const user = useAuthStore.getState().user;
+      if (user) {
+        router.replace(user.isSeller ? "/seller" : "/dashboard");
+      } else {
         router.replace("/login?error=oauth_failed");
-      });
+      }
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
