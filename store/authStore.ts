@@ -17,7 +17,7 @@ export const useAuthStore = create<AuthState>()(
       user:      null,
       isLoading: true,   // true until fetchMe resolves — prevents stale-user flash
 
-      setUser: (u) => set({ user: u }),
+      setUser: (u) => set({ user: u, isLoading: false }),
 
       logout: async () => {
         await api.post("/auth/logout").catch(() => {});

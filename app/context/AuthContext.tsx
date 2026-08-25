@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { User } from "@/types";
 
@@ -19,14 +20,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout    = useAuthStore((s) => s.logout);
   const fetchMe   = useAuthStore((s) => s.fetchMe);
   const called    = useRef(false);
+  const pathname  = usePathname();
 
   useEffect(() => {
-    // Always validate the session against the backend on mount.
-    // This clears stale persisted state when the cookie/session is gone.
+    // Skip the session check on the OAuth callback page — that page manages
+    // its own auth handshake. Running fetchMe() concurrently would race against
+    // verify-token and overwrite the user with null (401) before the cookie lands.
+    if (pathname === "/auth/callback") return;
     if (called.current) return;
     called.current = true;
     fetchMe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AuthContext.Provider value={{ user, isLoading, setUser, logout }}>
