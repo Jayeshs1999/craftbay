@@ -1,335 +1,225 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { PageSpinner } from "@/components/Spinner";
-import {
-  Button,
-  Card,
-  CardBadge,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  ShareButton,
-} from "../../components";
-import { useAuth } from "../context/AuthContext";
-import { pgAPI } from "@/services/api";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Building } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useAuthStore } from "@/store/authStore";
+import api from "@/services/api";
+import { Order } from "@/types";
+import { Package, Truck, CheckCircle, XCircle, Clock, ShoppingBag } from "lucide-react";
+import Button from "@/components/Button";
 
-// interface Student {
-//   id: string;
-//   name: string;
-//   email: string;
-//   phone?: string;
-//   roomAssignments: Array<{
-//     room: {
-//       roomNumber: string;
-//       building: string;
-//     };
-//   }>;
-// }
+const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
+  pending:          { label: "Pending",          color: "bg-yellow-100 text-yellow-700", icon: Clock },
+  confirmed:        { label: "Confirmed",        color: "bg-blue-100 text-blue-700",    icon: CheckCircle },
+  processing:       { label: "Processing",       color: "bg-orange-100 text-orange-700",icon: Package },
+  shipped:          { label: "Shipped",          color: "bg-purple-100 text-purple-700",icon: Truck },
+  out_for_delivery: { label: "Out for Delivery", color: "bg-indigo-100 text-indigo-700",icon: Truck },
+  delivered:        { label: "Delivered",        color: "bg-green-100 text-green-700",  icon: CheckCircle },
+  cancelled:        { label: "Cancelled",        color: "bg-red-100 text-red-600",      icon: XCircle },
+  return_requested: { label: "Return Requested", color: "bg-pink-100 text-pink-700",    icon: XCircle },
+  returned:         { label: "Returned",         color: "bg-gray-100 text-gray-600",    icon: XCircle },
+};
 
-// interface Room {
-//   id: string;
-//   roomNumber: string;
-//   building: string;
-//   capacity: number;
-//   assignments: Array<{
-//     student: {
-//       name: string;
-//     };
-//   }>;
-// }
+const FILTERS = [
+  { v: "",          l: "All" },
+  { v: "pending",   l: "Pending" },
+  { v: "shipped",   l: "Shipped" },
+  { v: "delivered", l: "Delivered" },
+  { v: "cancelled", l: "Cancelled" },
+];
 
-export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const { currentAdmin, logout } = useAuth();
-  const [pgs, setPGs] = useState<any[]>([]);
-  const { t } = useTranslation();
+export default function DashboardPage() {
+  const user      = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const router    = useRouter();
 
+  const [orders,  setOrders]  = useState<Order[]>([]);
+  const [fetching, setFetching] = useState(false);
+  const [filter,  setFilter]  = useState("");
+  // Track whether we have already fetched for this filter value
+  const fetchedFilter = useRef<string | null>(null);
+
+  // Redirect if definitely not logged in (auth resolved, no user)
   useEffect(() => {
-    if (currentAdmin) {
-      fetchAdminPGs();
+    if (!isLoading && !user) {
+      router.push("/login?redirect=/dashboard");
     }
-  }, [currentAdmin]);
+  }, [user, isLoading]);
 
-  const fetchAdminPGs = async () => {
-    setLoading(true);
-    try {
-      const response = await pgAPI.getAdminPGs();
-      if (response.success) {
-        setPGs(response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching PGs:", err);
-    } finally {
-      setLoading(false);
-    }
+  // Fetch orders only when user is confirmed present AND filter changes
+  useEffect(() => {
+    if (!user) return;                          // wait for auth
+    if (fetchedFilter.current === filter) return; // already fetched this filter
+    fetchedFilter.current = filter;
+
+    let cancelled = false;
+    (async () => {
+      setFetching(true);
+      try {
+        const params: Record<string, string> = {};
+        if (filter) params.status = filter;
+        const { data } = await api.get("/orders/my", { params });
+        if (!cancelled) setOrders(data.orders);
+      } catch { }
+      finally { if (!cancelled) setFetching(false); }
+    })();
+
+    return () => { cancelled = true; };
+  }, [user, filter]);
+
+  // Reset fetched-filter cache when filter changes so next effect run re-fetches
+  const handleFilterChange = (v: string) => {
+    fetchedFilter.current = null;
+    setFilter(v);
   };
 
+  async function cancelOrder(id: string) {
+    if (!confirm("Cancel this order?")) return;
+    try {
+      await api.put("/orders/" + id + "/cancel", { reason: "Buyer cancelled" });
+      setOrders((os) =>
+        os.map((o) => o._id === id ? { ...o, orderStatus: "cancelled" as any } : o)
+      );
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Cannot cancel this order");
+    }
+  }
+
+  // Still loading auth -- show skeleton
+  if (isLoading || !user) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="skeleton h-28 rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="m-0 sm:m-8">
-      <Card variant="glass" className="p-5 backdrop-blur-xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            {t("dashboard.yourPGs")}
-          </h2>
-          <div className="flex gap-2">
-            <CardBadge variant="success">
-              {pgs.length} {t("dashboard.total")}
-            </CardBadge>
-          </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors mb-5 group">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
+        Home
+      </a>
+      <div className="mb-8">
+        <h1 className="text-2xl font-extrabold text-[#1c1917] mb-1">My Orders</h1>
+        <p className="text-[#78716c] text-sm">Hello, {user.name} 👋</p>
+      </div>
+
+      {/* Quick links */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        {[
+          ["Browse Products", "/products"],
+          ["My Wishlist",     "/wishlist"],
+          ["Start Selling",   "/become-seller"],
+        ].map(([label, href]) => (
+          <Link key={href} href={href}
+            className="bg-white rounded-2xl border border-[#e7e5e4] p-4 flex items-center gap-2 hover:border-[#c05621] hover:bg-[#fef3e8] transition-all text-sm font-medium text-[#1c1917]">
+            {label}
+          </Link>
+        ))}
+      </div>
+
+      {/* Status filters */}
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {FILTERS.map(({ v, l }) => (
+          <button key={v} onClick={() => handleFilterChange(v)}
+            className={"px-3 py-1.5 rounded-full text-xs font-medium transition-all " +
+              (filter === v
+                ? "bg-[#c05621] text-white"
+                : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]")}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* Orders list */}
+      {fetching ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="skeleton h-28 rounded-2xl" />
+          ))}
         </div>
+      ) : orders.length === 0 ? (
+        <div className="text-center py-16">
+          <ShoppingBag size={48} className="text-[#e7e5e4] mx-auto mb-3" />
+          <p className="text-[#78716c]">
+            {filter ? "No " + filter + " orders" : "No orders yet"}
+          </p>
+          <Link href="/products">
+            <Button variant="outline" className="mt-4">Start Shopping</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => {
+            const meta = STATUS_META[order.orderStatus] || STATUS_META.pending;
+            const Icon = meta.icon;
+            const canCancel = ["pending", "confirmed", "processing"].includes(order.orderStatus);
 
-        {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <PageSpinner />
-          </div>
-        ) : pgs.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <Building className="w-8 h-8 text-gray-400" />
-            </div>
-            <p className="text-lg font-medium mb-2">{t("dashboard.noPGs")}</p>
-            <p className="text-sm">{t("dashboard.createFirstPG")}</p>
-            <Link href="/admin/create-pg">
-              <Button
-                size="lg"
-                className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-              >
-                {t("dashboard.createFirstPGButton")}
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pgs.map((pg) => {
-              const totalRooms = pg.structure.length;
-              const totalBeds = pg.structure.reduce(
-                (sum: number, room: any) => sum + room.beds.length,
-                0,
-              );
-              const allocatedBeds = pg.structure.reduce(
-                (sum: number, room: any) =>
-                  sum + room.beds.filter((bed: any) => bed.allocated).length,
-                0,
-              );
-              const availableBeds = totalBeds - allocatedBeds;
-              const occupancyRate =
-                totalBeds > 0
-                  ? ((allocatedBeds / totalBeds) * 100).toFixed(0)
-                  : "0";
+            return (
+              <div key={order._id} className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-[#78716c]">
+                      Order #{order._id.slice(-8).toUpperCase()}
+                    </p>
+                    <p className="text-xs text-[#a8a29e]">
+                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric", month: "short", year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <span className={"inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full " + meta.color}>
+                    <Icon size={10} />
+                    {meta.label}
+                  </span>
+                </div>
 
-              return (
-                <Card
-                  key={pg._id}
-                  variant="elevated"
-                  className="hover:shadow-2xl transition-all duration-300 group"
-                >
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {pg.name}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {pg.location?.subcity}, {pg.location?.city}
-                          </p>
-                        </div>
-                        {/* <div className="flex items-center gap-2">
-                          <ShareButton
-                            pgId={pg._id}
-                            pgName={pg.name}
-                            pgLocation={pg.location}
-                            price={pg.structure[0]?.price}
-                            size="sm"
-                          /> */}
-                        <div className="w-12 h-12 bg-gradient-to-br bg-primary rounded-full flex items-center justify-center shadow-lg">
-                          <Building className="w-6 h-6 text-white" />
-                          {/* </div> */}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <span className="text-blue-600 font-semibold">
-                            {totalRooms}
-                          </span>
-                          <span className="text-gray-600 ml-1">
-                            {t("dashboard.rooms")}
-                          </span>
-                        </div>
-                        <div className="bg-green-50 p-3 rounded-lg">
-                          <span className="text-green-600 font-semibold">
-                            {totalBeds}
-                          </span>
-                          <span className="text-gray-600 ml-1">
-                            {t("dashboard.beds")}
-                          </span>
-                        </div>
-                        <div className="bg-red-50 p-3 rounded-lg">
-                          <span className="text-red-600 font-semibold">
-                            {allocatedBeds}
-                          </span>
-                          <span className="text-gray-600 ml-1">
-                            {t("dashboard.allocated")}
-                          </span>
-                        </div>
-                        <div className="bg-yellow-50 p-3 rounded-lg">
-                          <span className="text-yellow-600 font-semibold">
-                            {availableBeds}
-                          </span>
-                          <span className="text-gray-600 ml-1">
-                            {t("dashboard.available")}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-gray-700">
-                          {t("dashboard.occupancy")}: {occupancyRate}%
-                        </span>
-                        <div className="w-full bg-gray-200 rounded-full h-3 ml-2">
-                          <div
-                            className="bg-gradient-to-r  bg-primary h-3 rounded-full transition-all duration-500"
-                            style={{ width: `${occupancyRate}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Link className="w-full" href={`/admin/pgs/${pg._id}`}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 w-full border-2 border-primary text-primary hover:bg-background hover:text-primary transition-all duration-300"
-                          >
-                            {t("dashboard.viewDetails")}
-                          </Button>
-                        </Link>
-                        <Link
-                          className="w-full"
-                          href={`/admin/edit-pg/${pg._id}`}
-                        >
-                          <Button
-                            size="sm"
-                            className="flex-1 w-full bg-gradient-to-r   text-white"
-                          >
-                            {t("common.edit")}
-                          </Button>
-                        </Link>
-                      </div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {order.items.map((item, i) => (
+                    <div key={i} className="flex items-center gap-1.5 bg-[#f5f5f4] rounded-xl px-3 py-1.5">
+                      <span className="text-xs text-[#1c1917] font-medium">{item.name}</span>
+                      <span className="text-xs text-[#78716c]">x{item.quantity}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </Card>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-bold text-[#c05621]">
+                    Rs.{order.totalAmount.toLocaleString("en-IN")}
+                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {order.trackingNumber && (
+                      <span className="text-xs text-[#78716c] bg-[#f5f5f4] px-2.5 py-1 rounded-lg">
+                        Track: {order.trackingNumber}
+                      </span>
+                    )}
+                    {canCancel && (
+                      <button
+                        onClick={() => cancelOrder(order._id)}
+                        className="text-xs text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                        Cancel Order
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {order.estimatedDelivery &&
+                  order.orderStatus !== "delivered" &&
+                  order.orderStatus !== "cancelled" && (
+                  <p className="text-xs text-[#78716c] mt-2">
+                    Est. delivery: {new Date(order.estimatedDelivery).toLocaleDateString("en-IN", {
+                      day: "numeric", month: "short", year: "numeric",
+                    })}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
-
-  // const [students, setStudents] = useState<Student[]>([]);
-  // const [rooms, setRooms] = useState<Room[]>([]);
-  // const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const [studentsRes, roomsRes] = await Promise.all([
-  //         fetch('/api/students'),
-  //         fetch('/api/rooms'),
-  //       ]);
-
-  //       if (studentsRes.ok) {
-  //         const studentsData = await studentsRes.json();
-  //         setStudents(studentsData);
-  //       }
-
-  //       if (roomsRes.ok) {
-  //         const roomsData = await roomsRes.json();
-  //         setRooms(roomsData);
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
-  // if (loading) {
-  //   return <div className="container mx-auto px-4 py-8">Loading...</div>;
-  // }
-
-  //   return (
-  //     <div className="container mx-auto px-4 py-8">
-  //       <h1 className="text-4xl font-bold mb-8">Dashboard</h1>
-
-  //       <div className="grid md:grid-cols-2 gap-8">
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle>Students ({students.length})</CardTitle>
-  //           </CardHeader>
-  //           <CardContent>
-  //             <div className="space-y-2">
-  //               {students.map((student) => (
-  //                 <div key={student.id} className="flex justify-between items-center p-2 border rounded">
-  //                   <div>
-  //                     <p className="font-medium">{student.name}</p>
-  //                     <p className="text-sm text-muted-foreground">{student.email}</p>
-  //                   </div>
-  //                   <div className="text-sm">
-  //                     {student.roomAssignments.length > 0 ? (
-  //                       <span className="bg-primary text-primary-foreground px-2 py-1 rounded">
-  //                         Room {student.roomAssignments[0].room.roomNumber}
-  //                       </span>
-  //                     ) : (
-  //                       <span className="text-muted-foreground">No room</span>
-  //                     )}
-  //                   </div>
-  //                 </div>
-  //               ))}
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle>Rooms ({rooms.length})</CardTitle>
-  //           </CardHeader>
-  //           <CardContent>
-  //             <div className="space-y-2">
-  //               {rooms.map((room) => (
-  //                 <div key={room.id} className="flex justify-between items-center p-2 border rounded">
-  //                   <div>
-  //                     <p className="font-medium">Room {room.roomNumber} - {room.building}</p>
-  //                     <p className="text-sm text-muted-foreground">
-  //                       {room.assignments.length}/{room.capacity} occupied
-  //                     </p>
-  //                   </div>
-  //                   <div className="text-sm">
-  //                     {room.assignments.length > 0 ? (
-  //                       <div>
-  //                         {room.assignments.map((assignment, index) => (
-  //                           <span key={index} className="block">{assignment.student.name}</span>
-  //                         ))}
-  //                       </div>
-  //                     ) : (
-  //                       <span className="text-muted-foreground">Empty</span>
-  //                     )}
-  //                   </div>
-  //                 </div>
-  //               ))}
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-  //       </div>
-  //     </div>
-  //   );
 }

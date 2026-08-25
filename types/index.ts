@@ -1,118 +1,142 @@
-// Types for PGWala project
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  role: "buyer" | "seller" | "admin";
+  isSeller: boolean;
+  sellerProfile?: SellerProfile;
+  addresses?: Address[];
+  wishlist?: string[];
+}
+
+export interface SellerProfile {
+  shopName: string;
+  shopDesc?: string;
+  shopBanner?: string;
+  shopCity: string;
+  shopState: string;
+  pickupPincode: string;
+  rating: number;
+  totalSales: number;
+  isVerified: boolean;
+}
+
+export interface ProductImage {
+  url: string;
+  publicId?: string;
+  isMain: boolean;
+}
+
+export interface ProductVariant {
+  name: string;
+  value: string;
+  additionalPrice: number;
+  stock: number;
+}
+
+export interface Review {
+  _id: string;
+  user: { _id: string; name: string; avatar?: string };
+  name: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface Product {
+  _id: string;
+  seller: { _id: string; name: string; sellerProfile?: SellerProfile };
+  name: string;
+  slug: string;
+  description: string;
+  shortDesc?: string;
+  images: ProductImage[];
+  price: number;
+  comparePrice?: number;
+  currency: string;
+  stock: number;
+  sku?: string;
+  variants: ProductVariant[];
+  category: string;
+  subCategory?: string;
+  tags: string[];
+  handmade: boolean;
+  freeShipping: boolean;
+  shippingCharge: number;
+  reviews: Review[];
+  rating: number;
+  numReviews: number;
+  isActive: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+  variant?: string;
+}
 
 export interface Address {
-  area: string;
-  landmark: string;
+  _id?: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
   city: string;
-  pincode: string;
   state: string;
+  pincode: string;
+  country: string;
+  isDefault: boolean;
 }
 
-export interface PGAdmin {
-  id: string;
-  pgName: string;
-  ownerName: string;
-  mobile: string;
-  email: string;
-  address: Address;
-  password: string;
-  role: string;
-}
+export type DeliveryMode = "platform" | "self_ship" | "pickup";
+export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "return_requested" | "returned";
+export type PaymentMethod = "razorpay" | "cod";
 
-export interface User {
-  id: string;
-  name?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  mobile: string;
-  address: string;
-  password: string;
-  role: string;
-}
-
-export interface Amenities {
-  // House Rules
-  smokingAllowed: boolean;
-  drinkingAllowed: boolean;
-  cookingAllowed: boolean;
-  nonVegAllowed: boolean;
-  guestsAllowed: boolean;
-  petsAllowed: boolean;
-  // Appliances & Comfort
-  acAvailable: boolean;
-  fanAvailable: boolean;
-  fridgeAvailable: boolean;
-  washingMachineAvailable: boolean;
-  tvAvailable: boolean;
-  wifiAvailable: boolean;
-  inverterAvailable: boolean;
-  // Bathroom / Toilet
-  attachedBathroom: boolean;
-  attachedToilet: boolean;
-  sharedBathrooms: number;
-  sharedToilets: number;
-  geyserAvailable: boolean;
-  // Storage & Security
-  lockerAvailable: boolean;
-  cctvAvailable: boolean;
-  securityGuard: boolean;
-  mainGateLock: boolean;
-  // Parking
-  twoWheelerParking: boolean;
-  fourWheelerParking: boolean;
-  // Food
-  breakfastAvailable: boolean;
-  lunchAvailable: boolean;
-  dinnerAvailable: boolean;
-  messAvailable: boolean;
-  // Other
-  gallaryAvailable: boolean;
-  gymAvailable: boolean;
-  studyRoomAvailable: boolean;
-  powerBackup: boolean;
-  housekeepingAvailable: boolean;
-  bikeRental: boolean;
-}
-
-export interface PG {
-  id: string;
-  adminId: string;
+export interface OrderItem {
+  product: string | Product;
+  seller: string;
   name: string;
-  photos: string[];
-  structure: Room[];
-  onlinePayment: boolean;
-  isPrivate: boolean;
-  amenities?: Partial<Amenities>;
-  location: {
-    subcity: string;
-    city: string;
-    state: string;
-    country: string;
-  };
-}
-
-export interface Room {
-  id: string;
-  name: string;
-  beds: Bed[];
+  image?: string;
   price: number;
-  pricingPeriod: 'day' | 'month';
+  quantity: number;
+  variant?: string;
 }
 
-export interface Bed {
-  id: string;
-  allocated: boolean;
-  price: number;
+export interface Order {
+  _id: string;
+  buyer: string | User;
+  items: OrderItem[];
+  shippingAddress: Address;
+  itemsTotal: number;
+  shippingCharge: number;
+  platformFee: number;
+  discount: number;
+  totalAmount: number;
+  deliveryMode: DeliveryMode;
+  estimatedDelivery?: string;
+  trackingNumber?: string;
+  courier?: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  orderStatus: OrderStatus;
+  statusHistory: { status: string; note?: string; updatedBy: string; timestamp: string }[];
+  createdAt: string;
 }
 
-export interface BookingRequest {
-  id: string;
-  userId: string;
-  pgId: string;
-  bedId: string;
-  joinDate: Date;
-  stayDays: number;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: Date;
+export interface ApiResponse<T> {
+  data?: T;
+  message?: string;
+  success?: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  [key: string]: T[] | number;
+  page: number;
+  pages: number;
+  total: number;
 }
