@@ -39,7 +39,11 @@ function LoginForm() {
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [showPwd,  setShowPwd]  = useState(false);
-  const [error,    setError]    = useState("");
+  const [error,    setError]    = useState(
+    searchParams.get("error") === "oauth_failed"
+      ? "Google sign-in failed. Please try again."
+      : ""
+  );
   const [loading,  setLoading]  = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
