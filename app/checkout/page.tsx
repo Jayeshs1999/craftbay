@@ -111,7 +111,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <a href="/cart" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors mb-5 group">
+      <a href="/cart" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors mb-5 group">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
         Back to Cart
       </a>
@@ -122,10 +122,10 @@ export default function CheckoutPage() {
         {[{ n: 1, label: "Address" }, { n: 2, label: "Delivery" }, { n: 3, label: "Payment" }].map(({ n, label }, idx) => (
           <div key={n} className="flex items-center gap-2">
             <div className={"w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold " +
-              (step > n ? "bg-green-500 text-white" : step === n ? "bg-[#c05621] text-white" : "bg-[#e7e5e4] text-[#78716c]")}>
+              (step > n ? "bg-green-500 text-white" : step === n ? "bg-[#059669] text-white" : "bg-[#e7e5e4] text-[#78716c]")}>
               {step > n ? <CheckCircle size={16} /> : n}
             </div>
-            <span className={"text-sm font-medium " + (step === n ? "text-[#c05621]" : "text-[#78716c]")}>{label}</span>
+            <span className={"text-sm font-medium " + (step === n ? "text-[#059669]" : "text-[#78716c]")}>{label}</span>
             {idx < 2 && <div className="w-8 h-px bg-[#e7e5e4] mx-1" />}
           </div>
         ))}
@@ -138,7 +138,7 @@ export default function CheckoutPage() {
           {step === 1 && (
             <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
               <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
-                <MapPin size={18} className="text-[#c05621]" /> Delivery Address
+                <MapPin size={18} className="text-[#059669]" /> Delivery Address
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input label="Full Name *" name="fullName" value={address.fullName} onChange={handleAddrChange} required />
@@ -153,7 +153,7 @@ export default function CheckoutPage() {
                 <div>
                   <label className="text-sm font-medium text-[#1c1917] block mb-1">State *</label>
                   <select name="state" value={address.state} onChange={handleAddrChange} required
-                    className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#c05621]">
+                    className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
                     <option value="">Select state</option>
                     {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -170,15 +170,15 @@ export default function CheckoutPage() {
           {step === 2 && (
             <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
               <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
-                <Truck size={18} className="text-[#c05621]" /> Delivery Method
+                <Truck size={18} className="text-[#059669]" /> Delivery Method
               </h2>
               <div className="space-y-3 mb-6">
                 {DELIVERY_MODES.map(({ mode, label, desc }) => (
                   <label key={mode}
                     className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
-                      (deliveryMode === mode ? "border-[#c05621] bg-[#fef3e8]" : "border-[#e7e5e4] hover:border-[#c05621]/50")}>
+                      (deliveryMode === mode ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
                     <input type="radio" name="delivery" value={mode} checked={deliveryMode === mode}
-                      onChange={() => setDeliveryMode(mode)} className="mt-0.5 accent-[#c05621]" />
+                      onChange={() => setDeliveryMode(mode)} className="mt-0.5 accent-[#059669]" />
                     <div>
                       <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
                       <p className="text-xs text-[#78716c] mt-0.5">{desc}</p>
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
           {step === 3 && (
             <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
               <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
-                <CreditCard size={18} className="text-[#c05621]" /> Payment Method
+                <CreditCard size={18} className="text-[#059669]" /> Payment Method
               </h2>
               <div className="space-y-3 mb-6">
                 {[
@@ -206,9 +206,9 @@ export default function CheckoutPage() {
                 ].map(({ val, label, desc }) => (
                   <label key={val}
                     className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
-                      (payMethod === val ? "border-[#c05621] bg-[#fef3e8]" : "border-[#e7e5e4] hover:border-[#c05621]/50")}>
+                      (payMethod === val ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
                     <input type="radio" name="pay" value={val} checked={payMethod === val}
-                      onChange={() => setPayMethod(val as any)} className="mt-0.5 accent-[#c05621]" />
+                      onChange={() => setPayMethod(val as any)} className="mt-0.5 accent-[#059669]" />
                     <div>
                       <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
                       <p className="text-xs text-[#78716c] mt-0.5">{desc}</p>
@@ -267,13 +267,13 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between font-bold text-[#1c1917] pt-2 border-t border-[#e7e5e4]">
                     <span>Total</span>
-                    <span className="text-[#c05621]">Rs.{quote.totalAmount.toLocaleString("en-IN")}</span>
+                    <span className="text-[#059669]">Rs.{quote.totalAmount.toLocaleString("en-IN")}</span>
                   </div>
                 </>
               ) : (
                 <div className="flex justify-between font-bold text-[#1c1917] pt-2 border-t border-[#e7e5e4]">
                   <span>Total</span>
-                  <span className="text-[#c05621]">Rs.{cartTotal.toLocaleString("en-IN")}+</span>
+                  <span className="text-[#059669]">Rs.{cartTotal.toLocaleString("en-IN")}+</span>
                 </div>
               )}
             </div>

@@ -9,7 +9,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="col-span-2 md:col-span-1">
           <Link href="/">
-            <p className="text-xl font-extrabold text-white mb-2 hover:text-[#f59e0b] transition-colors">CraftBay</p>
+            <p className="text-xl font-extrabold text-white mb-2 hover:text-[#10b981] transition-colors">CraftBay</p>
           </Link>
           <p className="text-sm leading-relaxed">
             India&apos;s marketplace for handmade &amp; creative products.

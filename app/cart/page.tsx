@@ -20,7 +20,7 @@ export default function CartPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Back nav */}
-      <a href="/products" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors mb-5 group">
+      <a href="/products" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors mb-5 group">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
         Continue Shopping
       </a>
@@ -44,21 +44,21 @@ export default function CartPage() {
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link href={`/products/${item.product.slug || item.product._id}`}>
-                    <p className="font-semibold text-[#1c1917] text-sm leading-snug hover:text-[#c05621] transition-colors line-clamp-2">
+                    <p className="font-semibold text-[#1c1917] text-sm leading-snug hover:text-[#059669] transition-colors line-clamp-2">
                       {item.product.name}
                     </p>
                   </Link>
                   {item.variant && <p className="text-xs text-[#78716c] mt-0.5">{item.variant}</p>}
-                  <p className="text-[#c05621] font-bold mt-1">Rs.{item.product.price.toLocaleString("en-IN")}</p>
+                  <p className="text-[#059669] font-bold mt-1">Rs.{item.product.price.toLocaleString("en-IN")}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center border border-[#e7e5e4] rounded-lg overflow-hidden">
                       <button onClick={() => updateQty(item.product._id, Math.max(1, item.quantity - 1), item.variant)}
-                        className="px-2 py-1 hover:bg-[#fef3e8] transition-colors">
+                        className="px-2 py-1 hover:bg-[#ecfdf5] transition-colors">
                         <Minus size={12} />
                       </button>
                       <span className="px-3 text-sm font-medium">{item.quantity}</span>
                       <button onClick={() => updateQty(item.product._id, Math.min(item.product.stock, item.quantity + 1), item.variant)}
-                        className="px-2 py-1 hover:bg-[#fef3e8] transition-colors">
+                        className="px-2 py-1 hover:bg-[#ecfdf5] transition-colors">
                         <Plus size={12} />
                       </button>
                     </div>
@@ -95,7 +95,7 @@ export default function CartPage() {
               </div>
               <div className="border-t border-[#e7e5e4] pt-3 flex justify-between font-bold text-[#1c1917]">
                 <span>Total</span>
-                <span className="text-[#c05621]">Rs.{cartTotal.toLocaleString("en-IN")}+</span>
+                <span className="text-[#059669]">Rs.{cartTotal.toLocaleString("en-IN")}+</span>
               </div>
             </div>
             {cartTotal >= 999 && (
@@ -107,7 +107,7 @@ export default function CartPage() {
               <Button className="w-full" size="lg">Proceed to Checkout</Button>
             </Link>
             <Link href="/products">
-              <button className="w-full mt-3 text-sm text-[#78716c] hover:text-[#c05621] transition-colors">
+              <button className="w-full mt-3 text-sm text-[#78716c] hover:text-[#059669] transition-colors">
                 Continue Shopping
               </button>
             </Link>

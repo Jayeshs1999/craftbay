@@ -68,7 +68,7 @@ export default function SellerDashboardPage() {
   }
 
   const STAT_CARDS = [
-    { label: "Total Products",  value: stats.totalProducts,  icon: Package,     color: "text-[#c05621] bg-[#fef3e8]" },
+    { label: "Total Products",  value: stats.totalProducts,  icon: Package,     color: "text-[#059669] bg-[#ecfdf5]" },
     { label: "Active Listings", value: stats.activeProducts, icon: Eye,         color: "text-green-700 bg-green-50" },
     { label: "Total Orders",    value: stats.totalOrders,    icon: ShoppingBag, color: "text-blue-700 bg-blue-50" },
     { label: "Pending Orders",  value: stats.pendingOrders,  icon: TrendingUp,  color: "text-amber-700 bg-amber-50" },
@@ -77,7 +77,7 @@ export default function SellerDashboardPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
 
-      <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors mb-5 group">
+      <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors mb-5 group">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
         Home
       </a>
@@ -97,7 +97,7 @@ export default function SellerDashboardPage() {
         {(["overview","products","orders"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={"px-5 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition-colors " +
-              (tab === t ? "border-[#c05621] text-[#c05621]" : "border-transparent text-[#78716c] hover:text-[#1c1917]")}>
+              (tab === t ? "border-[#059669] text-[#059669]" : "border-transparent text-[#78716c] hover:text-[#1c1917]")}>
             {t}
           </button>
         ))}
@@ -123,7 +123,7 @@ export default function SellerDashboardPage() {
                   </div>
                 ))}
               </div>
-              <div className="bg-[#fef3e8] rounded-2xl p-6 border border-[#fcd9b0]">
+              <div className="bg-[#ecfdf5] rounded-2xl p-6 border border-[#fcd9b0]">
                 <h3 className="font-bold text-[#1c1917] mb-3">Seller Tips</h3>
                 <ul className="space-y-2 text-sm text-[#57534e]">
                   <li>Use clear, well-lit photos -- products with 4+ images sell 3x better</li>
@@ -165,11 +165,11 @@ export default function SellerDashboardPage() {
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-3">
-                            <span className="font-bold text-[#c05621]">Rs.{product.price.toLocaleString("en-IN")}</span>
+                            <span className="font-bold text-[#059669]">Rs.{product.price.toLocaleString("en-IN")}</span>
                             <div className="flex gap-2">
                               <button
                                 onClick={() => toggleActive(product._id, product.isActive)}
-                                className="text-xs px-2.5 py-1 border border-[#e7e5e4] rounded-lg hover:bg-[#fef3e8] text-[#78716c] transition-colors">
+                                className="text-xs px-2.5 py-1 border border-[#e7e5e4] rounded-lg hover:bg-[#ecfdf5] text-[#78716c] transition-colors">
                                 {product.isActive ? "Deactivate" : "Activate"}
                               </button>
                               <button className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-400 transition-colors"
@@ -207,7 +207,7 @@ export default function SellerDashboardPage() {
                         {(order.buyer as any)?.name} -- {order.shippingAddress.city}, {order.shippingAddress.state}
                       </p>
                     </div>
-                    <span className="font-bold text-[#c05621] text-sm">Rs.{order.totalAmount.toLocaleString("en-IN")}</span>
+                    <span className="font-bold text-[#059669] text-sm">Rs.{order.totalAmount.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {order.items.map((item, i) => (

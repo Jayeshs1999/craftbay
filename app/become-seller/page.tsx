@@ -69,13 +69,13 @@ export default function BecomeSellerPage() {
     <div className="min-h-screen bg-[#fffaf5]">
       {/* Back link */}
       <div className="max-w-4xl mx-auto px-4 pt-6">
-        <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors group">
+        <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors group">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
           Home
         </a>
       </div>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#7c2d12] to-[#c05621] py-16 px-4 text-center text-white mt-4">
+      <section className="bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#059669] py-16 px-4 text-center text-white mt-4">
         <Store size={48} className="mx-auto mb-4 opacity-90" />
         <h1 className="text-3xl font-extrabold mb-2">Start Selling on CraftBay</h1>
         <p className="text-white/80 max-w-md mx-auto">
@@ -91,7 +91,7 @@ export default function BecomeSellerPage() {
           { icon: DollarSign, title: "Only 2% on sales", desc: "No monthly fee. We only earn when you earn." },
         ].map(({ icon: Icon, title, desc }) => (
           <div key={title} className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
-            <Icon size={24} className="text-[#c05621] mb-3" />
+            <Icon size={24} className="text-[#059669] mb-3" />
             <h3 className="font-bold text-[#1c1917] mb-1">{title}</h3>
             <p className="text-sm text-[#78716c]">{desc}</p>
           </div>
@@ -118,7 +118,7 @@ export default function BecomeSellerPage() {
               <textarea
                 name="shopDesc" value={form.shopDesc} onChange={handleChange} rows={3}
                 placeholder="Tell buyers what makes your shop unique..."
-                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#c05621] focus:ring-2 focus:ring-[#fef3e8] resize-none" />
+                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] resize-none" />
             </div>
             <Input
               label="City *" name="shopCity" value={form.shopCity}
@@ -127,7 +127,7 @@ export default function BecomeSellerPage() {
               <label className="text-sm font-medium text-[#1c1917] block mb-1">State *</label>
               <select
                 name="shopState" value={form.shopState} onChange={handleChange} required
-                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#c05621]">
+                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
                 <option value="">Select state</option>
                 {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>

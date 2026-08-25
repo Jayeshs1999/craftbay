@@ -69,7 +69,7 @@ export default function NewProductPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <a href="/seller" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors mb-5 group">
+      <a href="/seller" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors mb-5 group">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
         Back to Dashboard
       </a>
@@ -93,7 +93,7 @@ export default function NewProductPage() {
               <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-[#e7e5e4]">
                 <img src={src} alt="" className="w-full h-full object-cover" />
                 {i === 0 && (
-                  <span className="absolute bottom-0 left-0 right-0 bg-[#c05621] text-white text-[10px] text-center py-0.5">
+                  <span className="absolute bottom-0 left-0 right-0 bg-[#059669] text-white text-[10px] text-center py-0.5">
                     Main
                   </span>
                 )}
@@ -104,7 +104,7 @@ export default function NewProductPage() {
               </div>
             ))}
             {previews.length < 6 && (
-              <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#e7e5e4] flex flex-col items-center justify-center cursor-pointer hover:border-[#c05621] hover:bg-[#fef3e8] transition-all text-[#78716c] hover:text-[#c05621]">
+              <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#e7e5e4] flex flex-col items-center justify-center cursor-pointer hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-[#78716c] hover:text-[#059669]">
                 <Upload size={20} className="mb-1" />
                 <span className="text-xs">Add photo</span>
                 <input type="file" accept="image/*" multiple onChange={handleImages} className="hidden" />
@@ -124,7 +124,7 @@ export default function NewProductPage() {
             <textarea
               name="description" value={form.description} onChange={handleChange} rows={4} required
               placeholder="Describe your product -- materials, dimensions, how it was made, care instructions..."
-              className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#c05621] resize-none" />
+              className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] resize-none" />
           </div>
           <Input
             label="Short Description" name="shortDesc" value={form.shortDesc} onChange={handleChange}
@@ -134,7 +134,7 @@ export default function NewProductPage() {
               <label className="text-sm font-medium text-[#1c1917] block mb-1">Category *</label>
               <select
                 name="category" value={form.category} onChange={handleChange} required
-                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#c05621]">
+                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
                 <option value="">Select category</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -171,7 +171,7 @@ export default function NewProductPage() {
             <input
               type="checkbox" name="freeShipping"
               checked={form.freeShipping as unknown as boolean}
-              onChange={handleChange} className="accent-[#c05621] w-4 h-4" />
+              onChange={handleChange} className="accent-[#059669] w-4 h-4" />
             <span className="text-sm text-[#1c1917]">Offer free shipping on this product</span>
           </label>
           {!form.freeShipping && (

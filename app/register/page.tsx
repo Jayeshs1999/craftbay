@@ -67,23 +67,23 @@ export default function RegisterPage() {
   // Show spinner while verifying session
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fffaf5]">
-        <div className="w-8 h-8 border-4 border-[#c05621] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#f8faf8]">
+        <div className="w-8 h-8 border-4 border-[#059669] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fffaf5] to-[#fff1e6] px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f8faf8] via-[#ecfdf5]/40 to-[#fffbeb]/50 px-4 py-10">
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
-          <Link href="/"><span className="text-3xl font-extrabold text-[#c05621]">CraftBay</span></Link>
-          <p className="text-[#78716c] text-sm mt-1">Join thousands of creators</p>
+          <Link href="/"><span className="text-3xl font-black text-[#059669]">Craft<span className="text-[#d97706]">Bay</span></span></Link>
+          <p className="text-[#64748b] text-sm mt-1">Join thousands of creators</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#e7e5e4] p-8 shadow-sm">
-          <h1 className="text-xl font-bold text-[#1c1917] mb-6">Create Account</h1>
+        <div className="bg-white rounded-2xl border border-[#e2e8f0] p-8 shadow-sm">
+          <h1 className="text-xl font-bold text-[#0f172a] mb-6">Create Account</h1>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
@@ -94,40 +94,40 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#1c1917]">Full Name *</label>
+              <label className="text-sm font-medium text-[#0f172a]">Full Name *</label>
               <input value={name} onChange={(e) => setName(e.target.value)}
                 placeholder="Priya Sharma" required autoComplete="name"
-                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#a8a29e] focus:border-[#c05621] focus:ring-2 focus:ring-[#fef3e8] transition-colors" />
+                className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
             </div>
 
             {/* Email */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#1c1917]">Email *</label>
+              <label className="text-sm font-medium text-[#0f172a]">Email *</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com" required autoComplete="email"
-                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#a8a29e] focus:border-[#c05621] focus:ring-2 focus:ring-[#fef3e8] transition-colors" />
+                className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
             </div>
 
             {/* Phone */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#1c1917]">
-                Phone <span className="text-[#a8a29e] font-normal">(optional)</span>
+              <label className="text-sm font-medium text-[#0f172a]">
+                Phone <span className="text-[#94a3b8] font-normal">(optional)</span>
               </label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                 placeholder="98765 43210" autoComplete="tel"
-                className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#a8a29e] focus:border-[#c05621] focus:ring-2 focus:ring-[#fef3e8] transition-colors" />
+                className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
             </div>
 
             {/* Password */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#1c1917]">Password *</label>
+              <label className="text-sm font-medium text-[#0f172a]">Password *</label>
               <div className="relative">
                 <input type={showPwd ? "text" : "password"} value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min 8 chars" required autoComplete="new-password"
-                  className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#a8a29e] focus:border-[#c05621] focus:ring-2 focus:ring-[#fef3e8] transition-colors" />
+                  className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
                 <button type="button" onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a8a29e] hover:text-[#78716c]">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -142,18 +142,18 @@ export default function RegisterPage() {
 
             {/* Confirm */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#1c1917]">Confirm Password *</label>
+              <label className="text-sm font-medium text-[#0f172a]">Confirm Password *</label>
               <div className="relative">
                 <input type={showCnf ? "text" : "password"} value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   placeholder="Repeat password" required autoComplete="new-password"
-                  className={"w-full rounded-xl border px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#a8a29e] transition-colors focus:ring-2 " +
+                  className={"w-full rounded-xl border px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#94a3b8] transition-colors focus:ring-2 " +
                     (confirm.length > 0
-                      ? rules.match ? "border-green-400 focus:border-green-500 focus:ring-green-100"
+                      ? rules.match ? "border-emerald-500 focus:border-emerald-600 focus:ring-emerald-100"
                                     : "border-red-400 focus:border-red-500 focus:ring-red-100"
-                      : "border-[#e7e5e4] focus:border-[#c05621] focus:ring-[#fef3e8]")} />
+                      : "border-[#e2e8f0] focus:border-[#059669] focus:ring-[#ecfdf5]")} />
                 <button type="button" onClick={() => setShowCnf((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a8a29e] hover:text-[#78716c]">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
                   {showCnf ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -163,19 +163,19 @@ export default function RegisterPage() {
             </div>
 
             <button type="submit" disabled={loading || !strong || !rules.match}
-              className="w-full flex items-center justify-center gap-2 bg-[#c05621] text-white font-semibold py-3 rounded-xl hover:bg-[#9a3e12] active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer text-sm">
+              className="w-full flex items-center justify-center gap-2 bg-[#059669] text-white font-semibold py-3 rounded-xl hover:bg-[#047857] active:scale-[0.98] shadow-sm hover:shadow transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer text-sm">
               {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
-          <p className="text-center text-xs text-[#78716c] mt-5">
+          <p className="text-center text-xs text-[#64748b] mt-5">
             By signing up you agree to our{" "}
-            <Link href="/terms" className="text-[#c05621] hover:underline">Terms</Link>
+            <Link href="/terms" className="text-[#059669] hover:underline">Terms</Link>
           </p>
-          <p className="text-center text-sm text-[#78716c] mt-3">
+          <p className="text-center text-sm text-[#64748b] mt-3">
             Have an account?{" "}
-            <Link href="/login" className="text-[#c05621] font-semibold hover:underline">Sign in</Link>
+            <Link href="/login" className="text-[#059669] font-semibold hover:underline">Sign in</Link>
           </p>
         </div>
       </div>

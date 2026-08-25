@@ -33,12 +33,12 @@ export default function WishlistPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#c05621] transition-colors mb-5 group">
+      <a href="/" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors mb-5 group">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
         Home
       </a>
       <h1 className="text-2xl font-extrabold text-[#1c1917] mb-6 flex items-center gap-2">
-        <Heart size={22} className="text-[#c05621]" /> My Wishlist
+        <Heart size={22} className="text-[#059669]" /> My Wishlist
       </h1>
 
       {loading ? (

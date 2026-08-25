@@ -34,17 +34,17 @@ export default function Navbar() {
   useEffect(() => { setMenuOpen(false); setDropOpen(false); }, [pathname]);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-[#e7e5e4] shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] shadow-xs">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl font-extrabold text-[#c05621]">CraftBay</span>
+          <span className="text-xl font-black tracking-tight text-[#059669]">Craft<span className="text-[#d97706]">Bay</span></span>
         </Link>
 
         {/* Search bar - desktop */}
         <Link href="/products"
-          className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-[#f5f5f4] rounded-xl px-4 py-2.5 text-sm text-[#78716c] hover:bg-[#ede9e6] transition-colors">
+          className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-[#f1f5f9] rounded-xl px-4 py-2.5 text-sm text-[#64748b] hover:bg-[#e2e8f0] transition-colors">
           <Search size={16} />
           Search handmade products...
         </Link>
@@ -53,10 +53,10 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map(({ href, label }) => (
             <Link key={href} href={href}
-              className={"text-sm font-medium px-3 py-2 rounded-lg transition-colors " +
+              className={"text-sm font-semibold px-3 py-2 rounded-lg transition-colors " +
                 (pathname.startsWith(href)
-                  ? "text-[#c05621] bg-[#fef3e8]"
-                  : "text-[#78716c] hover:text-[#c05621] hover:bg-[#fef3e8]")}>
+                  ? "text-[#059669] bg-[#ecfdf5]"
+                  : "text-[#64748b] hover:text-[#059669] hover:bg-[#ecfdf5]")}>
               {label}
             </Link>
           ))}
@@ -64,10 +64,10 @@ export default function Navbar() {
           {/* Cart */}
           <Link href="/cart"
             className={"relative p-2 rounded-xl transition-colors " +
-              (pathname === "/cart" ? "bg-[#fef3e8] text-[#c05621]" : "hover:bg-[#fef3e8] text-[#78716c] hover:text-[#c05621]")}>
+              (pathname === "/cart" ? "bg-[#ecfdf5] text-[#059669]" : "hover:bg-[#ecfdf5] text-[#64748b] hover:text-[#059669]")}>
             <ShoppingCart size={20} />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#c05621] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 bg-[#059669] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
@@ -77,7 +77,7 @@ export default function Navbar() {
             <>
               <Link href="/wishlist"
                 className={"p-2 rounded-xl transition-colors " +
-                  (pathname === "/wishlist" ? "bg-[#fef3e8] text-[#c05621]" : "hover:bg-[#fef3e8] text-[#78716c] hover:text-[#c05621]")}>
+                  (pathname === "/wishlist" ? "bg-[#ecfdf5] text-[#059669]" : "hover:bg-[#ecfdf5] text-[#64748b] hover:text-[#059669]")}>
                 <Heart size={20} />
               </Link>
 
@@ -86,47 +86,47 @@ export default function Navbar() {
                 <button
                   onClick={() => setDropOpen((o) => !o)}
                   className={"flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-xl transition-colors " +
-                    (dropOpen ? "bg-[#fef3e8]" : "hover:bg-[#fef3e8]")}>
+                    (dropOpen ? "bg-[#ecfdf5]" : "hover:bg-[#ecfdf5]")}>
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" />
+                    <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover ring-2 ring-[#059669]/20" />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-[#c05621] flex items-center justify-center text-white font-bold text-xs">
+                    <div className="w-7 h-7 rounded-full bg-[#059669] flex items-center justify-center text-white font-bold text-xs shadow-xs">
                       {user.name[0].toUpperCase()}
                     </div>
                   )}
-                  <span className="text-sm font-medium text-[#1c1917] max-w-[80px] truncate">{user.name.split(" ")[0]}</span>
-                  <ChevronDown size={14} className={"text-[#78716c] transition-transform " + (dropOpen ? "rotate-180" : "")} />
+                  <span className="text-sm font-medium text-[#0f172a] max-w-[80px] truncate">{user.name.split(" ")[0]}</span>
+                  <ChevronDown size={14} className={"text-[#64748b] transition-transform " + (dropOpen ? "rotate-180" : "")} />
                 </button>
 
                 {dropOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#e7e5e4] overflow-hidden z-50">
-                    <div className="px-4 py-3 border-b border-[#e7e5e4] bg-[#fef3e8]">
-                      <p className="font-semibold text-sm text-[#1c1917]">{user.name}</p>
-                      <p className="text-xs text-[#78716c] truncate">{user.email}</p>
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#e2e8f0] overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#ecfdf5]">
+                      <p className="font-semibold text-sm text-[#0f172a]">{user.name}</p>
+                      <p className="text-xs text-[#64748b] truncate">{user.email}</p>
                     </div>
                     <nav className="py-1">
                       <Link href="/dashboard"
                         className={"flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors " +
-                          (pathname === "/dashboard" ? "bg-[#fef3e8] text-[#c05621]" : "hover:bg-[#fef3e8] text-[#1c1917]")}
+                          (pathname === "/dashboard" ? "bg-[#ecfdf5] text-[#059669] font-medium" : "hover:bg-[#ecfdf5] text-[#0f172a]")}
                         onClick={() => setDropOpen(false)}>
-                        <LayoutDashboard size={14} className="text-[#78716c]" /> My Orders
+                        <LayoutDashboard size={14} className="text-[#64748b]" /> My Orders
                       </Link>
                       {user.isSeller ? (
                         <Link href="/seller"
                           className={"flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors " +
-                            (pathname.startsWith("/seller") ? "bg-[#fef3e8] text-[#c05621]" : "hover:bg-[#fef3e8] text-[#1c1917]")}
+                            (pathname.startsWith("/seller") ? "bg-[#ecfdf5] text-[#059669] font-medium" : "hover:bg-[#ecfdf5] text-[#0f172a]")}
                           onClick={() => setDropOpen(false)}>
-                          <Store size={14} className="text-[#78716c]" /> Seller Dashboard
+                          <Store size={14} className="text-[#64748b]" /> Seller Dashboard
                         </Link>
                       ) : (
                         <Link href="/become-seller"
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[#fef3e8] text-[#1c1917] transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[#ecfdf5] text-[#0f172a] transition-colors"
                           onClick={() => setDropOpen(false)}>
-                          <Store size={14} className="text-[#78716c]" /> Start Selling
+                          <Store size={14} className="text-[#64748b]" /> Start Selling
                         </Link>
                       )}
                     </nav>
-                    <div className="border-t border-[#e7e5e4] py-1">
+                    <div className="border-t border-[#e2e8f0] py-1">
                       <button
                         onClick={() => { logout(); setDropOpen(false); }}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
@@ -140,12 +140,12 @@ export default function Navbar() {
           ) : (
             <>
               <Link href="/login"
-                className={"text-sm font-medium px-3 py-2 rounded-lg transition-colors " +
-                  (pathname === "/login" ? "text-[#c05621] bg-[#fef3e8]" : "text-[#78716c] hover:text-[#c05621] hover:bg-[#fef3e8]")}>
+                className={"text-sm font-semibold px-3 py-2 rounded-lg transition-colors " +
+                  (pathname === "/login" ? "text-[#059669] bg-[#ecfdf5]" : "text-[#64748b] hover:text-[#059669] hover:bg-[#ecfdf5]")}>
                 Login
               </Link>
               <Link href="/register"
-                className="text-sm font-medium bg-[#c05621] text-white px-4 py-2 rounded-xl hover:bg-[#9a3e12] transition-colors">
+                className="text-sm font-semibold bg-[#059669] text-white px-4 py-2 rounded-xl hover:bg-[#047857] shadow-sm hover:shadow transition-all">
                 Sign Up
               </Link>
             </>
@@ -154,17 +154,17 @@ export default function Navbar() {
 
         {/* Mobile: cart + toggle */}
         <div className="flex md:hidden items-center gap-2">
-          <Link href="/cart" className="relative p-2 rounded-xl hover:bg-[#fef3e8] text-[#78716c]">
+          <Link href="/cart" className="relative p-2 rounded-xl hover:bg-[#ecfdf5] text-[#64748b]">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-[#c05621] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 bg-[#059669] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
           </Link>
           <button
             onClick={() => setMenuOpen((o) => !o)}
-            className="p-2 rounded-xl hover:bg-[#fef3e8] text-[#78716c]">
+            className="p-2 rounded-xl hover:bg-[#ecfdf5] text-[#64748b]">
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
@@ -172,47 +172,47 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-[#e7e5e4] bg-white px-4 py-4 flex flex-col gap-1">
+        <div className="md:hidden border-t border-[#e2e8f0] bg-white px-4 py-4 flex flex-col gap-1">
           {/* Search */}
-          <Link href="/products" className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f5f5f4] text-sm text-[#78716c] mb-2">
+          <Link href="/products" className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f1f5f9] text-sm text-[#64748b] mb-2">
             <Search size={15} /> Search products...
           </Link>
 
           <Link href="/products"
             className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors " +
-              (pathname.startsWith("/products") ? "bg-[#fef3e8] text-[#c05621]" : "text-[#1c1917] hover:bg-[#f5f5f4]")}>
+              (pathname.startsWith("/products") ? "bg-[#ecfdf5] text-[#059669]" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
             🛍️ Shop All Products
           </Link>
 
           {user ? (
             <>
-              <div className="flex items-center gap-3 px-3 py-3 my-1 bg-[#fef3e8] rounded-xl">
-                <div className="w-8 h-8 rounded-full bg-[#c05621] flex items-center justify-center text-white font-bold text-sm shrink-0">
+              <div className="flex items-center gap-3 px-3 py-3 my-1 bg-[#ecfdf5] rounded-xl">
+                <div className="w-8 h-8 rounded-full bg-[#059669] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-xs">
                   {user.name[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#1c1917] truncate">{user.name}</p>
-                  <p className="text-xs text-[#78716c] truncate">{user.email}</p>
+                  <p className="text-sm font-semibold text-[#0f172a] truncate">{user.name}</p>
+                  <p className="text-xs text-[#64748b] truncate">{user.email}</p>
                 </div>
               </div>
               <Link href="/dashboard"
                 className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-colors " +
-                  (pathname === "/dashboard" ? "bg-[#fef3e8] text-[#c05621] font-medium" : "text-[#1c1917] hover:bg-[#f5f5f4]")}>
+                  (pathname === "/dashboard" ? "bg-[#ecfdf5] text-[#059669] font-medium" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
                 <LayoutDashboard size={15} /> My Orders
               </Link>
               <Link href="/wishlist"
                 className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-colors " +
-                  (pathname === "/wishlist" ? "bg-[#fef3e8] text-[#c05621] font-medium" : "text-[#1c1917] hover:bg-[#f5f5f4]")}>
+                  (pathname === "/wishlist" ? "bg-[#ecfdf5] text-[#059669] font-medium" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
                 <Heart size={15} /> Wishlist
               </Link>
               {user.isSeller ? (
                 <Link href="/seller"
                   className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-colors " +
-                    (pathname.startsWith("/seller") ? "bg-[#fef3e8] text-[#c05621] font-medium" : "text-[#1c1917] hover:bg-[#f5f5f4]")}>
+                    (pathname.startsWith("/seller") ? "bg-[#ecfdf5] text-[#059669] font-medium" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
                   <Store size={15} /> Seller Dashboard
                 </Link>
               ) : (
-                <Link href="/become-seller" className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-[#1c1917] hover:bg-[#f5f5f4] transition-colors">
+                <Link href="/become-seller" className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-[#0f172a] hover:bg-[#f1f5f9] transition-colors">
                   <Store size={15} /> Start Selling
                 </Link>
               )}
@@ -223,13 +223,13 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <div className="flex flex-col gap-2 pt-2 border-t border-[#e7e5e4] mt-2">
+            <div className="flex flex-col gap-2 pt-2 border-t border-[#e2e8f0] mt-2">
               <Link href="/login"
-                className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-[#e7e5e4] text-[#1c1917] hover:border-[#c05621] hover:text-[#c05621] transition-colors">
+                className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium border border-[#e2e8f0] text-[#0f172a] hover:border-[#059669] hover:text-[#059669] transition-colors">
                 Login
               </Link>
               <Link href="/register"
-                className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#c05621] text-white hover:bg-[#9a3e12] transition-colors">
+                className="flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#059669] text-white hover:bg-[#047857] transition-colors shadow-xs">
                 Sign Up — It&apos;s Free
               </Link>
             </div>

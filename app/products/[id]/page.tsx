@@ -55,9 +55,9 @@ export default function ProductDetailPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Breadcrumb + back */}
       <div className="flex items-center gap-2 text-xs text-[#78716c] mb-6 flex-wrap">
-        <a href="/" className="hover:text-[#c05621] transition-colors">Home</a>
+        <a href="/" className="hover:text-[#059669] transition-colors">Home</a>
         <span>/</span>
-        <a href="/products" className="hover:text-[#c05621] transition-colors">Products</a>
+        <a href="/products" className="hover:text-[#059669] transition-colors">Products</a>
         <span>/</span>
         <span className="text-[#1c1917] font-medium truncate max-w-[200px]">{product.name}</span>
       </div>
@@ -87,7 +87,7 @@ export default function ProductDetailPage() {
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
               {product.images.map((img, i) => (
                 <button key={i} onClick={() => setMainImg(i)}
-                  className={"relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 " + (i === mainImg ? "border-[#c05621]" : "border-[#e7e5e4]")}>
+                  className={"relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 " + (i === mainImg ? "border-[#059669]" : "border-[#e7e5e4]")}>
                   <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
                 </button>
               ))}
@@ -102,7 +102,7 @@ export default function ProductDetailPage() {
             <span className="text-sm text-[#78716c]">{product.rating.toFixed(1)} - {product.numReviews} reviews</span>
           </div>
           <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl font-extrabold text-[#c05621]">Rs.{product.price.toLocaleString("en-IN")}</span>
+            <span className="text-3xl font-extrabold text-[#059669]">Rs.{product.price.toLocaleString("en-IN")}</span>
             {product.comparePrice && <span className="text-base text-[#a8a29e] line-through">Rs.{product.comparePrice.toLocaleString("en-IN")}</span>}
             {product.comparePrice && product.comparePrice > product.price && (
               <span className="text-sm font-bold text-green-600">{Math.round((1 - product.price / product.comparePrice) * 100)}% off</span>)}
@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {product.variants.filter((v) => v.name === vName).map((v) => (
                       <button key={v.value} onClick={() => setVariant((prev) => ({ ...prev, [vName]: v.value }))}
-                        className={"px-3 py-1.5 rounded-lg text-sm border transition-all " + (variant[vName] === v.value ? "border-[#c05621] bg-[#fef3e8] text-[#c05621] font-medium" : "border-[#e7e5e4] hover:border-[#c05621]")}>
+                        className={"px-3 py-1.5 rounded-lg text-sm border transition-all " + (variant[vName] === v.value ? "border-[#059669] bg-[#ecfdf5] text-[#059669] font-medium" : "border-[#e7e5e4] hover:border-[#059669]")}>
                         {v.value}{v.additionalPrice > 0 && <span className="text-xs ml-1 text-[#78716c]">+Rs.{v.additionalPrice}</span>}
                       </button>))}
                   </div>
@@ -124,9 +124,9 @@ export default function ProductDetailPage() {
           <div className="flex items-center gap-3 mb-6">
             <p className="text-sm font-medium">Qty:</p>
             <div className="flex items-center border border-[#e7e5e4] rounded-xl overflow-hidden">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-3 py-2 text-lg hover:bg-[#fef3e8]">-</button>
+              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-3 py-2 text-lg hover:bg-[#ecfdf5]">-</button>
               <span className="px-4 text-sm font-medium">{qty}</span>
-              <button onClick={() => setQty((q) => Math.min(product.stock, q + 1))} className="px-3 py-2 text-lg hover:bg-[#fef3e8]">+</button>
+              <button onClick={() => setQty((q) => Math.min(product.stock, q + 1))} className="px-3 py-2 text-lg hover:bg-[#ecfdf5]">+</button>
             </div>
             <span className="text-xs text-[#78716c]">{product.stock} in stock</span>
           </div>
@@ -144,11 +144,11 @@ export default function ProductDetailPage() {
               [Package, "Handmade by verified maker"],
             ].map(([Icon, text]: any) => (
               <div key={text} className="flex items-center gap-2 text-sm text-[#57534e]">
-                <Icon size={14} className="text-[#c05621] shrink-0" />{text}
+                <Icon size={14} className="text-[#059669] shrink-0" />{text}
               </div>))}
           </div>
           {product.seller && (
-            <div className="bg-[#fef3e8] rounded-2xl p-4 border border-[#fcd9b0]">
+            <div className="bg-[#ecfdf5] rounded-2xl p-4 border border-[#fcd9b0]">
               <p className="text-xs text-[#78716c] mb-1">Sold by</p>
               <p className="font-bold text-[#1c1917]">{(product.seller as any).sellerProfile?.shopName || (product.seller as any).name}</p>
               {(product.seller as any).sellerProfile?.shopCity && (
@@ -160,7 +160,7 @@ export default function ProductDetailPage() {
         <div className="flex border-b border-[#e7e5e4] mb-6">
           {(["desc","reviews","shipping"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={"px-5 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition-colors " + (tab===t?"border-[#c05621] text-[#c05621]":"border-transparent text-[#78716c] hover:text-[#1c1917]")}>
+              className={"px-5 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition-colors " + (tab===t?"border-[#059669] text-[#059669]":"border-transparent text-[#78716c] hover:text-[#1c1917]")}>
               {t==="desc"?"Description":t==="reviews"?"Reviews ("+product.numReviews+")":"Shipping & Returns"}
             </button>))}
         </div>
@@ -184,7 +184,7 @@ export default function ProductDetailPage() {
                     </button>))}
                 </div>
                 <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Share your experience..." rows={3}
-                  className="w-full border border-[#e7e5e4] rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#c05621] resize-none mb-3" />
+                  className="w-full border border-[#e7e5e4] rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] resize-none mb-3" />
                 <Button onClick={submitReview} loading={reviewing} disabled={!comment.trim()}>Submit Review</Button>
               </div>)}
             {product.reviews.length === 0
@@ -192,7 +192,7 @@ export default function ProductDetailPage() {
               : product.reviews.map((r) => (
                 <div key={r._id} className="border-b border-[#e7e5e4] pb-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-full bg-[#fef3e8] flex items-center justify-center text-[#c05621] font-bold text-sm">{r.name[0]}</div>
+                    <div className="w-8 h-8 rounded-full bg-[#ecfdf5] flex items-center justify-center text-[#059669] font-bold text-sm">{r.name[0]}</div>
                     <div>
                       <p className="font-medium text-sm text-[#1c1917]">{r.name}</p>
                       <div className="flex">{[1,2,3,4,5].map((s) => <Star key={s} size={10} className={s<=r.rating?"fill-amber-400 text-amber-400":"fill-gray-200 text-gray-200"} />)}</div>
@@ -203,7 +203,7 @@ export default function ProductDetailPage() {
           </div>)}
         {tab === "shipping" && (
           <div className="text-sm text-[#57534e] space-y-4 max-w-2xl">
-            <div className="bg-[#fef3e8] rounded-2xl p-5 border border-[#fcd9b0]">
+            <div className="bg-[#ecfdf5] rounded-2xl p-5 border border-[#fcd9b0]">
               <h4 className="font-bold text-[#1c1917] mb-3">Delivery Options</h4>
               <ul className="space-y-1.5 list-disc list-inside">
                 <li>Platform Delivery - We arrange courier. Rs.40-Rs.80. Free on orders Rs.999+.</li>
