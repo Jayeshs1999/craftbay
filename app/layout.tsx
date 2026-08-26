@@ -7,8 +7,13 @@ import LayoutShell from "@/components/LayoutShell";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "CraftBay - Handmade Marketplace", template: "%s | CraftBay" },
+  title: { default: "Banavoo - Handmade Marketplace", template: "%s | Banavoo" },
   description: "Discover and buy unique handmade products from creative makers across India.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

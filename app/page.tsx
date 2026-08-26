@@ -35,7 +35,7 @@ export default function HomePage() {
             <span className="text-[#fde68a]">No GSTN. No Barriers.</span>
           </h1>
           <p className="text-emerald-50/90 text-lg sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-            CraftBay is India&apos;s marketplace for handcrafted products. From jewelry to paintings,
+            Banavoo.in is India&apos;s marketplace for handcrafted products. From jewelry to paintings,
             candles to clothing -- list anything creative, reach buyers everywhere.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -99,7 +99,7 @@ export default function HomePage() {
       <section className="bg-[#ecfdf5] py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-[#0f172a] mb-2">Why CraftBay?</h2>
+            <h2 className="text-3xl font-extrabold text-[#0f172a] mb-2">Why Banavoo.in?</h2>
             <p className="text-[#64748b]">Built for creators who just want to share their passion</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -121,7 +121,7 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-extrabold text-white mb-3">Ready to sell your creations?</h2>
           <p className="text-[#94a3b8] mb-8">
-            Join thousands of makers selling on Instagram and Facebook -- now also on CraftBay with delivery handled.
+            Join thousands of makers selling on Instagram and Facebook -- now also on Banavoo.in with delivery handled.
           </p>
           <Link href="/become-seller">
             <button className="inline-flex items-center gap-2 bg-[#059669] text-white font-bold px-8 py-4 rounded-xl text-base hover:bg-[#047857] active:scale-[0.98] shadow-lg transition-all cursor-pointer">

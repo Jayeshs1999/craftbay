@@ -77,7 +77,7 @@ export default function BecomeSellerPage() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#059669] py-16 px-4 text-center text-white mt-4">
         <Store size={48} className="mx-auto mb-4 opacity-90" />
-        <h1 className="text-3xl font-extrabold mb-2">Start Selling on CraftBay</h1>
+        <h1 className="text-3xl font-extrabold mb-2">Start Selling on Banavoo.in</h1>
         <p className="text-white/80 max-w-md mx-auto">
           No GSTN. No registration fee. Just your creativity and a bank account to receive payments.
         </p>

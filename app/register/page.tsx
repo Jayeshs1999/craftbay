@@ -94,7 +94,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
-          <Link href="/"><span className="text-3xl font-black text-[#059669]">Craft<span className="text-[#d97706]">Bay</span></span></Link>
+          <Link href="/"><span className="text-3xl font-black text-[#059669]">Banavoo<span className="text-[#d97706]">.In</span></span></Link>
           <p className="text-[#64748b] text-sm mt-1">Join thousands of creators</p>
         </div>
 

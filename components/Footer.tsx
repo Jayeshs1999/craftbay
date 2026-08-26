@@ -9,7 +9,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="col-span-2 md:col-span-1">
           <Link href="/">
-            <p className="text-xl font-extrabold text-white mb-2 hover:text-[#10b981] transition-colors">CraftBay</p>
+            <p className="text-xl font-extrabold text-white mb-2 hover:text-[#10b981] transition-colors">Banavoo.in</p>
           </Link>
           <p className="text-sm leading-relaxed">
             India&apos;s marketplace for handmade &amp; creative products.
@@ -43,7 +43,7 @@ export default function Footer() {
 
         {/* Sell */}
         <div>
-          <p className="text-white font-semibold mb-3 text-sm">Sell on CraftBay</p>
+          <p className="text-white font-semibold mb-3 text-sm">Sell on Banavoo.in</p>
           <nav className="flex flex-col gap-2 text-sm">
             <Link href="/become-seller" className="hover:text-white transition-colors">Start Selling — Free</Link>
             <Link href="/seller" className="hover:text-white transition-colors">Seller Dashboard</Link>
@@ -58,7 +58,7 @@ export default function Footer() {
       <div className="border-t border-[#292524] py-4 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <p className="text-xs text-[#57534e]">
-            &copy; {new Date().getFullYear()} CraftBay. Made with ❤️ for India&apos;s creators.
+            &copy; {new Date().getFullYear()} Banavoo.in. Made with ❤️ for India&apos;s creators.
           </p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

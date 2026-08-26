@@ -1,4 +1,4 @@
-# CraftBay Frontend
+# Banavoo.in Frontend
 
 Next.js 16 + TypeScript + Tailwind CSS marketplace frontend.
 
@@ -7,13 +7,13 @@ Next.js 16 + TypeScript + Tailwind CSS marketplace frontend.
 - React 19
 - TypeScript
 - Tailwind CSS v4
-- Zustand (state management — auth + cart)
+- Zustand (state management ï¿½ auth + cart)
 - Axios (API client)
 - lucide-react (icons)
 
 ## Setup
 
-1. `cp .env.local.example .env.local` — fill in `NEXT_PUBLIC_API_URL`
+1. `cp .env.local.example .env.local` ï¿½ fill in `NEXT_PUBLIC_API_URL`
 2. `npm install`
 3. `npm run dev`
 
@@ -21,7 +21,7 @@ Next.js 16 + TypeScript + Tailwind CSS marketplace frontend.
 
 | Route | Description | Auth |
 |-------|-------------|------|
-| `/` | Home — hero, categories, CTA | Public |
+| `/` | Home ï¿½ hero, categories, CTA | Public |
 | `/products` | Product listing with search & filters | Public |
 | `/products/[id]` | Product detail, reviews, delivery tabs | Public |
 | `/login` | User login | Public |
@@ -35,7 +35,7 @@ Next.js 16 + TypeScript + Tailwind CSS marketplace frontend.
 | `/wishlist` | Saved products | Private |
 
 ## Key Features
-- Products page is **fully public** — no login required to browse
+- Products page is **fully public** ï¿½ no login required to browse
 - Users must **register/login only to place an order or wishlist**
 - Seller onboarding: any buyer can click "Start Selling" and become a seller instantly (no GSTN)
 - Cart persisted in localStorage via Zustand persist middleware

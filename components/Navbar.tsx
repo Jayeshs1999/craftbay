@@ -39,7 +39,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl font-black tracking-tight text-[#059669]">Craft<span className="text-[#d97706]">Bay</span></span>
+          <span className="text-xl font-black tracking-tight text-[#059669]">Banavoo<span className="text-[#d97706]">.In</span></span>
         </Link>
 
         {/* Search bar - desktop */}
