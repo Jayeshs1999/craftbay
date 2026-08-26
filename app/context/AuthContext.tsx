@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import { User } from "@/types";
@@ -44,6 +45,7 @@ async function bootAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const user      = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const router    = useRouter();
 
   useEffect(() => {
     if (window.location.pathname === "/auth/callback") return;
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootCalled = false;
     await api.post("/auth/logout").catch(() => {});
     useAuthStore.getState().clearAuth();
+    router.push("/products");
   }
 
   return (
