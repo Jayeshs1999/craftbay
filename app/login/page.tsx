@@ -5,6 +5,7 @@ import Link from "next/link";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL ||
@@ -25,11 +26,10 @@ function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const redirect     = searchParams.get("redirect") || "";
+  const { user, isLoading } = useAuth();
   const setUser      = useAuthStore((s) => s.setUser);
-  const user         = useAuthStore((s) => s.user);
-  const isLoading    = useAuthStore((s) => s.isLoading);
 
-  // Redirect away if already authenticated
+  // Already logged in — bounce away
   useEffect(() => {
     if (!isLoading && user) {
       router.replace(redirect || (user.isSeller ? "/seller" : "/dashboard"));

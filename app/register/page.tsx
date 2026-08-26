@@ -5,6 +5,7 @@ import Link from "next/link";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL ||
@@ -30,12 +31,11 @@ function Rule({ ok, text }: { ok: boolean; text: string }) {
 }
 
 export default function RegisterPage() {
-  const router     = useRouter();
-  const setUser    = useAuthStore((s) => s.setUser);
-  const user       = useAuthStore((s) => s.user);
-  const isLoading  = useAuthStore((s) => s.isLoading);
+  const router    = useRouter();
+  const { user, isLoading } = useAuth();
+  const setUser   = useAuthStore((s) => s.setUser);
 
-  // Redirect away if already authenticated
+  // Already logged in — bounce away
   useEffect(() => {
     if (!isLoading && user) {
       router.replace(user.isSeller ? "/seller" : "/dashboard");

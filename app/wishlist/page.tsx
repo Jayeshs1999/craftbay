@@ -1,22 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import { Heart } from "lucide-react";
 import Button from "@/components/Button";
 import Link from "next/link";
+import { useRequireAuth } from "@/utils/useRequireAuth";
 
 export default function WishlistPage() {
-  const user   = useAuthStore((s) => s.user);
-  const router = useRouter();
+  const { user } = useRequireAuth("/login");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [wishlist, setWishlist] = useState<string[]>([]);
-
-  useEffect(() => { if (!user) router.push("/login"); }, [user]);
 
   useEffect(() => {
     api.get("/wishlist").then(({ data }) => {

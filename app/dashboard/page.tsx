@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import { Order } from "@/types";
 import { Package, Truck, CheckCircle, XCircle, Clock, ShoppingBag } from "lucide-react";
 import Button from "@/components/Button";
+import { useRequireAuth } from "@/utils/useRequireAuth";
 
 const STATUS_META: Record<string, { label: string; color: string; icon: any }> = {
   pending:          { label: "Pending",          color: "bg-yellow-100 text-yellow-700", icon: Clock },
@@ -29,22 +28,13 @@ const FILTERS = [
 ];
 
 export default function DashboardPage() {
-  const user      = useAuthStore((s) => s.user);
-  const isLoading = useAuthStore((s) => s.isLoading);
-  const router    = useRouter();
+  const { user, isLoading } = useRequireAuth("/login?redirect=/dashboard");
 
   const [orders,  setOrders]  = useState<Order[]>([]);
   const [fetching, setFetching] = useState(false);
   const [filter,  setFilter]  = useState("");
   // Track whether we have already fetched for this filter value
   const fetchedFilter = useRef<string | null>(null);
-
-  // Redirect if definitely not logged in (auth resolved, no user)
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login?redirect=/dashboard");
-    }
-  }, [user, isLoading]);
 
   // Fetch orders only when user is confirmed present AND filter changes
   useEffect(() => {

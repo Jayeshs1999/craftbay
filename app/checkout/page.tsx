@@ -3,11 +3,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useCartStore } from "@/store/cartStore";
-import { useAuthStore } from "@/store/authStore";
 import { DeliveryMode } from "@/types";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Truck, MapPin, CreditCard, Package, CheckCircle } from "lucide-react";
+import { useRequireAuth } from "@/utils/useRequireAuth";
 
 const STATES = [
   "Andhra Pradesh","Assam","Bihar","Delhi","Goa","Gujarat","Haryana",
@@ -25,7 +25,7 @@ const DELIVERY_MODES: { mode: DeliveryMode; label: string; desc: string }[] = [
 
 export default function CheckoutPage() {
   const router  = useRouter();
-  const user    = useAuthStore((s) => s.user);
+  const { user, isLoading } = useRequireAuth("/login?redirect=/checkout");
   const { items, total, clearCart } = useCartStore();
   const cartTotal = total();
 
@@ -44,9 +44,10 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (!user) router.push("/login?redirect=/checkout");
+    if (isLoading) return;
+    if (!user) return;                  // useRequireAuth handles redirect
     if (items.length === 0) router.push("/cart");
-  }, [user, items]);
+  }, [user, isLoading, items]);
 
   useEffect(() => {
     const def = user?.addresses?.find((a) => a.isDefault) || user?.addresses?.[0];

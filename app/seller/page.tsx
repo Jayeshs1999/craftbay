@@ -2,16 +2,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import { Product, Order } from "@/types";
-import { Package, ShoppingBag, Eye, TrendingUp, Plus, Edit, Trash2, Truck, CheckCircle } from "lucide-react";
+import { Package, ShoppingBag, Eye, TrendingUp, Plus, Trash2, Truck, CheckCircle } from "lucide-react";
 import Button from "@/components/Button";
+import { useRequireAuth } from "@/utils/useRequireAuth";
 
 type Tab = "overview" | "products" | "orders";
 
 export default function SellerDashboardPage() {
-  const user   = useAuthStore((s) => s.user);
+  const { user, isLoading } = useRequireAuth("/login");
   const router = useRouter();
 
   const [tab,      setTab]      = useState<Tab>("overview");
@@ -21,10 +21,11 @@ export default function SellerDashboardPage() {
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    if (!user) { router.push("/login"); return; }
+    if (isLoading) return;
+    if (!user) return;                         // useRequireAuth handles redirect
     if (!user.isSeller) { router.push("/become-seller"); return; }
     loadData();
-  }, [user]);
+  }, [user, isLoading]);
 
   async function loadData() {
     setLoading(true);

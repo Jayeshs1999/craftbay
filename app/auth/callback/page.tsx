@@ -2,39 +2,9 @@
 import { useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import api from "@/services/api";
 
-function CallbackHandler() {
-  const router       = useRouter();
-  const searchParams = useSearchParams();
-  const setUser      = useAuthStore((s) => s.setUser);
-  const fetchMe      = useAuthStore((s) => s.fetchMe);
-  const called       = useRef(false);
-
-  useEffect(() => {
-    if (called.current) return;
-    called.current = true;
-
-    const token = searchParams.get("token");
-
-    if (!token) {
-      router.replace("/login?error=oauth_failed");
-      return;
-    }
-
-    // Store the token immediately — api.ts will attach it as Bearer on the
-    // next request, so fetchMe() will succeed without needing a cookie.
-    setUser(null, token);
-
-    fetchMe().then(() => {
-      const user = useAuthStore.getState().user;
-      if (user) {
-        router.replace(user.isSeller ? "/seller" : "/dashboard");
-      } else {
-        router.replace("/login?error=oauth_failed");
-      }
-    });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
+function Spinner() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8faf8]">
       <div className="w-8 h-8 border-4 border-[#059669] border-t-transparent rounded-full animate-spin" />
@@ -42,13 +12,41 @@ function CallbackHandler() {
   );
 }
 
+function CallbackHandler() {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const done         = useRef(false);
+
+  useEffect(() => {
+    if (done.current) return;
+    done.current = true;
+
+    const token = searchParams.get("token");
+    if (!token) {
+      router.replace("/login?error=oauth_failed");
+      return;
+    }
+
+    // Save token so the api interceptor sends it as Bearer on the next request.
+    useAuthStore.getState().setUser(null, token);
+
+    api.get("/auth/me")
+      .then(({ data }) => {
+        useAuthStore.getState().setUser(data, token);
+        router.replace(data.isSeller ? "/seller" : "/dashboard");
+      })
+      .catch(() => {
+        useAuthStore.getState().clearAuth();
+        router.replace("/login?error=oauth_failed");
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return <Spinner />;
+}
+
 export default function AuthCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f8faf8]">
-        <div className="w-8 h-8 border-4 border-[#059669] border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<Spinner />}>
       <CallbackHandler />
     </Suspense>
   );
