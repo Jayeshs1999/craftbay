@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useCartStore } from "@/store/cartStore";
@@ -29,14 +29,15 @@ export default function CheckoutPage() {
   const { items, total, clearCart } = useCartStore();
   const cartTotal = total();
 
+  // Prevents the "items empty → push /cart" guard from firing after order success
+  const ordered = useRef(false);
+
   const [step,         setStep]         = useState<1 | 2 | 3>(1);
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("platform");
   const [payMethod,    setPayMethod]    = useState<"razorpay" | "cod">("razorpay");
   const [quote,        setQuote]        = useState<{ shippingCharge: number; platformFee: number; totalAmount: number } | null>(null);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
-  const [placed,       setPlaced]       = useState(false);
-  const [orderId,      setOrderId]      = useState("");
 
   const [address, setAddress] = useState({
     fullName: "", phone: "", line1: "", line2: "",
@@ -46,7 +47,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) return;                  // useRequireAuth handles redirect
-    if (items.length === 0) router.push("/cart");
+    if (items.length === 0 && !ordered.current) router.push("/cart");
   }, [user, isLoading, items]);
 
   useEffect(() => {
@@ -84,9 +85,9 @@ export default function CheckoutPage() {
         cartItems: items.map((i) => ({ product: i.product._id, quantity: i.quantity, variant: i.variant })),
         shippingAddress: address, deliveryMode, paymentMethod: payMethod,
       });
+      ordered.current = true;   // block the "items=0 → /cart" guard
       clearCart();
-      setOrderId(data._id);
-      setPlaced(true);
+      router.push(`/order-success?id=${data._id}`);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to place order. Please try again.");
     } finally {
@@ -94,19 +95,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (placed) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fffaf5] px-4">
-      <div className="text-center max-w-sm">
-        <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-extrabold text-[#1c1917] mb-2">Order Placed!</h2>
-        <p className="text-[#78716c] mb-2">Your order has been received. The seller will start processing it soon.</p>
-        <p className="text-xs text-[#a8a29e] mb-6">Order ID: {orderId}</p>
-        <Button onClick={() => router.push("/dashboard")}>View My Orders</Button>
-      </div>
-    </div>
-  );
-
-  if (!user || items.length === 0) return null;
+  if (!user || (items.length === 0 && !ordered.current)) return null;
 
   const addrValid = address.fullName && address.phone && address.line1 && address.city && address.state && address.pincode;
 
