@@ -49,7 +49,7 @@ export default function Footer() {
             <Link href="/seller" className="hover:text-white transition-colors">Seller Dashboard</Link>
           </nav>
           <div className="mt-5 bg-[#292524] rounded-xl px-3 py-2.5 text-xs text-[#a8a29e]">
-            Only 2% fee on sales.<br />No monthly charges.
+            100% Free — no fees, no commission.
           </div>
         </div>
       </div>

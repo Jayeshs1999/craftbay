@@ -88,7 +88,7 @@ export default function BecomeSellerPage() {
         {[
           { icon: Palette,    title: "List Anything",    desc: "Jewellery, paintings, clothes, candles -- if you made it, you can sell it." },
           { icon: Truck,      title: "Delivery Handled", desc: "We arrange courier pickup or you can self-ship or allow local pickup." },
-          { icon: DollarSign, title: "Only 2% on sales", desc: "No monthly fee. We only earn when you earn." },
+          { icon: DollarSign, title: "100% Free",        desc: "No monthly fee. No commission. Keep everything you earn." },
         ].map(({ icon: Icon, title, desc }) => (
           <div key={title} className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
             <Icon size={24} className="text-[#059669] mb-3" />

@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import api from "@/services/api";
-import { Order } from "@/types";
+import { Order, Product } from "@/types";
 import { Package, Truck, CheckCircle, XCircle, Clock, ShoppingBag } from "lucide-react";
 import Button from "@/components/Button";
 import { useRequireAuth } from "@/utils/useRequireAuth";
@@ -169,10 +169,20 @@ export default function DashboardPage() {
 
                 <div className="flex flex-wrap gap-2 mb-3">
                   {order.items.map((item, i) => (
-                    <div key={i} className="flex items-center gap-1.5 bg-[#f5f5f4] rounded-xl px-3 py-1.5">
-                      <span className="text-xs text-[#1c1917] font-medium">{item.name}</span>
-                      <span className="text-xs text-[#78716c]">x{item.quantity}</span>
-                    </div>
+                    <Link
+                      key={i}
+                      href={`/products/${typeof item.product === "string" ? item.product : (item.product as unknown as Product)?._id ?? ""}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-2 bg-[#f5f5f4] hover:bg-[#ecfdf5] hover:border-[#059669] border border-transparent rounded-xl p-1.5 pr-3 transition-all group"
+                    >
+                      {item.image && (
+                        <div className="w-9 h-9 rounded-lg overflow-hidden bg-white shrink-0 border border-[#e7e5e4]">
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <span className="text-xs text-[#1c1917] font-medium group-hover:text-[#059669] transition-colors">{item.name}</span>
+                      <span className="text-xs text-[#78716c]">×{item.quantity}</span>
+                    </Link>
                   ))}
                 </div>
 

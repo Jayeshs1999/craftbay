@@ -18,9 +18,8 @@ const STATES = [
 ];
 
 const DELIVERY_MODES: { mode: DeliveryMode; label: string; desc: string }[] = [
-  { mode: "platform",  label: "Platform Delivery (Recommended)", desc: "We arrange courier pickup and delivery. Rs.40-Rs.80 by distance. Free on orders Rs.999+." },
-  { mode: "self_ship", label: "Seller Ships",                     desc: "Seller ships via their own courier. Rates as stated by seller." },
-  { mode: "pickup",    label: "Local Pickup -- Free",             desc: "Pick up directly from the seller. Best for local buyers." },
+  { mode: "self_ship", label: "Seller Ships",      desc: "Seller ships via their own courier. Rates as stated by seller." },
+  { mode: "pickup",    label: "Local Pickup — Free", desc: "Pick up directly from the seller. Best for local buyers." },
 ];
 
 export default function CheckoutPage() {
@@ -33,8 +32,8 @@ export default function CheckoutPage() {
   const ordered = useRef(false);
 
   const [step,         setStep]         = useState<1 | 2 | 3>(1);
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("platform");
-  const [payMethod,    setPayMethod]    = useState<"razorpay" | "cod">("razorpay");
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("self_ship");
+  const [payMethod,    setPayMethod]    = useState<"razorpay" | "cod">("cod");
   const [quote,        setQuote]        = useState<{ shippingCharge: number; platformFee: number; totalAmount: number } | null>(null);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
@@ -190,21 +189,28 @@ export default function CheckoutPage() {
                 <CreditCard size={18} className="text-[#059669]" /> Payment Method
               </h2>
               <div className="space-y-3 mb-6">
-                {[
-                  { val: "razorpay", label: "Online Payment",     desc: "Pay via UPI, card, or netbanking (Razorpay)" },
-                  { val: "cod",      label: "Cash on Delivery",   desc: "Pay Rs.30 extra COD handling charge" },
-                ].map(({ val, label, desc }) => (
-                  <label key={val}
-                    className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
-                      (payMethod === val ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
-                    <input type="radio" name="pay" value={val} checked={payMethod === val}
-                      onChange={() => setPayMethod(val as any)} className="mt-0.5 accent-[#059669]" />
-                    <div>
-                      <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
-                      <p className="text-xs text-[#78716c] mt-0.5">{desc}</p>
-                    </div>
-                  </label>
-                ))}
+                {/* Online Payment — disabled until Razorpay is configured */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e7e5e4] opacity-50 cursor-not-allowed">
+                  <input type="radio" name="pay" value="razorpay" disabled className="mt-0.5 accent-[#059669]" />
+                  <div>
+                    <p className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
+                      Online Payment
+                      <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md">Coming Soon</span>
+                    </p>
+                    <p className="text-xs text-[#78716c] mt-0.5">Pay via UPI, card, or netbanking (Razorpay)</p>
+                  </div>
+                </label>
+
+                {/* Cash on Delivery */}
+                <label className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
+                  (payMethod === "cod" ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
+                  <input type="radio" name="pay" value="cod" checked={payMethod === "cod"}
+                    onChange={() => setPayMethod("cod")} className="mt-0.5 accent-[#059669]" />
+                  <div>
+                    <p className="font-semibold text-sm text-[#1c1917]">Cash on Delivery</p>
+                    <p className="text-xs text-[#78716c] mt-0.5">Pay Rs.30 extra COD handling charge</p>
+                  </div>
+                </label>
               </div>
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>
@@ -251,9 +257,6 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-[#57534e]">
                     <span>Shipping</span>
                     <span>{quote.shippingCharge === 0 ? "Free" : "Rs." + quote.shippingCharge}</span>
-                  </div>
-                  <div className="flex justify-between text-[#57534e]">
-                    <span>Platform fee</span><span>Rs.{quote.platformFee.toFixed(0)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-[#1c1917] pt-2 border-t border-[#e7e5e4]">
                     <span>Total</span>

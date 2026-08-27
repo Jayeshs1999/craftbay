@@ -89,10 +89,6 @@ export default function CartPage() {
                 <span>Shipping</span>
                 <span className="text-green-600">{cartTotal >= 999 ? "Free" : "Calculated at checkout"}</span>
               </div>
-              <div className="flex justify-between text-[#57534e]">
-                <span>Platform fee (2%)</span>
-                <span>Rs.{Math.min(Math.max(cartTotal * 0.02, 2), 50).toFixed(0)}</span>
-              </div>
               <div className="border-t border-[#e7e5e4] pt-3 flex justify-between font-bold text-[#1c1917]">
                 <span>Total</span>
                 <span className="text-[#059669]">Rs.{cartTotal.toLocaleString("en-IN")}+</span>

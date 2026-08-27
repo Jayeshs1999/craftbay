@@ -128,7 +128,7 @@ export default function HomePage() {
               Start Selling -- It&apos;s Free <ArrowRight size={18} />
             </button>
           </Link>
-          <p className="text-[#64748b] text-xs mt-4">No GSTN · No subscription · 2% platform fee only on sales</p>
+          <p className="text-[#64748b] text-xs mt-4">No GSTN · No subscription · Free to use</p>
         </div>
       </section>
 

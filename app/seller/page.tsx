@@ -157,20 +157,26 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
             <p className="text-xs font-semibold text-[#78716c] uppercase tracking-wide mb-2">Items Ordered</p>
             <div className="space-y-2">
               {order.items.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 bg-[#f7f8fa] rounded-xl p-3">
+                <Link
+                  key={i}
+                  href={`/products/${typeof item.product === "string" ? item.product : (item.product as unknown as { _id: string })?._id ?? ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 bg-[#f7f8fa] hover:bg-[#ecfdf5] rounded-xl p-3 transition-colors group"
+                >
                   {(item as PopulatedOrderItem).image && (
                     <img src={(item as PopulatedOrderItem).image} alt={item.name}
                       className="w-10 h-10 rounded-lg object-cover shrink-0 border border-[#e7e5e4]" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#1c1917] truncate">{item.name}</p>
+                    <p className="text-sm font-medium text-[#1c1917] group-hover:text-[#059669] truncate transition-colors">{item.name}</p>
                     {item.variant && <p className="text-xs text-[#78716c]">{item.variant}</p>}
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-semibold text-[#1c1917]">×{item.quantity}</p>
                     <p className="text-xs text-[#059669]">Rs.{(item.price * item.quantity).toLocaleString("en-IN")}</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -185,12 +191,6 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
               <div className="flex justify-between text-[#57534e]">
                 <span>Shipping</span>
                 <span>Rs.{order.shippingCharge.toLocaleString("en-IN")}</span>
-              </div>
-            )}
-            {order.platformFee > 0 && (
-              <div className="flex justify-between text-[#57534e]">
-                <span>Platform fee</span>
-                <span>Rs.{order.platformFee.toLocaleString("en-IN")}</span>
               </div>
             )}
             {order.discount > 0 && (
@@ -607,11 +607,27 @@ export default function SellerDashboardPage() {
                         </div>
 
                         {/* Items */}
-                        <div className="flex flex-wrap gap-1.5 mb-3">
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {order.items.map((item, i) => (
-                            <span key={i} className="bg-[#f5f5f4] text-[#57534e] text-xs px-2.5 py-1 rounded-lg">
-                              {item.name} ×{item.quantity}
-                            </span>
+                            <Link
+                              key={i}
+                              href={`/products/${typeof item.product === "string" ? item.product : (item.product as unknown as { _id: string })?._id ?? ""}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-2 bg-[#f5f5f4] hover:bg-[#ecfdf5] hover:border-[#059669] border border-transparent rounded-xl p-1.5 pr-3 transition-all group"
+                            >
+                              {(item as PopulatedOrderItem).image && (
+                                <div className="w-9 h-9 rounded-lg overflow-hidden bg-white shrink-0 border border-[#e7e5e4]">
+                                  <img
+                                    src={(item as PopulatedOrderItem).image}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                              <span className="text-xs font-medium text-[#57534e] group-hover:text-[#059669] transition-colors">
+                                {item.name} ×{item.quantity}
+                              </span>
+                            </Link>
                           ))}
                         </div>
 
