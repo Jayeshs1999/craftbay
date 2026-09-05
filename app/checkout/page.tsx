@@ -107,15 +107,17 @@ export default function CheckoutPage() {
       <h1 className="text-2xl font-extrabold text-[#1c1917] mb-6">Checkout</h1>
 
       {/* Step indicators */}
-      <div className="flex items-center gap-2 mb-10">
+      <div className="flex items-center mb-10 w-full">
         {[{ n: 1, label: "Address" }, { n: 2, label: "Delivery" }, { n: 3, label: "Payment" }].map(({ n, label }, idx) => (
-          <div key={n} className="flex items-center gap-2">
-            <div className={"w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold " +
-              (step > n ? "bg-green-500 text-white" : step === n ? "bg-[#059669] text-white" : "bg-[#e7e5e4] text-[#78716c]")}>
-              {step > n ? <CheckCircle size={16} /> : n}
+          <div key={n} className="flex items-center min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className={"w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0 flex items-center justify-center text-xs sm:text-sm font-bold " +
+                (step > n ? "bg-green-500 text-white" : step === n ? "bg-[#059669] text-white" : "bg-[#e7e5e4] text-[#78716c]")}>
+                {step > n ? <CheckCircle size={14} /> : n}
+              </div>
+              <span className={"text-xs sm:text-sm font-medium whitespace-nowrap " + (step === n ? "text-[#059669]" : "text-[#78716c]")}>{label}</span>
             </div>
-            <span className={"text-sm font-medium " + (step === n ? "text-[#059669]" : "text-[#78716c]")}>{label}</span>
-            {idx < 2 && <div className="w-8 h-px bg-[#e7e5e4] mx-1" />}
+            {idx < 2 && <div className="flex-1 min-w-[12px] h-px bg-[#e7e5e4] mx-1.5 sm:mx-2" />}
           </div>
         ))}
       </div>

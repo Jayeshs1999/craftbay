@@ -6,7 +6,7 @@ import api from "@/services/api";
 import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
-import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail } from "lucide-react";
 import Button from "@/components/Button";
 
 export default function ProductDetailPage() {
@@ -23,6 +23,8 @@ export default function ProductDetailPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [reviewing, setReviewing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     api.get("/products/" + id)
@@ -40,6 +42,28 @@ export default function ProductDetailPage() {
   if (!product) return null;
 
   const variantStr = Object.entries(variant).map(([k,v]) => k+": "+v).join(", ");
+  const productUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareText = `Check out ${product.name} on Banavoo`;
+  const encodedUrl = encodeURIComponent(productUrl);
+  const encodedText = encodeURIComponent(shareText);
+
+  async function shareProduct() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product!.name, text: shareText, url: productUrl });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    setShareOpen((open) => !open);
+  }
+
+  async function copyProductLink() {
+    await navigator.clipboard.writeText(productUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function submitReview() {
     if (!user) { router.push("/login"); return; }
@@ -130,13 +154,32 @@ export default function ProductDetailPage() {
             </div>
             <span className="text-xs text-[#78716c]">{product.stock} in stock</span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 mb-3">
             <Button className="flex-1" size="lg" onClick={() => addItem(product, qty, variantStr || undefined)} disabled={product.stock === 0}>
               <ShoppingCart size={18} /> {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>
             <Button variant="outline" size="lg" onClick={() => { addItem(product, qty, variantStr || undefined); router.push("/cart"); }}>Buy Now</Button>
-            <Button variant="ghost" size="lg" className="!px-3"><Heart size={18} /></Button>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="lg" className="!px-3" aria-label="Add to wishlist"><Heart size={18} /></Button>
+              <Button variant="outline" size="lg" className="!px-3" onClick={shareProduct} aria-label="Share product"><Share2 size={18} /></Button>
+            </div>
           </div>
+          {shareOpen && (
+            <div className="mb-6 rounded-2xl border border-[#e7e5e4] bg-white p-4">
+              <p className="mb-3 text-sm font-semibold text-[#1c1917]">Share this product</p>
+              <div className="flex flex-wrap gap-2">
+                <a href={`https://wa.me/?text=${encodedText}%20${encodedUrl}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm hover:border-[#059669] hover:text-[#059669]">WhatsApp</a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm hover:border-[#059669] hover:text-[#059669]">Facebook</a>
+                <a href={`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm hover:border-[#059669] hover:text-[#059669]">X</a>
+                <a href={`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm hover:border-[#059669] hover:text-[#059669]">Telegram</a>
+                <a href={`mailto:?subject=${encodedText}&body=${encodedText}%0A${encodedUrl}`} className="flex items-center gap-1.5 rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm hover:border-[#059669] hover:text-[#059669]"><Mail size={14} /> Email</a>
+                <button onClick={copyProductLink} className="flex items-center gap-1.5 rounded-lg border border-[#e7e5e4] px-3 py-2 text-sm hover:border-[#059669] hover:text-[#059669]">
+                  {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? "Copied" : "Copy link"}
+                </button>
+              </div>
+            </div>
+          )}
+          {!shareOpen && <div className="mb-3" />}
           <div className="space-y-2 mb-6">
             {[
               [Truck, product.freeShipping ? "Free shipping on this item" : "Delivery from Rs.40 - Platform delivery available"],
