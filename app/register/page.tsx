@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
-import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, ArrowLeft, Mail, RefreshCw } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 
 const GOOGLE_AUTH_URL =
@@ -30,27 +30,70 @@ function Rule({ ok, text }: { ok: boolean; text: string }) {
   );
 }
 
-export default function RegisterPage() {
-  const router    = useRouter();
-  const { user, isLoading } = useAuth();
-  const setUser   = useAuthStore((s) => s.setUser);
+// ─── OTP input — 6 separate boxes ─────────────────────────────────────────────
+function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Already logged in — bounce away
-  useEffect(() => {
-    if (!isLoading && user) {
-      router.replace(user.isSeller ? "/seller" : "/dashboard");
+  function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace" && !value[i] && i > 0) {
+      inputs.current[i - 1]?.focus();
     }
-  }, [user, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
-  const [name,      setName]      = useState("");
-  const [email,     setEmail]     = useState("");
-  const [phone,     setPhone]     = useState("");
-  const [password,  setPassword]  = useState("");
-  const [confirm,   setConfirm]   = useState("");
-  const [showPwd,   setShowPwd]   = useState(false);
-  const [showCnf,   setShowCnf]   = useState(false);
-  const [error,     setError]     = useState("");
-  const [loading,   setLoading]   = useState(false);
+  function handleChange(i: number, ch: string) {
+    const digit = ch.replace(/\D/, "").slice(-1);
+    const arr   = value.padEnd(6, " ").split("");
+    arr[i]      = digit || " ";
+    const next  = arr.join("").trimEnd();
+    onChange(next);
+    if (digit && i < 5) {
+      inputs.current[i + 1]?.focus();
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted) {
+      onChange(pasted);
+      inputs.current[Math.min(pasted.length, 5)]?.focus();
+      e.preventDefault();
+    }
+  }
+
+  return (
+    <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <input
+          key={i}
+          ref={(el) => { inputs.current[i] = el; }}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={value[i] && value[i] !== " " ? value[i] : ""}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKey(i, e)}
+          className="w-11 h-12 text-center text-lg font-bold border border-[#e2e8f0] rounded-xl outline-none transition-colors focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] bg-white text-[#0f172a]"
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Step 1: Registration form ─────────────────────────────────────────────────
+function RegistrationForm({
+  onOtpSent,
+}: {
+  onOtpSent: (email: string) => void;
+}) {
+  const [name,     setName]     = useState("");
+  const [email,    setEmail]    = useState("");
+  const [phone,    setPhone]    = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm,  setConfirm]  = useState("");
+  const [showPwd,  setShowPwd]  = useState(false);
+  const [showCnf,  setShowCnf]  = useState(false);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
 
   const rules = {
     len:   password.length >= 8,
@@ -67,20 +110,259 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/register", {
-        name, email, password,
-        phone: phone || undefined,
-      });
-      setUser(data, data.token ?? null);
-      router.push("/dashboard");
+      await api.post("/auth/send-otp", { name, email, password, phone: phone || undefined });
+      onOtpSent(email.toLowerCase());
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Registration failed");
+      setError(e.response?.data?.message || "Failed to send OTP. Try again.");
       setLoading(false);
     }
   }
 
-  // Show spinner while verifying session
+  return (
+    <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
+          {error}
+        </div>
+      )}
+
+      {/* Google Sign-Up */}
+      <a
+        href={GOOGLE_AUTH_URL}
+        className="w-full flex items-center justify-center gap-2.5 border border-[#e2e8f0] rounded-xl py-2.5 text-sm font-medium text-[#0f172a] hover:bg-[#f8faf8] transition-colors mb-5"
+      >
+        <GoogleIcon />
+        Sign up with Google
+      </a>
+
+      <div className="flex items-center gap-3 mb-5">
+        <hr className="flex-1 border-[#e2e8f0]" />
+        <span className="text-xs text-[#94a3b8]">or</span>
+        <hr className="flex-1 border-[#e2e8f0]" />
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Name */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-[#0f172a]">Full Name *</label>
+          <input value={name} onChange={(e) => setName(e.target.value)}
+            placeholder="Priya Sharma" required autoComplete="name"
+            className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
+        </div>
+
+        {/* Email */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-[#0f172a]">Email *</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com" required autoComplete="email"
+            className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
+        </div>
+
+        {/* Phone */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-[#0f172a]">
+            Phone <span className="text-[#94a3b8] font-normal">(optional)</span>
+          </label>
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+            placeholder="98765 43210" autoComplete="tel"
+            className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
+        </div>
+
+        {/* Password */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-[#0f172a]">Password *</label>
+          <div className="relative">
+            <input type={showPwd ? "text" : "password"} value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min 8 chars" required autoComplete="new-password"
+              className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
+            <button type="button" onClick={() => setShowPwd((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
+              {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {password.length > 0 && (
+            <div className="flex gap-x-3 flex-wrap mt-1">
+              <Rule ok={rules.len}   text="8+ chars" />
+              <Rule ok={rules.upper} text="Uppercase" />
+              <Rule ok={rules.num}   text="Number" />
+            </div>
+          )}
+        </div>
+
+        {/* Confirm */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-[#0f172a]">Confirm Password *</label>
+          <div className="relative">
+            <input type={showCnf ? "text" : "password"} value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Repeat password" required autoComplete="new-password"
+              className={"w-full rounded-xl border px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#94a3b8] transition-colors focus:ring-2 " +
+                (confirm.length > 0
+                  ? rules.match ? "border-emerald-500 focus:border-emerald-600 focus:ring-emerald-100"
+                                : "border-red-400 focus:border-red-500 focus:ring-red-100"
+                  : "border-[#e2e8f0] focus:border-[#059669] focus:ring-[#ecfdf5]")} />
+            <button type="button" onClick={() => setShowCnf((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
+              {showCnf ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {confirm.length > 0 && !rules.match && (
+            <p className="text-xs text-red-500">Passwords do not match</p>
+          )}
+        </div>
+
+        <button type="submit" disabled={loading || !strong || !rules.match}
+          className="w-full flex items-center justify-center gap-2 bg-[#059669] text-white font-semibold py-3 rounded-xl hover:bg-[#047857] active:scale-[0.98] shadow-sm hover:shadow transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer text-sm">
+          {loading && <Loader2 size={16} className="animate-spin" />}
+          {loading ? "Sending OTP..." : "Continue →"}
+        </button>
+      </form>
+
+      <p className="text-center text-xs text-[#64748b] mt-5">
+        By signing up you agree to our{" "}
+        <Link href="/terms" className="text-[#059669] hover:underline">Terms</Link>
+      </p>
+      <p className="text-center text-sm text-[#64748b] mt-3">
+        Have an account?{" "}
+        <Link href="/login" className="text-[#059669] font-semibold hover:underline">Sign in</Link>
+      </p>
+    </>
+  );
+}
+
+// ─── Step 2: OTP verification ──────────────────────────────────────────────────
+function OtpVerifyForm({
+  email,
+  onBack,
+  onVerified,
+}: {
+  email: string;
+  onBack: () => void;
+  onVerified: (data: any) => void;
+}) {
+  const [otp,      setOtp]      = useState("");
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(30);
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const t = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCountdown]);
+
+  const otpFilled = otp.replace(/\s/g, "").length === 6;
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!otpFilled) return;
+    setError("");
+    setLoading(true);
+    try {
+      const { data } = await api.post("/auth/verify-otp", { email, otp: otp.trim() });
+      onVerified(data);
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || "Verification failed. Try again.");
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    // We can't resend without the original form data here, so take the user back
+    onBack();
+  }
+
+  return (
+    <>
+      {/* Email banner */}
+      <div className="flex items-center gap-2.5 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3 mb-5">
+        <Mail size={16} className="text-[#059669] shrink-0" />
+        <div className="min-w-0">
+          <p className="text-xs text-[#065f46] font-medium">OTP sent to</p>
+          <p className="text-sm font-semibold text-[#059669] truncate">{email}</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleVerify} className="space-y-5">
+        <div className="flex flex-col gap-3">
+          <label className="text-sm font-medium text-[#0f172a] text-center">
+            Enter the 6-digit code
+          </label>
+          <OtpInput value={otp} onChange={setOtp} />
+          <p className="text-xs text-[#94a3b8] text-center">
+            Code expires in 10 minutes
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !otpFilled}
+          className="w-full flex items-center justify-center gap-2 bg-[#059669] text-white font-semibold py-3 rounded-xl hover:bg-[#047857] active:scale-[0.98] shadow-sm hover:shadow transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer text-sm">
+          {loading && <Loader2 size={16} className="animate-spin" />}
+          {loading ? "Verifying..." : "Verify & Create Account"}
+        </button>
+      </form>
+
+      {/* Resend / back */}
+      <div className="flex items-center justify-between mt-4">
+        <button
+          onClick={onBack}
+          className="text-xs text-[#64748b] hover:text-[#0f172a] flex items-center gap-1 transition-colors">
+          <ArrowLeft size={12} /> Change email
+        </button>
+        <button
+          onClick={handleResend}
+          disabled={resendCountdown > 0 || resending}
+          className="text-xs text-[#059669] font-medium hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1 transition-colors">
+          {resending
+            ? <><RefreshCw size={12} className="animate-spin" /> Sending…</>
+            : resendCountdown > 0
+              ? `Resend in ${resendCountdown}s`
+              : <><RefreshCw size={12} /> Resend OTP</>}
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ─── Page shell ────────────────────────────────────────────────────────────────
+export default function RegisterPage() {
+  const router  = useRouter();
+  const { user, isLoading } = useAuth();
+  const setUser = useAuthStore((s) => s.setUser);
+
+  // Already logged in — bounce away
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace(user.isSeller ? "/seller" : "/dashboard");
+    }
+  }, [user, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // "step" drives which screen is shown
+  const [step,  setStep]  = useState<"form" | "otp">("form");
+  const [email, setEmail] = useState("");
+
+  function handleOtpSent(sentEmail: string) {
+    setEmail(sentEmail);
+    setStep("otp");
+  }
+
+  function handleVerified(data: any) {
+    setUser(data, data.token ?? null);
+    router.push("/dashboard");
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8faf8]">
@@ -95,128 +377,48 @@ export default function RegisterPage() {
 
         <div className="text-center mb-8">
           <Link href="/"><span className="text-3xl font-black text-[#059669]">Banavoo<span className="text-[#d97706]">.In</span></span></Link>
-          <p className="text-[#64748b] text-sm mt-1">Join thousands of creators</p>
+          <p className="text-[#64748b] text-sm mt-1">
+            {step === "form" ? "Join thousands of creators" : "Almost there!"}
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#e2e8f0] p-8 shadow-sm">
+          {/* Header row */}
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => router.push("/products")}
+              onClick={() => step === "otp" ? setStep("form") : router.push("/products")}
               className="p-1.5 rounded-lg text-[#64748b] hover:text-[#0f172a] hover:bg-[#f1f5f9] transition-colors"
-              aria-label="Back to products"
-            >
+              aria-label="Back">
               <ArrowLeft size={18} />
             </button>
-            <h1 className="text-xl font-bold text-[#0f172a]">Create Account</h1>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-              {error}
-            </div>
-          )}
-
-          {/* Google Sign-Up */}
-          <a
-            href={GOOGLE_AUTH_URL}
-            className="w-full flex items-center justify-center gap-2.5 border border-[#e2e8f0] rounded-xl py-2.5 text-sm font-medium text-[#0f172a] hover:bg-[#f8faf8] transition-colors mb-5"
-          >
-            <GoogleIcon />
-            Sign up with Google
-          </a>
-
-          <div className="flex items-center gap-3 mb-5">
-            <hr className="flex-1 border-[#e2e8f0]" />
-            <span className="text-xs text-[#94a3b8]">or</span>
-            <hr className="flex-1 border-[#e2e8f0]" />
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">Full Name *</label>
-              <input value={name} onChange={(e) => setName(e.target.value)}
-                placeholder="Priya Sharma" required autoComplete="name"
-                className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
-            </div>
-
-            {/* Email */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">Email *</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com" required autoComplete="email"
-                className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
-            </div>
-
-            {/* Phone */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">
-                Phone <span className="text-[#94a3b8] font-normal">(optional)</span>
-              </label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                placeholder="98765 43210" autoComplete="tel"
-                className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
-            </div>
-
-            {/* Password */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">Password *</label>
-              <div className="relative">
-                <input type={showPwd ? "text" : "password"} value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min 8 chars" required autoComplete="new-password"
-                  className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
-                <button type="button" onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {password.length > 0 && (
-                <div className="flex gap-x-3 flex-wrap mt-1">
-                  <Rule ok={rules.len}   text="8+ chars" />
-                  <Rule ok={rules.upper} text="Uppercase" />
-                  <Rule ok={rules.num}   text="Number" />
+            <div>
+              <h1 className="text-xl font-bold text-[#0f172a]">
+                {step === "form" ? "Create Account" : "Verify Email"}
+              </h1>
+              {step === "otp" && (
+                <div className="flex gap-1 mt-1">
+                  <span className="w-5 h-1 rounded-full bg-[#059669]" />
+                  <span className="w-5 h-1 rounded-full bg-[#059669]" />
+                </div>
+              )}
+              {step === "form" && (
+                <div className="flex gap-1 mt-1">
+                  <span className="w-5 h-1 rounded-full bg-[#059669]" />
+                  <span className="w-5 h-1 rounded-full bg-[#e2e8f0]" />
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Confirm */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">Confirm Password *</label>
-              <div className="relative">
-                <input type={showCnf ? "text" : "password"} value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Repeat password" required autoComplete="new-password"
-                  className={"w-full rounded-xl border px-3.5 py-2.5 pr-10 text-sm outline-none placeholder:text-[#94a3b8] transition-colors focus:ring-2 " +
-                    (confirm.length > 0
-                      ? rules.match ? "border-emerald-500 focus:border-emerald-600 focus:ring-emerald-100"
-                                    : "border-red-400 focus:border-red-500 focus:ring-red-100"
-                      : "border-[#e2e8f0] focus:border-[#059669] focus:ring-[#ecfdf5]")} />
-                <button type="button" onClick={() => setShowCnf((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]">
-                  {showCnf ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {confirm.length > 0 && !rules.match && (
-                <p className="text-xs text-red-500">Passwords do not match</p>
-              )}
-            </div>
-
-            <button type="submit" disabled={loading || !strong || !rules.match}
-              className="w-full flex items-center justify-center gap-2 bg-[#059669] text-white font-semibold py-3 rounded-xl hover:bg-[#047857] active:scale-[0.98] shadow-sm hover:shadow transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer text-sm">
-              {loading && <Loader2 size={16} className="animate-spin" />}
-              {loading ? "Creating account..." : "Create Account"}
-            </button>
-          </form>
-
-          <p className="text-center text-xs text-[#64748b] mt-5">
-            By signing up you agree to our{" "}
-            <Link href="/terms" className="text-[#059669] hover:underline">Terms</Link>
-          </p>
-          <p className="text-center text-sm text-[#64748b] mt-3">
-            Have an account?{" "}
-            <Link href="/login" className="text-[#059669] font-semibold hover:underline">Sign in</Link>
-          </p>
+          {step === "form" ? (
+            <RegistrationForm onOtpSent={handleOtpSent} />
+          ) : (
+            <OtpVerifyForm
+              email={email}
+              onBack={() => setStep("form")}
+              onVerified={handleVerified}
+            />
+          )}
         </div>
       </div>
     </div>
