@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, Heart, Store, Menu, X, Search, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
+import { ShoppingCart, Heart, Store, Menu, X, Search, LayoutDashboard, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCartStore } from "@/store/cartStore";
@@ -111,6 +111,14 @@ export default function Navbar() {
                         onClick={() => setDropOpen(false)}>
                         <LayoutDashboard size={14} className="text-[#64748b]" /> My Orders
                       </Link>
+                      {user.role === "admin" && (
+                        <Link href="/admin"
+                          className={"flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors " +
+                            (pathname.startsWith("/admin") ? "bg-amber-50 text-amber-700 font-medium" : "hover:bg-amber-50 text-[#0f172a]")}
+                          onClick={() => setDropOpen(false)}>
+                          <ShieldCheck size={14} className="text-amber-600" /> Admin Dashboard
+                        </Link>
+                      )}
                       {user.isSeller ? (
                         <Link href="/seller"
                           className={"flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors " +
@@ -205,6 +213,13 @@ export default function Navbar() {
                   (pathname === "/wishlist" ? "bg-[#ecfdf5] text-[#059669] font-medium" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
                 <Heart size={15} /> Wishlist
               </Link>
+              {user.role === "admin" && (
+                <Link href="/admin"
+                  className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-colors " +
+                    (pathname.startsWith("/admin") ? "bg-amber-50 text-amber-700 font-medium" : "text-[#0f172a] hover:bg-amber-50")}>
+                  <ShieldCheck size={15} className="text-amber-600" /> Admin Dashboard
+                </Link>
+              )}
               {user.isSeller ? (
                 <Link href="/seller"
                   className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-colors " +
