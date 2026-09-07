@@ -8,7 +8,7 @@ import {
   Package, ShoppingBag, Eye, TrendingUp, Plus, Trash2,
   Truck, CheckCircle, X, Phone, MapPin, User as UserIcon,
   ClipboardList, Clock, XCircle, ChevronDown, ChevronUp,
-  Hash, AlertCircle,
+  Hash, AlertCircle, StoreIcon,
 } from "lucide-react";
 import Button from "@/components/Button";
 import { useRequireAuth } from "@/utils/useRequireAuth";
@@ -65,8 +65,9 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
   const [loading, setLoading]               = useState(false);
   const [historyOpen, setHistoryOpen]       = useState(false);
 
-  const buyer = order.buyer as PopulatedBuyer;
-  const addr  = order.shippingAddress;
+  const buyer     = order.buyer as PopulatedBuyer;
+  const addr      = order.shippingAddress;
+  const isPickup  = order.deliveryMode === "pickup";
 
   const canConfirm  = order.orderStatus === "pending";
   const canProcess  = order.orderStatus === "confirmed";
@@ -103,11 +104,18 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
         <div className="px-6 py-5 space-y-5">
 
           {/* Status */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={"text-sm px-3 py-1 rounded-full font-semibold capitalize " + (STATUS_COLORS[order.orderStatus] || "bg-gray-100 text-gray-600")}>
               {STATUS_LABELS[order.orderStatus] || order.orderStatus}
             </span>
-            <span className="text-xs text-[#78716c]">{order.paymentMethod.toUpperCase()} · {order.paymentStatus}</span>
+            {isPickup && (
+              <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold bg-amber-100 text-amber-700">
+                <StoreIcon size={11} /> Local Pickup
+              </span>
+            )}
+            <span className="text-xs text-[#78716c]">
+              {isPickup ? "Pay at Pickup" : order.paymentMethod.toUpperCase()} · {order.paymentStatus}
+            </span>
           </div>
 
           {/* Buyer Details */}
@@ -133,24 +141,47 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
             )}
           </div>
 
-          {/* Shipping Address */}
-          <div className="bg-[#f7f8fa] rounded-xl p-4 space-y-1">
-            <p className="text-xs font-semibold text-[#78716c] uppercase tracking-wide mb-2">Delivery Address</p>
-            <div className="flex gap-2">
-              <MapPin size={14} className="text-[#059669] shrink-0 mt-0.5" />
-              <div className="text-sm text-[#1c1917] leading-relaxed">
-                <p className="font-semibold">{addr.fullName}</p>
-                {addr.phone && (
-                  <a href={`tel:${addr.phone}`} className="flex items-center gap-1 text-[#059669] font-medium hover:underline mt-0.5">
-                    <Phone size={12} /> {addr.phone}
+          {/* Shipping Address / Pickup Contact */}
+          {isPickup ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                <StoreIcon size={12} /> Pickup — Buyer Contact
+              </p>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                The buyer will collect from your location. Contact them to arrange a time.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-[#1c1917]">
+                <UserIcon size={14} className="text-amber-600 shrink-0" />
+                <span className="font-medium">{addr.fullName}</span>
+              </div>
+              {addr.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone size={14} className="text-amber-600 shrink-0" />
+                  <a href={`tel:${addr.phone}`} className="font-semibold text-amber-700 hover:underline">
+                    {addr.phone}
                   </a>
-                )}
-                <p className="text-[#57534e] mt-1">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
-                <p className="text-[#57534e]">{addr.city}, {addr.state} – {addr.pincode}</p>
-                <p className="text-[#57534e]">{addr.country || "India"}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-[#f7f8fa] rounded-xl p-4 space-y-1">
+              <p className="text-xs font-semibold text-[#78716c] uppercase tracking-wide mb-2">Delivery Address</p>
+              <div className="flex gap-2">
+                <MapPin size={14} className="text-[#059669] shrink-0 mt-0.5" />
+                <div className="text-sm text-[#1c1917] leading-relaxed">
+                  <p className="font-semibold">{addr.fullName}</p>
+                  {addr.phone && (
+                    <a href={`tel:${addr.phone}`} className="flex items-center gap-1 text-[#059669] font-medium hover:underline mt-0.5">
+                      <Phone size={12} /> {addr.phone}
+                    </a>
+                  )}
+                  <p className="text-[#57534e] mt-1">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
+                  <p className="text-[#57534e]">{addr.city}, {addr.state} – {addr.pincode}</p>
+                  <p className="text-[#57534e]">{addr.country || "India"}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Order Items */}
           <div>
@@ -205,8 +236,8 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
             </div>
           </div>
 
-          {/* Tracking fields (shown when shipping) */}
-          {canShip && (
+          {/* Tracking fields (shown when shipping — not for pickup) */}
+          {canShip && !isPickup && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-[#78716c] uppercase tracking-wide">Shipping Info (optional)</p>
               <input
@@ -225,12 +256,22 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
           )}
 
           {/* Existing tracking info */}
-          {order.trackingNumber && !canShip && (
+          {order.trackingNumber && !canShip && !isPickup && (
             <div className="bg-purple-50 rounded-xl p-3 text-sm">
               <div className="flex items-center gap-2 text-purple-700 font-medium">
                 <Hash size={13} /> Tracking: {order.trackingNumber}
               </div>
               {order.courier && <p className="text-purple-600 mt-0.5 ml-5">{order.courier}</p>}
+            </div>
+          )}
+
+          {/* Pickup ready banner (shown when processing & pickup) */}
+          {canShip && isPickup && (
+            <div className="flex gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <StoreIcon size={15} className="text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Once you click <strong>Ready for Pickup</strong>, the buyer will be notified to come collect.
+              </p>
             </div>
           )}
 
@@ -301,15 +342,24 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
             </button>
           )}
           {canShip && (
-            <button disabled={loading} onClick={() => handle("shipped", { trackingNumber: trackingNumber || undefined, courier: courier || undefined })}
-              className="flex items-center gap-1.5 text-sm bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-colors">
-              <Truck size={14} /> Mark Shipped
-            </button>
+            isPickup ? (
+              <button disabled={loading}
+                onClick={() => handle("shipped", { note: "Order ready for pickup" })}
+                className="flex items-center gap-1.5 text-sm bg-amber-500 text-white px-4 py-2 rounded-xl hover:bg-amber-600 disabled:opacity-50 transition-colors">
+                <StoreIcon size={14} /> Ready for Pickup
+              </button>
+            ) : (
+              <button disabled={loading}
+                onClick={() => handle("shipped", { trackingNumber: trackingNumber || undefined, courier: courier || undefined })}
+                className="flex items-center gap-1.5 text-sm bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-colors">
+                <Truck size={14} /> Mark Shipped
+              </button>
+            )
           )}
           {canDeliver && (
             <button disabled={loading} onClick={() => handle("delivered")}
               className="flex items-center gap-1.5 text-sm bg-[#059669] text-white px-4 py-2 rounded-xl hover:bg-[#047857] disabled:opacity-50 transition-colors">
-              <CheckCircle size={14} /> Mark Delivered
+              <CheckCircle size={14} /> {isPickup ? "Mark Collected" : "Mark Delivered"}
             </button>
           )}
           {canReject && !showReject && (

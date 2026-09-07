@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/services/api";
 import { Order } from "@/types";
-import { CheckCircle, Package, ShoppingBag, LayoutDashboard, PartyPopper, Loader2 } from "lucide-react";
+import { CheckCircle, Package, ShoppingBag, LayoutDashboard, PartyPopper, Loader2, StoreIcon } from "lucide-react";
 import Button from "@/components/Button";
 
 // ─── Inner component (uses useSearchParams — must be inside <Suspense>) ───────
@@ -90,13 +90,27 @@ function OrderSuccessContent() {
             )}
 
             {/* What's next */}
-            <div className="bg-[#ecfdf5] rounded-xl px-4 py-3 flex gap-3">
-              <PartyPopper size={18} className="text-[#059669] shrink-0 mt-0.5" />
-              <p className="text-xs text-[#065f46] leading-relaxed">
-                The seller will confirm &amp; process your order shortly.
-                You&apos;ll get an email update at every step.
-              </p>
-            </div>
+            {order?.deliveryMode === "pickup" ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex gap-3">
+                <StoreIcon size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-800 leading-relaxed space-y-1">
+                  <p className="font-semibold">Next steps for Local Pickup:</p>
+                  <ol className="list-decimal pl-4 space-y-0.5">
+                    <li>The seller will contact you to confirm a pickup time.</li>
+                    <li>Visit the seller&apos;s location to collect your item.</li>
+                    <li>Pay the seller directly (cash / UPI) when you arrive.</li>
+                  </ol>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#ecfdf5] rounded-xl px-4 py-3 flex gap-3">
+                <PartyPopper size={18} className="text-[#059669] shrink-0 mt-0.5" />
+                <p className="text-xs text-[#065f46] leading-relaxed">
+                  The seller will confirm &amp; process your order shortly.
+                  You&apos;ll get an email update at every step.
+                </p>
+              </div>
+            )}
 
           </div>
 

@@ -6,7 +6,7 @@ import { useCartStore } from "@/store/cartStore";
 import { DeliveryMode } from "@/types";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Truck, MapPin, CreditCard, Package, CheckCircle } from "lucide-react";
+import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon } from "lucide-react";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 
 const STATES = [
@@ -38,6 +38,8 @@ export default function CheckoutPage() {
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
 
+  const isPickup = deliveryMode === "pickup";
+
   const [address, setAddress] = useState({
     fullName: "", phone: "", line1: "", line2: "",
     city: "", state: "", pincode: "", country: "India",
@@ -58,11 +60,32 @@ export default function CheckoutPage() {
     });
   }, [user]);
 
+  // When switching to pickup mode, force payment to COD (cash at pickup)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (isPickup) {
+      setPayMethod("cod");
+      // Pre-fill contact details from user profile if not already set
+      setAddress((a) => ({
+        ...a,
+        fullName: a.fullName || user?.name || "",
+        phone:    a.phone    || user?.phone || "",
+      }));
+    }
+  // Re-run only when pickup mode toggles, not on every user/address change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPickup]);
+
   function handleAddrChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setAddress((a) => ({ ...a, [e.target.name]: e.target.value }));
   }
 
   async function fetchQuote() {
+    // For pickup, quote is always just the cart total (no shipping/fees)
+    if (isPickup) {
+      setQuote({ shippingCharge: 0, platformFee: 0, totalAmount: cartTotal });
+      return;
+    }
     try {
       const { data } = await api.post("/orders/quote", {
         cartItems: items.map((i) => ({ product: i.product._id, quantity: i.quantity, variant: i.variant })),
@@ -73,16 +96,29 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    if (step === 3 && address.city) fetchQuote();
+    if (step === 3) fetchQuote();
   }, [step, deliveryMode, payMethod]);
 
   async function placeOrder() {
     setLoading(true);
     setError("");
     try {
+      // For pickup, we still need a minimal address (contact info); use a placeholder for location fields
+      const orderAddress = isPickup
+        ? {
+            fullName: address.fullName,
+            phone:    address.phone,
+            line1:    "Local Pickup",
+            city:     "Local Pickup",
+            state:    address.state || "N/A",
+            pincode:  address.pincode || "000000",
+            country:  "India",
+          }
+        : address;
+
       const { data } = await api.post("/orders", {
         cartItems: items.map((i) => ({ product: i.product._id, quantity: i.quantity, variant: i.variant })),
-        shippingAddress: address, deliveryMode, paymentMethod: payMethod,
+        shippingAddress: orderAddress, deliveryMode, paymentMethod: payMethod,
       });
       ordered.current = true;   // block the "items=0 → /cart" guard
       clearCart();
@@ -96,7 +132,10 @@ export default function CheckoutPage() {
 
   if (!user || (items.length === 0 && !ordered.current)) return null;
 
-  const addrValid = address.fullName && address.phone && address.line1 && address.city && address.state && address.pincode;
+  // Address step: for pickup only name+phone are required
+  const addrValid = isPickup
+    ? !!(address.fullName && address.phone)
+    : !!(address.fullName && address.phone && address.line1 && address.city && address.state && address.pincode);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -108,7 +147,11 @@ export default function CheckoutPage() {
 
       {/* Step indicators */}
       <div className="flex items-center mb-10 w-full">
-        {[{ n: 1, label: "Address" }, { n: 2, label: "Delivery" }, { n: 3, label: "Payment" }].map(({ n, label }, idx) => (
+        {[
+          { n: 1, label: isPickup ? "Contact" : "Address" },
+          { n: 2, label: "Delivery" },
+          { n: 3, label: "Payment" },
+        ].map(({ n, label }, idx) => (
           <div key={n} className="flex items-center min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
               <div className={"w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0 flex items-center justify-center text-xs sm:text-sm font-bold " +
@@ -125,39 +168,66 @@ export default function CheckoutPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
 
-          {/* Step 1: Address */}
+          {/* ── Step 1: Address / Contact ── */}
           {step === 1 && (
             <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
-              <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
-                <MapPin size={18} className="text-[#059669]" /> Delivery Address
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="Full Name *" name="fullName" value={address.fullName} onChange={handleAddrChange} required />
-                <Input label="Phone *" name="phone" type="tel" value={address.phone} onChange={handleAddrChange} required />
-                <div className="sm:col-span-2">
-                  <Input label="Address Line 1 *" name="line1" value={address.line1} onChange={handleAddrChange} placeholder="House No, Street, Area" required />
-                </div>
-                <div className="sm:col-span-2">
-                  <Input label="Address Line 2" name="line2" value={address.line2} onChange={handleAddrChange} placeholder="Landmark (optional)" />
-                </div>
-                <Input label="City *" name="city" value={address.city} onChange={handleAddrChange} required />
-                <div>
-                  <label className="text-sm font-medium text-[#1c1917] block mb-1">State *</label>
-                  <select name="state" value={address.state} onChange={handleAddrChange} required
-                    className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
-                    <option value="">Select state</option>
-                    {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <Input label="Pincode *" name="pincode" value={address.pincode} onChange={handleAddrChange} placeholder="411001" required />
-              </div>
+              {isPickup ? (
+                <>
+                  <h2 className="font-bold text-[#1c1917] mb-1 flex items-center gap-2">
+                    <StoreIcon size={18} className="text-[#059669]" /> Your Contact Details
+                  </h2>
+                  <p className="text-sm text-[#78716c] mb-5">
+                    You&apos;ve chosen <span className="font-semibold text-[#059669]">Local Pickup</span>. The seller will
+                    contact you to arrange a pickup time. No shipping address needed.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Input label="Full Name *" name="fullName" value={address.fullName} onChange={handleAddrChange} required />
+                    <Input label="Phone *" name="phone" type="tel" value={address.phone} onChange={handleAddrChange} required />
+                  </div>
+
+                  {/* Pickup info banner */}
+                  <div className="mt-5 flex gap-3 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3">
+                    <StoreIcon size={16} className="text-[#059669] shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#065f46] leading-relaxed">
+                      After placing the order, the seller will reach out to confirm a pickup time and share their location.
+                      No payment is charged until you collect your item.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
+                    <MapPin size={18} className="text-[#059669]" /> Delivery Address
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Input label="Full Name *" name="fullName" value={address.fullName} onChange={handleAddrChange} required />
+                    <Input label="Phone *" name="phone" type="tel" value={address.phone} onChange={handleAddrChange} required />
+                    <div className="sm:col-span-2">
+                      <Input label="Address Line 1 *" name="line1" value={address.line1} onChange={handleAddrChange} placeholder="House No, Street, Area" required />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Input label="Address Line 2" name="line2" value={address.line2} onChange={handleAddrChange} placeholder="Landmark (optional)" />
+                    </div>
+                    <Input label="City *" name="city" value={address.city} onChange={handleAddrChange} required />
+                    <div>
+                      <label className="text-sm font-medium text-[#1c1917] block mb-1">State *</label>
+                      <select name="state" value={address.state} onChange={handleAddrChange} required
+                        className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
+                        <option value="">Select state</option>
+                        {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <Input label="Pincode *" name="pincode" value={address.pincode} onChange={handleAddrChange} placeholder="411001" required />
+                  </div>
+                </>
+              )}
               <Button className="mt-6" size="lg" onClick={() => setStep(2)} disabled={!addrValid}>
                 Continue to Delivery
               </Button>
             </div>
           )}
 
-          {/* Step 2: Delivery */}
+          {/* ── Step 2: Delivery ── */}
           {step === 2 && (
             <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
               <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
@@ -177,6 +247,23 @@ export default function CheckoutPage() {
                   </label>
                 ))}
               </div>
+
+              {/* Pickup extra info when selected */}
+              {isPickup && (
+                <div className="mb-5 flex gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <StoreIcon size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="text-xs text-amber-800 leading-relaxed space-y-1">
+                    <p className="font-semibold">How Local Pickup works:</p>
+                    <ol className="list-decimal pl-4 space-y-0.5">
+                      <li>Place your order — no shipping fee charged.</li>
+                      <li>Seller confirms &amp; contacts you to arrange a time.</li>
+                      <li>Visit the seller&apos;s location to collect your item.</li>
+                      <li>Pay the seller directly when you pick up.</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
                 <Button onClick={() => setStep(3)}>Continue to Payment</Button>
@@ -184,50 +271,77 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Step 3: Payment */}
+          {/* ── Step 3: Payment ── */}
           {step === 3 && (
             <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
               <h2 className="font-bold text-[#1c1917] mb-5 flex items-center gap-2">
                 <CreditCard size={18} className="text-[#059669]" /> Payment Method
               </h2>
-              <div className="space-y-3 mb-6">
-                {/* Online Payment — disabled until Razorpay is configured */}
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e7e5e4] opacity-50 cursor-not-allowed">
-                  <input type="radio" name="pay" value="razorpay" disabled className="mt-0.5 accent-[#059669]" />
-                  <div>
-                    <p className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
-                      Online Payment
-                      <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md">Coming Soon</span>
-                    </p>
-                    <p className="text-xs text-[#78716c] mt-0.5">Pay via UPI, card, or netbanking (Razorpay)</p>
-                  </div>
-                </label>
 
-                {/* Cash on Delivery */}
-                <label className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
-                  (payMethod === "cod" ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
-                  <input type="radio" name="pay" value="cod" checked={payMethod === "cod"}
-                    onChange={() => setPayMethod("cod")} className="mt-0.5 accent-[#059669]" />
-                  <div>
-                    <p className="font-semibold text-sm text-[#1c1917]">Cash on Delivery</p>
-                    <p className="text-xs text-[#78716c] mt-0.5">Pay Rs.30 extra COD handling charge</p>
+              {isPickup ? (
+                /* ── Pickup: only pay-at-pickup option ── */
+                <div className="space-y-3 mb-6">
+                  <label className={"flex items-start gap-3 p-4 rounded-xl border border-[#059669] bg-[#ecfdf5] cursor-default"}>
+                    <input type="radio" name="pay" value="cod" checked readOnly className="mt-0.5 accent-[#059669]" />
+                    <div>
+                      <p className="font-semibold text-sm text-[#1c1917]">Pay at Pickup</p>
+                      <p className="text-xs text-[#78716c] mt-0.5">
+                        Pay the seller directly (cash / UPI) when you collect your order. No extra charges.
+                      </p>
+                    </div>
+                  </label>
+
+                  <div className="flex gap-3 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3">
+                    <StoreIcon size={15} className="text-[#059669] shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#065f46] leading-relaxed">
+                      No online payment required. The seller will contact you to confirm pickup details.
+                    </p>
                   </div>
-                </label>
-              </div>
+                </div>
+              ) : (
+                /* ── Shipping: standard payment options ── */
+                <div className="space-y-3 mb-6">
+                  {/* Online Payment — disabled until Razorpay is configured */}
+                  <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e7e5e4] opacity-50 cursor-not-allowed">
+                    <input type="radio" name="pay" value="razorpay" disabled className="mt-0.5 accent-[#059669]" />
+                    <div>
+                      <p className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
+                        Online Payment
+                        <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md">Coming Soon</span>
+                      </p>
+                      <p className="text-xs text-[#78716c] mt-0.5">Pay via UPI, card, or netbanking (Razorpay)</p>
+                    </div>
+                  </label>
+
+                  {/* Cash on Delivery */}
+                  <label className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
+                    (payMethod === "cod" ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
+                    <input type="radio" name="pay" value="cod" checked={payMethod === "cod"}
+                      onChange={() => setPayMethod("cod")} className="mt-0.5 accent-[#059669]" />
+                    <div>
+                      <p className="font-semibold text-sm text-[#1c1917]">Cash on Delivery</p>
+                      <p className="text-xs text-[#78716c] mt-0.5">Pay Rs.30 extra COD handling charge</p>
+                    </div>
+                  </label>
+                </div>
+              )}
+
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>
               )}
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
                 <Button size="lg" loading={loading} onClick={placeOrder} className="flex-1">
-                  Place Order{quote ? " -- Rs." + quote.totalAmount.toLocaleString("en-IN") : ""}
+                  {isPickup
+                    ? `Place Order — Rs.${cartTotal.toLocaleString("en-IN")} (pay at pickup)`
+                    : `Place Order${quote ? " -- Rs." + quote.totalAmount.toLocaleString("en-IN") : ""}`}
                 </Button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Order summary sidebar */}
+        {/* ── Order summary sidebar ── */}
         <div>
           <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5 sticky top-20">
             <h3 className="font-bold text-[#1c1917] mb-4 flex items-center gap-2">
@@ -254,7 +368,18 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-[#57534e]">
                 <span>Subtotal</span><span>Rs.{cartTotal.toLocaleString("en-IN")}</span>
               </div>
-              {quote ? (
+              {isPickup ? (
+                <>
+                  <div className="flex justify-between text-[#57534e]">
+                    <span>Shipping</span>
+                    <span className="text-[#059669] font-medium">Free (Pickup)</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-[#1c1917] pt-2 border-t border-[#e7e5e4]">
+                    <span>Total</span>
+                    <span className="text-[#059669]">Rs.{cartTotal.toLocaleString("en-IN")}</span>
+                  </div>
+                </>
+              ) : quote ? (
                 <>
                   <div className="flex justify-between text-[#57534e]">
                     <span>Shipping</span>
@@ -272,6 +397,15 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
+
+            {/* Delivery mode badge in sidebar */}
+            {deliveryMode && (
+              <div className={"mt-3 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg " +
+                (isPickup ? "bg-amber-50 text-amber-700" : "bg-[#f7f8fa] text-[#57534e]")}>
+                {isPickup ? <StoreIcon size={12} /> : <Truck size={12} />}
+                {isPickup ? "Local Pickup — Free" : "Seller Ships"}
+              </div>
+            )}
           </div>
         </div>
       </div>
