@@ -123,7 +123,12 @@ function LoginForm() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">Password</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-[#0f172a]">Password</label>
+                <Link href="/forgot-password" className="text-xs text-[#ea580c] hover:underline font-medium">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   type={showPwd ? "text" : "password"} value={password}
