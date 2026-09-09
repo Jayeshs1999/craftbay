@@ -61,7 +61,7 @@ export default function HomePage() {
       {/* STATS */}
       <section className="bg-white border-b border-[#e2e8f0] py-8 px-4">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[["10,000+","Products"],["5,000+","Sellers"],["50,000+","Happy Buyers"],["99.9%","Uptime"]].map(([v,l]) => (
+          {[["Just Launched 🚀","Platform"],["Growing","Seller Community"],["100% Free","No Commission"],["99.9%","Uptime"]].map(([v,l]) => (
             <div key={l}>
               <p className="text-3xl font-extrabold text-[#059669]">{v}</p>
               <p className="text-sm text-[#64748b] mt-1 font-medium">{l}</p>
@@ -121,7 +121,7 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-extrabold text-white mb-3">Ready to sell your creations?</h2>
           <p className="text-[#94a3b8] mb-8">
-            Join thousands of makers selling on Instagram and Facebook -- now also on Banavoo.in with delivery handled.
+            Be one of the first creators on Banavoo.in. List your products, reach buyers, and get delivery handled — all for free.
           </p>
           <Link href="/become-seller">
             <button className="inline-flex items-center gap-2 bg-[#059669] text-white font-bold px-8 py-4 rounded-xl text-base hover:bg-[#047857] active:scale-[0.98] shadow-lg transition-all cursor-pointer">
