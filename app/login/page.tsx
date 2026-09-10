@@ -6,6 +6,7 @@ import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
+import toast from "react-hot-toast";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL ||
@@ -39,16 +40,17 @@ function LoginForm() {
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [showPwd,  setShowPwd]  = useState(false);
-  const [error,    setError]    = useState(
-    searchParams.get("error") === "oauth_failed"
-      ? "Google sign-in failed. Please try again."
-      : ""
-  );
   const [loading,  setLoading]  = useState(false);
+
+  // Show OAuth error as toast on mount
+  useState(() => {
+    if (searchParams.get("error") === "oauth_failed") {
+      toast.error("Google sign-in failed. Please try again.");
+    }
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
@@ -56,7 +58,7 @@ function LoginForm() {
       router.push(redirect || (data.isSeller ? "/seller" : "/dashboard"));
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Invalid email or password");
+      toast.error(e.response?.data?.message || "Invalid email or password");
       setLoading(false);
     }
   }
@@ -90,12 +92,6 @@ function LoginForm() {
             </button>
             <h1 className="text-xl font-bold text-[#0f172a]">Sign In</h1>
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-              {error}
-            </div>
-          )}
 
           {/* Google Sign-In */}
           <a

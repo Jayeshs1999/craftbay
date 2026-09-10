@@ -1,5 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
@@ -11,6 +12,14 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   return (
     <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: { fontSize: "14px", maxWidth: "380px" },
+          error: { duration: 5000 },
+        }}
+      />
       {!isAuth && <Navbar />}
       <main className={isAuth ? "flex-grow" : "flex-grow"}>{children}</main>
       {!isAuth && <Footer />}

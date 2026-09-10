@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Store, CheckCircle, Palette, Truck, DollarSign } from "lucide-react";
+import toast from "react-hot-toast";
 
 const STATES = [
   "Andhra Pradesh","Assam","Bihar","Delhi","Goa","Gujarat","Haryana",
@@ -23,7 +24,6 @@ export default function BecomeSellerPage() {
   const [form, setForm] = useState({
     shopName: "", shopDesc: "", shopCity: "", shopState: "", pickupPincode: "",
   });
-  const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!user) return (
@@ -51,7 +51,6 @@ export default function BecomeSellerPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       await api.put("/auth/become-seller", form);
@@ -59,7 +58,7 @@ export default function BecomeSellerPage() {
       setUser(data);
       router.push("/seller");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to activate seller account");
+      toast.error(err.response?.data?.message || "Failed to activate seller account");
     } finally {
       setLoading(false);
     }
@@ -102,12 +101,6 @@ export default function BecomeSellerPage() {
       <section className="max-w-xl mx-auto px-4 pb-16">
         <div className="bg-white rounded-2xl border border-[#e7e5e4] p-8 shadow-sm">
           <h2 className="text-xl font-bold text-[#1c1917] mb-6">Set Up Your Shop</h2>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input

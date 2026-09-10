@@ -9,6 +9,7 @@ import {
   CheckCircle, XCircle, Clock, Truck, Bell, Eye, ChevronDown,
   ChevronUp, Phone, Mail, RefreshCw,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ function NudgeModal({
       setSent(true);
       setTimeout(onDone, 1200);
     } catch (e: any) {
-      alert(e.response?.data?.message || "Failed to send nudge");
+      toast.error(e.response?.data?.message || "Failed to send nudge");
     } finally {
       setLoading(false);
     }
@@ -214,7 +215,7 @@ function OrderRow({
       });
       order.orderStatus = statusValue as any;
     } catch (e: any) {
-      alert(e.response?.data?.message || "Failed");
+      toast.error(e.response?.data?.message || "Failed to update status");
     } finally {
       setUpdating(false);
     }

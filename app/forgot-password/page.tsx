@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/services/api";
 import { ArrowLeft, Mail, Eye, EyeOff, Loader2, CheckCircle2, XCircle, RefreshCw, CheckCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -69,19 +70,17 @@ function EmailStep({
   onSent: (email: string) => void;
 }) {
   const [email,   setEmail]   = useState("");
-  const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       await api.post("/auth/send-reset-otp", { email });
       onSent(email.toLowerCase());
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Something went wrong. Try again.");
+      toast.error(e.response?.data?.message || "Something went wrong. Try again.");
       setLoading(false);
     }
   }
@@ -91,12 +90,6 @@ function EmailStep({
       <p className="text-sm text-[#64748b] mb-6">
         Enter the email address for your account and we'll send you a 6-digit reset code.
       </p>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex flex-col gap-1">
@@ -140,7 +133,6 @@ function ResetStep({
   const [confirm,      setConfirm]      = useState("");
   const [showPwd,      setShowPwd]      = useState(false);
   const [showCnf,      setShowCnf]      = useState(false);
-  const [error,        setError]        = useState("");
   const [loading,      setLoading]      = useState(false);
   const [countdown,    setCountdown]    = useState(60);
   const [resending,    setResending]    = useState(false);
@@ -164,7 +156,6 @@ function ResetStep({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    setError("");
     setLoading(true);
     try {
       await api.post("/auth/reset-password", {
@@ -175,21 +166,20 @@ function ResetStep({
       onSuccess();
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Reset failed. Please try again.");
+      toast.error(e.response?.data?.message || "Reset failed. Please try again.");
       setLoading(false);
     }
   }
 
   async function handleResend() {
     setResending(true);
-    setError("");
     try {
       await api.post("/auth/send-reset-otp", { email });
       setCountdown(60);
       setOtp("");
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Failed to resend code.");
+      toast.error(e.response?.data?.message || "Failed to resend code.");
     } finally {
       setResending(false);
     }
@@ -205,12 +195,6 @@ function ResetStep({
           <p className="text-sm font-semibold text-[#ea580c] truncate">{email}</p>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* OTP boxes */}

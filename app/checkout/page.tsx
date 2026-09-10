@@ -8,6 +8,7 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon } from "lucide-react";
 import { useRequireAuth } from "@/utils/useRequireAuth";
+import toast from "react-hot-toast";
 
 const STATES = [
   "Andhra Pradesh","Assam","Bihar","Delhi","Goa","Gujarat","Haryana",
@@ -36,7 +37,6 @@ export default function CheckoutPage() {
   const [payMethod,    setPayMethod]    = useState<"razorpay" | "cod">("cod");
   const [quote,        setQuote]        = useState<{ shippingCharge: number; platformFee: number; totalAmount: number } | null>(null);
   const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState("");
 
   const isPickup = deliveryMode === "pickup";
 
@@ -101,7 +101,6 @@ export default function CheckoutPage() {
 
   async function placeOrder() {
     setLoading(true);
-    setError("");
     try {
       // For pickup, we still need a minimal address (contact info); use a placeholder for location fields
       const orderAddress = isPickup
@@ -124,7 +123,7 @@ export default function CheckoutPage() {
       clearCart();
       router.push(`/order-success?id=${data._id}`);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to place order. Please try again.");
+      toast.error(err.response?.data?.message || "Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -326,9 +325,6 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>
-              )}
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
                 <Button size="lg" loading={loading} onClick={placeOrder} className="flex-1">

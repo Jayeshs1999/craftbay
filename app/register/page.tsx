@@ -6,6 +6,7 @@ import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, ArrowLeft, Mail, RefreshCw } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
+import toast from "react-hot-toast";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL ||
@@ -92,7 +93,6 @@ function RegistrationForm({
   const [confirm,  setConfirm]  = useState("");
   const [showPwd,  setShowPwd]  = useState(false);
   const [showCnf,  setShowCnf]  = useState(false);
-  const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
 
   const rules = {
@@ -105,28 +105,21 @@ function RegistrationForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!rules.match) { setError("Passwords do not match"); return; }
-    if (!strong)      { setError("Password does not meet requirements"); return; }
-    setError("");
+    if (!rules.match) { toast.error("Passwords do not match"); return; }
+    if (!strong)      { toast.error("Password does not meet requirements"); return; }
     setLoading(true);
     try {
       await api.post("/auth/send-otp", { name, email, password, phone: phone || undefined });
       onOtpSent(email.toLowerCase());
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Failed to send OTP. Try again.");
+      toast.error(e.response?.data?.message || "Failed to send OTP. Try again.");
       setLoading(false);
     }
   }
 
   return (
     <>
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-          {error}
-        </div>
-      )}
-
       {/* Google Sign-Up */}
       <a
         href={GOOGLE_AUTH_URL}
@@ -243,7 +236,6 @@ function OtpVerifyForm({
   onVerified: (data: any) => void;
 }) {
   const [otp,      setOtp]      = useState("");
-  const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
   const [resending, setResending] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(30);
@@ -260,14 +252,13 @@ function OtpVerifyForm({
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
     if (!otpFilled) return;
-    setError("");
     setLoading(true);
     try {
       const { data } = await api.post("/auth/verify-otp", { email, otp: otp.trim() });
       onVerified(data);
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || "Verification failed. Try again.");
+      toast.error(e.response?.data?.message || "Verification failed. Try again.");
       setLoading(false);
     }
   }
@@ -287,12 +278,6 @@ function OtpVerifyForm({
           <p className="text-sm font-semibold text-[#059669] truncate">{email}</p>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-5">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleVerify} className="space-y-5">
         <div className="flex flex-col gap-3">

@@ -6,6 +6,7 @@ import api from "@/services/api";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Upload, X, Plus } from "lucide-react";
+import toast from "react-hot-toast";
 
 const CATEGORIES = [
   "Jewellery","Home Decor","Clothing","Pottery","Paintings",
@@ -25,7 +26,6 @@ export default function NewProductPage() {
   const [images,   setImages]   = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const t = e.target as HTMLInputElement;
@@ -34,7 +34,7 @@ export default function NewProductPage() {
 
   function handleImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
-    if (images.length + files.length > 6) { setError("Max 6 images"); return; }
+    if (images.length + files.length > 6) { toast.error("Max 6 images"); return; }
     setImages((prev) => [...prev, ...files]);
     files.forEach((f) => {
       const reader = new FileReader();
@@ -51,8 +51,7 @@ export default function NewProductPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (images.length === 0) { setError("Please add at least one image"); return; }
-    setError("");
+    if (images.length === 0) { toast.error("Please add at least one image"); return; }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -61,7 +60,7 @@ export default function NewProductPage() {
       await api.post("/products", fd, { headers: { "Content-Type": "multipart/form-data" } });
       router.push("/seller");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to create product");
+      toast.error(err.response?.data?.message || "Failed to create product");
     } finally {
       setLoading(false);
     }
@@ -77,10 +76,6 @@ export default function NewProductPage() {
         <h1 className="text-2xl font-extrabold text-[#1c1917]">Add New Product</h1>
         <p className="text-[#78716c] text-sm">List your handmade creation for buyers to discover</p>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-6">{error}</div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
