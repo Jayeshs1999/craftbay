@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import toast from "react-hot-toast";
+import FieldLabel from "@/components/FieldLabel";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL ||
@@ -110,7 +111,7 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#0f172a]">Email</label>
+              <FieldLabel required>Email</FieldLabel>
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com" required autoComplete="email"
@@ -120,7 +121,7 @@ function LoginForm() {
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[#0f172a]">Password</label>
+                <FieldLabel required>Password</FieldLabel>
                 <Link href="/forgot-password" className="text-xs text-[#ea580c] hover:underline font-medium">
                   Forgot password?
                 </Link>

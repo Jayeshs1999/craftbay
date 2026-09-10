@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle, ArrowLeft, Mail, RefreshCw } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import toast from "react-hot-toast";
+import FieldLabel from "@/components/FieldLabel";
 
 const GOOGLE_AUTH_URL =
   process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL ||
@@ -138,7 +139,7 @@ function RegistrationForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Name */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">Full Name *</label>
+          <FieldLabel required>Full Name</FieldLabel>
           <input value={name} onChange={(e) => setName(e.target.value)}
             placeholder="Priya Sharma" required autoComplete="name"
             className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
@@ -146,7 +147,7 @@ function RegistrationForm({
 
         {/* Email */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">Email *</label>
+          <FieldLabel required>Email</FieldLabel>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com" required autoComplete="email"
             className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
@@ -154,9 +155,7 @@ function RegistrationForm({
 
         {/* Phone */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">
-            Phone <span className="text-[#94a3b8] font-normal">(optional)</span>
-          </label>
+          <FieldLabel>Phone</FieldLabel>
           <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
             placeholder="98765 43210" autoComplete="tel"
             className="w-full rounded-xl border border-[#e2e8f0] px-3.5 py-2.5 text-sm outline-none placeholder:text-[#94a3b8] focus:border-[#059669] focus:ring-2 focus:ring-[#ecfdf5] transition-colors" />
@@ -164,7 +163,7 @@ function RegistrationForm({
 
         {/* Password */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">Password *</label>
+          <FieldLabel required>Password</FieldLabel>
           <div className="relative">
             <input type={showPwd ? "text" : "password"} value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -186,7 +185,7 @@ function RegistrationForm({
 
         {/* Confirm */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">Confirm Password *</label>
+          <FieldLabel required>Confirm Password</FieldLabel>
           <div className="relative">
             <input type={showCnf ? "text" : "password"} value={confirm}
               onChange={(e) => setConfirm(e.target.value)}

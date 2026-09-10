@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Upload, X, Plus } from "lucide-react";
 import toast from "react-hot-toast";
+import FieldLabel from "@/components/FieldLabel";
 
 const CATEGORIES = [
   "Jewellery","Home Decor","Clothing","Pottery","Paintings",
@@ -115,7 +116,7 @@ export default function NewProductPage() {
             label="Product Name *" name="name" value={form.name} onChange={handleChange}
             placeholder="e.g. Hand-painted Terracotta Vase" required />
           <div>
-            <label className="text-sm font-medium text-[#1c1917] block mb-1">Description *</label>
+            <FieldLabel required>Description</FieldLabel>
             <textarea
               name="description" value={form.description} onChange={handleChange} rows={4} required
               placeholder="Describe your product -- materials, dimensions, how it was made, care instructions..."
@@ -126,7 +127,7 @@ export default function NewProductPage() {
             placeholder="One-line tagline shown on the product card" />
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-[#1c1917] block mb-1">Category *</label>
+              <FieldLabel required>Category</FieldLabel>
               <select
                 name="category" value={form.category} onChange={handleChange} required
                 className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">

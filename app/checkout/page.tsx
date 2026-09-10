@@ -9,6 +9,7 @@ import Input from "@/components/Input";
 import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon } from "lucide-react";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 import toast from "react-hot-toast";
+import FieldLabel from "@/components/FieldLabel";
 
 const STATES = [
   "Andhra Pradesh","Assam","Bihar","Delhi","Goa","Gujarat","Haryana",
@@ -209,7 +210,7 @@ export default function CheckoutPage() {
                     </div>
                     <Input label="City *" name="city" value={address.city} onChange={handleAddrChange} required />
                     <div>
-                      <label className="text-sm font-medium text-[#1c1917] block mb-1">State *</label>
+                      <FieldLabel required>State</FieldLabel>
                       <select name="state" value={address.state} onChange={handleAddrChange} required
                         className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
                         <option value="">Select state</option>

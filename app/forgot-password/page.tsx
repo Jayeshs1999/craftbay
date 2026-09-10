@@ -5,6 +5,7 @@ import Link from "next/link";
 import api from "@/services/api";
 import { ArrowLeft, Mail, Eye, EyeOff, Loader2, CheckCircle2, XCircle, RefreshCw, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import FieldLabel from "@/components/FieldLabel";
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ function EmailStep({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">Email address</label>
+          <FieldLabel required>Email address</FieldLabel>
           <input
             type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com" required autoComplete="email"
@@ -221,7 +222,7 @@ function ResetStep({
 
         {/* New password */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">New password</label>
+          <FieldLabel required>New password</FieldLabel>
           <div className="relative">
             <input
               type={showPwd ? "text" : "password"} value={newPassword}
@@ -245,7 +246,7 @@ function ResetStep({
 
         {/* Confirm password */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#0f172a]">Confirm new password</label>
+          <FieldLabel required>Confirm new password</FieldLabel>
           <div className="relative">
             <input
               type={showCnf ? "text" : "password"} value={confirm}

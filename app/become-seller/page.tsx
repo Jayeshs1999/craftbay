@@ -8,6 +8,7 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { Store, CheckCircle, Palette, Truck, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
+import FieldLabel from "@/components/FieldLabel";
 
 const STATES = [
   "Andhra Pradesh","Assam","Bihar","Delhi","Goa","Gujarat","Haryana",
@@ -107,7 +108,7 @@ export default function BecomeSellerPage() {
               label="Shop Name *" name="shopName" value={form.shopName}
               onChange={handleChange} placeholder="e.g. Priya's Pottery Studio" required />
             <div>
-              <label className="text-sm font-medium text-[#1c1917] block mb-1">Shop Description</label>
+              <FieldLabel>Shop Description</FieldLabel>
               <textarea
                 name="shopDesc" value={form.shopDesc} onChange={handleChange} rows={3}
                 placeholder="Tell buyers what makes your shop unique..."
@@ -117,7 +118,7 @@ export default function BecomeSellerPage() {
               label="City *" name="shopCity" value={form.shopCity}
               onChange={handleChange} placeholder="Pune" required />
             <div>
-              <label className="text-sm font-medium text-[#1c1917] block mb-1">State *</label>
+              <FieldLabel required>State</FieldLabel>
               <select
                 name="shopState" value={form.shopState} onChange={handleChange} required
                 className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669]">
