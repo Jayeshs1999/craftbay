@@ -11,6 +11,20 @@ export interface User {
   wishlist?: string[];
 }
 
+export interface DeliveryConfig {
+  selfShipEnabled: boolean;
+  freeShippingAbove: number;
+  localCharge: number;
+  regionalCharge: number;
+  nationalCharge: number;
+  codEnabled: boolean;
+  codExtraCharge: number;
+  estimatedDaysLocal: number;
+  estimatedDaysRegional: number;
+  estimatedDaysNational: number;
+  deliveryNote: string;
+}
+
 export interface SellerProfile {
   shopName: string;
   shopDesc?: string;
@@ -21,6 +35,7 @@ export interface SellerProfile {
   rating: number;
   totalSales: number;
   isVerified: boolean;
+  deliveryConfig?: DeliveryConfig;
 }
 
 export interface ProductImage {

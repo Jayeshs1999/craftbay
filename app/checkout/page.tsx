@@ -6,7 +6,7 @@ import { useCartStore } from "@/store/cartStore";
 import { DeliveryMode } from "@/types";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon } from "lucide-react";
+import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon, Loader2 } from "lucide-react";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 import toast from "react-hot-toast";
 import FieldLabel from "@/components/FieldLabel";
@@ -19,9 +19,9 @@ const STATES = [
   "Uttar Pradesh","Uttarakhand","West Bengal",
 ];
 
-const DELIVERY_MODES: { mode: DeliveryMode; label: string; desc: string }[] = [
-  { mode: "self_ship", label: "Seller Ships",      desc: "Seller ships via their own courier. Rates as stated by seller." },
-  { mode: "pickup",    label: "Local Pickup — Free", desc: "Pick up directly from the seller. Best for local buyers." },
+const DELIVERY_MODE_META: { mode: DeliveryMode; label: string; baseDesc: string }[] = [
+  { mode: "self_ship", label: "Seller Ships",       baseDesc: "Seller ships via their own courier." },
+  { mode: "pickup",    label: "Local Pickup — Free", baseDesc: "Pick up directly from the seller. No shipping fee." },
 ];
 
 export default function CheckoutPage() {
@@ -36,7 +36,10 @@ export default function CheckoutPage() {
   const [step,         setStep]         = useState<1 | 2 | 3>(1);
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("self_ship");
   const [payMethod,    setPayMethod]    = useState<"razorpay" | "cod">("cod");
-  const [quote,        setQuote]        = useState<{ shippingCharge: number; platformFee: number; totalAmount: number } | null>(null);
+  const [quote,        setQuote]        = useState<{ shippingCharge: number; platformFee: number; totalAmount: number; deliveryNotes?: string[] } | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  // per-mode quote cache: keyed by deliveryMode so step 2 can show charges for each option
+  const [modeQuotes,   setModeQuotes]   = useState<Partial<Record<DeliveryMode, { shippingCharge: number; totalAmount: number; deliveryNotes?: string[] }>>>({});
   const [loading,      setLoading]      = useState(false);
 
   const isPickup = deliveryMode === "pickup";
@@ -81,24 +84,43 @@ export default function CheckoutPage() {
     setAddress((a) => ({ ...a, [e.target.name]: e.target.value }));
   }
 
-  async function fetchQuote() {
-    // For pickup, quote is always just the cart total (no shipping/fees)
-    if (isPickup) {
-      setQuote({ shippingCharge: 0, platformFee: 0, totalAmount: cartTotal });
-      return;
-    }
+  // Fetch quotes for all shipping modes as soon as we have a valid address (entering step 2+)
+  async function fetchAllQuotes() {
+    if (!address.city || !address.state) return;
+    setQuoteLoading(true);
+    const cartItems = items.map((i) => ({ product: i.product._id, quantity: i.quantity, variant: i.variant }));
+
+    // pickup is always free — no API call needed
+    const pickupQuote = { shippingCharge: 0, totalAmount: cartTotal };
+
     try {
       const { data } = await api.post("/orders/quote", {
-        cartItems: items.map((i) => ({ product: i.product._id, quantity: i.quantity, variant: i.variant })),
-        shippingAddress: address, deliveryMode, paymentMethod: payMethod,
+        cartItems, shippingAddress: address, deliveryMode: "self_ship", paymentMethod: payMethod,
       });
-      setQuote(data);
-    } catch { }
+      setModeQuotes({ self_ship: data, pickup: pickupQuote });
+      // also set active quote
+      setQuote(deliveryMode === "pickup" ? { shippingCharge: 0, platformFee: 0, totalAmount: cartTotal } : data);
+    } catch {
+      setModeQuotes({ pickup: pickupQuote });
+    } finally {
+      setQuoteLoading(false);
+    }
   }
 
+  // Re-fetch quotes whenever payMethod changes (COD surcharge affects amount)
   useEffect(() => {
-    if (step === 3) fetchQuote();
-  }, [step, deliveryMode, payMethod]);
+    if (step >= 2) fetchAllQuotes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, payMethod]);
+
+  // Keep active quote in sync when user switches delivery mode
+  useEffect(() => {
+    const q = modeQuotes[deliveryMode];
+    if (q) setQuote(deliveryMode === "pickup"
+      ? { shippingCharge: 0, platformFee: 0, totalAmount: cartTotal }
+      : { ...q, platformFee: 0 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveryMode, modeQuotes]);
 
   async function placeOrder() {
     setLoading(true);
@@ -234,18 +256,35 @@ export default function CheckoutPage() {
                 <Truck size={18} className="text-[#059669]" /> Delivery Method
               </h2>
               <div className="space-y-3 mb-6">
-                {DELIVERY_MODES.map(({ mode, label, desc }) => (
-                  <label key={mode}
-                    className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
-                      (deliveryMode === mode ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
-                    <input type="radio" name="delivery" value={mode} checked={deliveryMode === mode}
-                      onChange={() => setDeliveryMode(mode)} className="mt-0.5 accent-[#059669]" />
-                    <div>
-                      <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
-                      <p className="text-xs text-[#78716c] mt-0.5">{desc}</p>
-                    </div>
-                  </label>
-                ))}
+                {DELIVERY_MODE_META.map(({ mode, label, baseDesc }) => {
+                  const mq = modeQuotes[mode];
+                  const charge = mode === "pickup" ? 0 : mq?.shippingCharge;
+                  return (
+                    <label key={mode}
+                      className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
+                        (deliveryMode === mode ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
+                      <input type="radio" name="delivery" value={mode} checked={deliveryMode === mode}
+                        onChange={() => setDeliveryMode(mode)} className="mt-0.5 accent-[#059669]" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
+                          {quoteLoading ? (
+                            <Loader2 size={13} className="text-[#78716c] animate-spin shrink-0" />
+                          ) : charge !== undefined ? (
+                            <span className={"text-sm font-bold shrink-0 " + (charge === 0 ? "text-[#059669]" : "text-[#1c1917]")}>
+                              {charge === 0 ? "Free" : `Rs.${charge}`}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-[#78716c] mt-0.5">{baseDesc}
+                          {mode === "self_ship" && mq?.deliveryNotes && mq.deliveryNotes.length > 0 && (
+                            <span className="block mt-1 text-amber-700">{mq.deliveryNotes.join(" · ")}</span>
+                          )}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
 
               {/* Pickup extra info when selected */}
@@ -320,7 +359,18 @@ export default function CheckoutPage() {
                       onChange={() => setPayMethod("cod")} className="mt-0.5 accent-[#059669]" />
                     <div>
                       <p className="font-semibold text-sm text-[#1c1917]">Cash on Delivery</p>
-                      <p className="text-xs text-[#78716c] mt-0.5">Pay Rs.30 extra COD handling charge</p>
+                      <p className="text-xs text-[#78716c] mt-0.5">
+                        {modeQuotes.self_ship
+                          ? (() => {
+                              // COD surcharge = quote with COD - quote without COD (base charge)
+                              // We show the total shipping charge already includes it
+                              const codTotal = modeQuotes.self_ship.shippingCharge;
+                              return codTotal > 0
+                                ? `Rs.${codTotal} delivery charge (includes COD handling fee)`
+                                : "No extra COD charge for this order";
+                            })()
+                          : "Extra COD handling charge may apply"}
+                      </p>
                     </div>
                   </label>
                 </div>
@@ -331,7 +381,7 @@ export default function CheckoutPage() {
                 <Button size="lg" loading={loading} onClick={placeOrder} className="flex-1">
                   {isPickup
                     ? `Place Order — Rs.${cartTotal.toLocaleString("en-IN")} (pay at pickup)`
-                    : `Place Order${quote ? " -- Rs." + quote.totalAmount.toLocaleString("en-IN") : ""}`}
+                    : `Place Order${quote ? ` — Rs.${quote.totalAmount.toLocaleString("en-IN")}` : ""}`}
                 </Button>
               </div>
             </div>
@@ -386,6 +436,12 @@ export default function CheckoutPage() {
                     <span>Total</span>
                     <span className="text-[#059669]">Rs.{quote.totalAmount.toLocaleString("en-IN")}</span>
                   </div>
+                  {quote.deliveryNotes && quote.deliveryNotes.length > 0 && (
+                    <div className="mt-2 flex gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                      <Truck size={13} className="text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 leading-relaxed">{quote.deliveryNotes.join(" · ")}</p>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="flex justify-between font-bold text-[#1c1917] pt-2 border-t border-[#e7e5e4]">

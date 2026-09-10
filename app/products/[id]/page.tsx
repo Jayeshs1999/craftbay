@@ -2,17 +2,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import api from "@/services/api";
 import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail } from "lucide-react";
 import Button from "@/components/Button";
+import toast from "react-hot-toast";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const addItem = useCartStore((s) => s.addItem);
+  const addItem   = useCartStore((s) => s.addItem);
   const user = useAuthStore((s) => s.user);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,10 +157,16 @@ export default function ProductDetailPage() {
             <span className="text-xs text-[#78716c]">{product.stock} in stock</span>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mb-3">
-            <Button className="flex-1" size="lg" onClick={() => addItem(product, qty, variantStr || undefined)} disabled={product.stock === 0}>
+            <Button className="flex-1" size="lg" onClick={() => {
+              const result = addItem(product, qty, variantStr || undefined);
+              if (result === "ok") toast.success("Added to cart");
+            }} disabled={product.stock === 0}>
               <ShoppingCart size={18} /> {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>
-            <Button variant="outline" size="lg" onClick={() => { addItem(product, qty, variantStr || undefined); router.push("/cart"); }}>Buy Now</Button>
+            <Button variant="outline" size="lg" onClick={() => {
+              const result = addItem(product, qty, variantStr || undefined);
+              if (result === "ok") router.push("/cart");
+            }}>Buy Now</Button>
             <div className="flex gap-2">
               <Button variant="ghost" size="lg" className="!px-3" aria-label="Add to wishlist"><Heart size={18} /></Button>
               <Button variant="outline" size="lg" className="!px-3" onClick={shareProduct} aria-label="Share product"><Share2 size={18} /></Button>
@@ -191,12 +199,18 @@ export default function ProductDetailPage() {
               </div>))}
           </div>
           {product.seller && (
-            <div className="bg-[#ecfdf5] rounded-2xl p-4 border border-[#fcd9b0]">
-              <p className="text-xs text-[#78716c] mb-1">Sold by</p>
-              <p className="font-bold text-[#1c1917]">{(product.seller as any).sellerProfile?.shopName || (product.seller as any).name}</p>
-              {(product.seller as any).sellerProfile?.shopCity && (
-                <p className="text-xs text-[#78716c]">{(product.seller as any).sellerProfile.shopCity}, {(product.seller as any).sellerProfile.shopState}</p>)}
-            </div>)}
+            <Link href={`/shop/${(product.seller as any)._id}`}>
+              <div className="bg-[#ecfdf5] rounded-2xl p-4 border border-[#a7f3d0] hover:border-[#059669] hover:shadow-sm transition-all cursor-pointer">
+                <p className="text-xs text-[#78716c] mb-1">Sold by</p>
+                <p className="font-bold text-[#1c1917] hover:text-[#059669] transition-colors">
+                  {(product.seller as any).sellerProfile?.shopName || (product.seller as any).name}
+                </p>
+                {(product.seller as any).sellerProfile?.shopCity && (
+                  <p className="text-xs text-[#78716c]">{(product.seller as any).sellerProfile.shopCity}, {(product.seller as any).sellerProfile.shopState}</p>
+                )}
+                <p className="text-xs text-[#059669] font-medium mt-1">View all products from this seller →</p>
+              </div>
+            </Link>)}
         </div>
       </div>
       <div className="mt-12">

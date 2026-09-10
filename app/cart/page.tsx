@@ -2,11 +2,20 @@
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import Button from "@/components/Button";
-import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, Store } from "lucide-react";
 
 export default function CartPage() {
   const { items, removeItem, updateQty, total, clearCart } = useCartStore();
   const cartTotal = total();
+
+  // Seller info from the first item (all items are guaranteed same seller)
+  const sellerInfo = items.length > 0
+    ? (items[0].product.seller as any)
+    : null;
+  const shopName = sellerInfo?.sellerProfile?.shopName || sellerInfo?.name || null;
+  const shopCity = sellerInfo?.sellerProfile?.shopCity;
+  const shopState = sellerInfo?.sellerProfile?.shopState;
+  const sellerId  = sellerInfo?._id;
 
   if (items.length === 0) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-[#78716c]">
@@ -24,10 +33,31 @@ export default function CartPage() {
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
         Continue Shopping
       </a>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-extrabold text-[#1c1917]">Shopping Cart <span className="text-[#78716c] font-normal text-lg">({items.length} {items.length === 1 ? "item" : "items"})</span></h1>
         <button onClick={clearCart} className="text-sm text-red-500 hover:underline">Clear all</button>
       </div>
+
+      {/* Seller banner */}
+      {shopName && (
+        <div className="flex items-center gap-3 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3 mb-6">
+          <Store size={16} className="text-[#059669] shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#057a55] font-medium">
+              All items in your cart are from one seller
+            </p>
+            <p className="text-sm font-bold text-[#1c1917]">
+              {shopName}
+              {shopCity && <span className="font-normal text-[#78716c] ml-2 text-xs">{shopCity}{shopState ? `, ${shopState}` : ""}</span>}
+            </p>
+          </div>
+          {sellerId && (
+            <Link href={`/shop/${sellerId}`} className="shrink-0 text-xs font-semibold text-[#059669] hover:underline">
+              View Shop →
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Items list */}

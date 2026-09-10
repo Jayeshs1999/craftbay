@@ -5,6 +5,8 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
 import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
+import toast from "react-hot-toast";
+
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +20,17 @@ export default function ProductCard({ product, onWishlist, wishlisted, priority 
   const addItem  = useCartStore((s) => s.addItem);
   const mainImg  = product.images.find((i) => i.isMain)?.url || product.images[0]?.url;
   const [imgErr, setImgErr] = useState(false);
+  const [added, setAdded]   = useState(false);
+
+  function handleAddToCart() {
+    const result = addItem(product);
+    if (result === "ok") {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+      toast.success("Added to cart");
+    }
+    // "conflict" → SellerConflictModal auto-shows via store state
+  }
 
   const discount = product.comparePrice && product.comparePrice > product.price
     ? Math.round((1 - product.price / product.comparePrice) * 100)
@@ -93,6 +106,16 @@ export default function ProductCard({ product, onWishlist, wishlisted, priority 
             {product.name}
           </h3>
         </Link>
+        {/* Seller shop link */}
+        {product.seller && (product.seller as any)._id && (
+          <Link
+            href={`/shop/${(product.seller as any)._id}`}
+            className="text-[10px] text-[#78716c] hover:text-[#059669] transition-colors truncate block mt-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            🏪 {(product.seller as any).sellerProfile?.shopName || (product.seller as any).name}
+          </Link>
+        )}
 
         {/* Rating */}
         <div className="flex items-center gap-1 mt-1.5">
@@ -120,12 +143,13 @@ export default function ProductCard({ product, onWishlist, wishlisted, priority 
 
         {/* Add to cart */}
         <button
-          onClick={() => addItem(product)}
+          onClick={handleAddToCart}
           disabled={product.stock === 0}
-          className="mt-3 w-full flex items-center justify-center gap-1.5 bg-[#ecfdf5] text-[#059669] font-semibold text-sm py-2 rounded-xl hover:bg-[#059669] hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className={"mt-3 w-full flex items-center justify-center gap-1.5 font-semibold text-sm py-2 rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer " +
+            (added ? "bg-[#059669] text-white" : "bg-[#ecfdf5] text-[#059669] hover:bg-[#059669] hover:text-white")}
         >
           <ShoppingCart size={14} />
-          {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+          {product.stock === 0 ? "Out of Stock" : added ? "Added!" : "Add to Cart"}
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import SellerConflictModal from "./SellerConflictModal";
 
 const AUTH_ROUTES = ["/login", "/register"];
 
@@ -21,6 +22,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         }}
       />
       {!isAuth && <Navbar />}
+      <SellerConflictModal />
       <main className={isAuth ? "flex-grow" : "flex-grow"}>{children}</main>
       {!isAuth && <Footer />}
     </>

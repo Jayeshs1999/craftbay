@@ -39,9 +39,9 @@ export default function HomePage() {
             candles to clothing -- list anything creative, reach buyers everywhere.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/products">
+            <Link href="/shops">
               <button className="inline-flex items-center gap-2 bg-white text-[#047857] font-bold px-7 py-3.5 rounded-xl text-sm shadow-lg hover:shadow-xl hover:bg-emerald-50 active:scale-[0.98] transition-all cursor-pointer">
-                Browse Products <ArrowRight size={16} />
+                Browse Shops <ArrowRight size={16} />
               </button>
             </Link>
             <Link href="/become-seller">
@@ -86,10 +86,15 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
-        <div className="text-center mt-8">
-          <Link href="/products">
+        <div className="text-center mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link href="/shops">
             <button className="inline-flex items-center gap-2 bg-[#059669] text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-[#047857] shadow-sm hover:shadow transition-all cursor-pointer">
-              View All Products <ArrowRight size={16} />
+              Browse All Shops <ArrowRight size={16} />
+            </button>
+          </Link>
+          <Link href="/products">
+            <button className="inline-flex items-center gap-2 bg-white border border-[#e2e8f0] text-[#0f172a] px-6 py-3 rounded-xl text-sm font-semibold hover:border-[#059669] hover:text-[#059669] transition-all cursor-pointer">
+              View All Products
             </button>
           </Link>
         </div>

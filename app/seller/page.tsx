@@ -3,17 +3,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/services/api";
-import { Product, Order, OrderStatus, OrderItem } from "@/types";
+import { Product, Order, OrderStatus, OrderItem, DeliveryConfig } from "@/types";
 import {
   Package, ShoppingBag, Eye, TrendingUp, Plus, Trash2,
   Truck, CheckCircle, X, Phone, MapPin, User as UserIcon,
   ClipboardList, Clock, XCircle, ChevronDown, ChevronUp,
-  Hash, AlertCircle, StoreIcon,
+  Hash, AlertCircle, StoreIcon, Settings,
 } from "lucide-react";
 import Button from "@/components/Button";
 import { useRequireAuth } from "@/utils/useRequireAuth";
+import toast from "react-hot-toast";
 
-type Tab = "overview" | "products" | "orders";
+type Tab = "overview" | "products" | "orders" | "settings";
 
 /** Buyer is populated by the API with name/email/phone */
 interface PopulatedBuyer {
@@ -387,6 +388,24 @@ export default function SellerDashboardPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderFilter, setOrderFilter] = useState<string>("all");
 
+  // ── Delivery config state ───────────────────────────────────────────────────
+  const DEFAULT_DELIVERY_CFG: DeliveryConfig = {
+    selfShipEnabled: true,
+    freeShippingAbove: 0,
+    localCharge: 40,
+    regionalCharge: 60,
+    nationalCharge: 80,
+    codEnabled: true,
+    codExtraCharge: 30,
+    estimatedDaysLocal: 2,
+    estimatedDaysRegional: 4,
+    estimatedDaysNational: 7,
+    deliveryNote: "",
+  };
+  const [deliveryCfg,     setDeliveryCfg]     = useState<DeliveryConfig>(DEFAULT_DELIVERY_CFG);
+  const [cfgLoading,      setCfgLoading]      = useState(false);
+  const [cfgSaving,       setCfgSaving]       = useState(false);
+
   async function loadData() {
     setLoading(true);
     try {
@@ -447,6 +466,32 @@ export default function SellerDashboardPage() {
     }));
   }
 
+  async function loadDeliveryConfig() {
+    setCfgLoading(true);
+    try {
+      const { data } = await api.get("/sellers/delivery-config");
+      setDeliveryCfg(data);
+    } catch { } finally { setCfgLoading(false); }
+  }
+
+  async function saveDeliveryConfig(e: React.FormEvent) {
+    e.preventDefault();
+    setCfgSaving(true);
+    try {
+      const { data } = await api.put("/sellers/delivery-config", deliveryCfg);
+      setDeliveryCfg(data);
+      toast.success("Delivery settings saved!");
+    } catch {
+      toast.error("Failed to save delivery settings.");
+    } finally { setCfgSaving(false); }
+  }
+
+  // Load delivery config when switching to settings tab
+  useEffect(() => {
+    if (tab === "settings" && !cfgLoading) loadDeliveryConfig();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
   const filteredOrders = orderFilter === "all"
     ? orders
     : orders.filter((o) => o.orderStatus === orderFilter);
@@ -487,12 +532,14 @@ export default function SellerDashboardPage() {
       </div>
 
       {/* Tab nav */}
-      <div className="flex border-b border-[#e7e5e4] mb-8">
-        {(["overview","products","orders"] as Tab[]).map((t) => (
+      <div className="flex border-b border-[#e7e5e4] mb-8 overflow-x-auto">
+        {(["overview","products","orders","settings"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={"px-5 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition-colors " +
+            className={"px-5 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition-colors whitespace-nowrap " +
               (tab === t ? "border-[#059669] text-[#059669]" : "border-transparent text-[#78716c] hover:text-[#1c1917]")}>
-            {t}
+            {t === "settings" ? (
+              <span className="flex items-center gap-1.5"><Settings size={13} />Settings</span>
+            ) : t}
             {t === "orders" && stats.pendingOrders > 0 && (
               <span className="ml-1.5 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
                 {stats.pendingOrders}
@@ -697,6 +744,169 @@ export default function SellerDashboardPage() {
                     );
                   })}
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* SETTINGS — Delivery Configuration */}
+          {tab === "settings" && (
+            <div className="max-w-2xl">
+              <h2 className="text-lg font-bold text-[#1c1917] mb-1 flex items-center gap-2">
+                <Settings size={18} className="text-[#059669]" /> Delivery Settings
+              </h2>
+              <p className="text-sm text-[#78716c] mb-6">
+                Configure how you charge buyers for delivery when they choose <span className="font-medium text-[#1c1917]">Seller Ships</span>.
+                These rates are shown to buyers at checkout.
+              </p>
+
+              {cfgLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-12 rounded-xl" />)}
+                </div>
+              ) : (
+                <form onSubmit={saveDeliveryConfig} className="space-y-6">
+
+                  {/* Enable/disable self-ship */}
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5">
+                    <label className="flex items-center justify-between gap-4 cursor-pointer">
+                      <div>
+                        <p className="font-semibold text-sm text-[#1c1917]">Enable Seller Shipping</p>
+                        <p className="text-xs text-[#78716c] mt-0.5">
+                          Allow buyers to choose &quot;Seller Ships&quot; at checkout. Disable to hide that option.
+                        </p>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={deliveryCfg.selfShipEnabled}
+                          onChange={(e) => setDeliveryCfg((c) => ({ ...c, selfShipEnabled: e.target.checked }))}
+                        />
+                        <div
+                          onClick={() => setDeliveryCfg((c) => ({ ...c, selfShipEnabled: !c.selfShipEnabled }))}
+                          className={"w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0 " +
+                            (deliveryCfg.selfShipEnabled ? "bg-[#059669]" : "bg-[#e7e5e4]")}>
+                          <div className={"w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 " +
+                            (deliveryCfg.selfShipEnabled ? "translate-x-5.5 ml-0.5" : "translate-x-0.5 ml-0.5")} />
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Delivery charges by zone */}
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-4">
+                    <h3 className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
+                      <Truck size={15} className="text-[#059669]" /> Delivery Charges by Zone
+                    </h3>
+                    <p className="text-xs text-[#78716c] -mt-1">
+                      Zone is determined by comparing buyer&apos;s city/state to your shop location.
+                    </p>
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      {[
+                        { key: "localCharge",    label: "Same City (Local)", days: "estimatedDaysLocal",    daysLabel: "Est. days" },
+                        { key: "regionalCharge", label: "Same State (Regional)", days: "estimatedDaysRegional", daysLabel: "Est. days" },
+                        { key: "nationalCharge", label: "Other States (National)", days: "estimatedDaysNational", daysLabel: "Est. days" },
+                      ].map(({ key, label, days, daysLabel }) => (
+                        <div key={key} className="space-y-2">
+                          <label className="text-xs font-medium text-[#57534e]">{label}</label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#78716c]">Rs.</span>
+                            <input
+                              type="number" min={0} max={9999}
+                              value={deliveryCfg[key as keyof DeliveryConfig] as number}
+                              onChange={(e) => setDeliveryCfg((c) => ({ ...c, [key]: Number(e.target.value) }))}
+                              className="w-full rounded-xl border border-[#e7e5e4] pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#059669]"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number" min={1} max={30}
+                              value={deliveryCfg[days as keyof DeliveryConfig] as number}
+                              onChange={(e) => setDeliveryCfg((c) => ({ ...c, [days]: Number(e.target.value) }))}
+                              className="w-16 rounded-xl border border-[#e7e5e4] px-2 py-1.5 text-xs focus:outline-none focus:border-[#059669]"
+                            />
+                            <span className="text-xs text-[#78716c]">{daysLabel}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Free shipping threshold */}
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-3">
+                    <h3 className="font-semibold text-sm text-[#1c1917]">Free Shipping Threshold</h3>
+                    <p className="text-xs text-[#78716c]">
+                      Orders at or above this amount get free shipping. Set to <span className="font-medium">0</span> to never offer free shipping.
+                    </p>
+                    <div className="flex items-center gap-3 max-w-xs">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#78716c]">Rs.</span>
+                        <input
+                          type="number" min={0} max={99999}
+                          value={deliveryCfg.freeShippingAbove}
+                          onChange={(e) => setDeliveryCfg((c) => ({ ...c, freeShippingAbove: Number(e.target.value) }))}
+                          className="w-full rounded-xl border border-[#e7e5e4] pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#059669]"
+                          placeholder="0"
+                        />
+                      </div>
+                      {deliveryCfg.freeShippingAbove > 0 && (
+                        <span className="text-xs text-[#059669] font-medium bg-[#ecfdf5] px-2.5 py-1 rounded-lg">
+                          Free above Rs.{deliveryCfg.freeShippingAbove.toLocaleString("en-IN")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* COD settings */}
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-[#1c1917]">Cash on Delivery (COD)</h3>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <span className="text-xs text-[#78716c]">{deliveryCfg.codEnabled ? "Enabled" : "Disabled"}</span>
+                        <div
+                          onClick={() => setDeliveryCfg((c) => ({ ...c, codEnabled: !c.codEnabled }))}
+                          className={"w-10 h-5 rounded-full cursor-pointer transition-colors " +
+                            (deliveryCfg.codEnabled ? "bg-[#059669]" : "bg-[#e7e5e4]")}>
+                          <div className={"w-4 h-4 bg-white rounded-full shadow-sm transition-transform mt-0.5 " +
+                            (deliveryCfg.codEnabled ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5")} />
+                        </div>
+                      </label>
+                    </div>
+                    {deliveryCfg.codEnabled && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-[#57534e]">COD Handling Charge</label>
+                        <div className="relative max-w-xs">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#78716c]">Rs.</span>
+                          <input
+                            type="number" min={0} max={999}
+                            value={deliveryCfg.codExtraCharge}
+                            onChange={(e) => setDeliveryCfg((c) => ({ ...c, codExtraCharge: Number(e.target.value) }))}
+                            className="w-full rounded-xl border border-[#e7e5e4] pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#059669]"
+                          />
+                        </div>
+                        <p className="text-xs text-[#78716c]">Extra charge added to COD orders to cover cash-collection costs.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Delivery note */}
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-3">
+                    <h3 className="font-semibold text-sm text-[#1c1917]">Delivery Note (shown to buyer at checkout)</h3>
+                    <textarea
+                      rows={3}
+                      maxLength={300}
+                      value={deliveryCfg.deliveryNote}
+                      onChange={(e) => setDeliveryCfg((c) => ({ ...c, deliveryNote: e.target.value }))}
+                      placeholder="e.g. We ship every Monday and Thursday. Fragile items packed with extra care."
+                      className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] resize-none"
+                    />
+                    <p className="text-xs text-[#78716c] text-right">{deliveryCfg.deliveryNote.length}/300</p>
+                  </div>
+
+                  <Button type="submit" loading={cfgSaving} size="lg">
+                    Save Delivery Settings
+                  </Button>
+                </form>
               )}
             </div>
           )}

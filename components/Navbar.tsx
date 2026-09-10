@@ -7,7 +7,8 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useCartStore } from "@/store/cartStore";
 
 const NAV_LINKS = [
-  { href: "/products",      label: "Shop" },
+  { href: "/shops",         label: "Shops" },
+  { href: "/products",      label: "All Products" },
   { href: "/become-seller", label: "Sell" },
 ];
 
@@ -186,10 +187,15 @@ export default function Navbar() {
             <Search size={15} /> Search products...
           </Link>
 
+          <Link href="/shops"
+            className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors " +
+              (pathname.startsWith("/shops") || pathname.startsWith("/shop") ? "bg-[#ecfdf5] text-[#059669]" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
+            🏪 Browse Shops
+          </Link>
           <Link href="/products"
             className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors " +
               (pathname.startsWith("/products") ? "bg-[#ecfdf5] text-[#059669]" : "text-[#0f172a] hover:bg-[#f1f5f9]")}>
-            🛍️ Shop All Products
+            🛍️ All Products
           </Link>
 
           {user ? (
