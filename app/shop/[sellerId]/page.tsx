@@ -7,6 +7,7 @@ import ProductCard from "@/components/ProductCard";
 import {
   Store, MapPin, Star, Package,
   Search, SlidersHorizontal, X, Loader2,
+  Share2, Copy, Check,
 } from "lucide-react";
 
 // ── constants (mirrors /products page) ───────────────────────────────────────
@@ -58,6 +59,8 @@ export default function SellerShopPage() {
   const [page,        setPage]        = useState(1);
   const [hasMore,     setHasMore]     = useState(false);
   const [filterOpen,  setFilterOpen]  = useState(false);
+  const [shareOpen,   setShareOpen]   = useState(false);
+  const [copied,      setCopied]      = useState(false);
 
   // filter state
   const [qInput,   setQInput]   = useState("");
@@ -146,6 +149,29 @@ export default function SellerShopPage() {
   const shopState = profile?.shopState;
   const rating    = profile?.rating ?? 0;
 
+  const shopUrl      = typeof window !== "undefined" ? window.location.href : "";
+  const shareText    = `Check out ${shopName} on Banavoo`;
+  const encodedUrl   = encodeURIComponent(shopUrl);
+  const encodedText  = encodeURIComponent(shareText);
+
+  async function shareShop() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shopName, text: shareText, url: shopUrl });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+    setShareOpen((o) => !o);
+  }
+
+  async function copyShopLink() {
+    await navigator.clipboard.writeText(shopUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -167,7 +193,15 @@ export default function SellerShopPage() {
             <Store size={26} className="text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-extrabold leading-tight">{shopName}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl font-extrabold leading-tight">{shopName}</h1>
+              <button
+                onClick={shareShop}
+                aria-label="Share shop"
+                className="shrink-0 flex items-center gap-1.5 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors">
+                <Share2 size={13} /> Share
+              </button>
+            </div>
             {(shopCity || shopState) && (
               <p className="flex items-center gap-1 text-emerald-100 text-sm mt-1">
                 <MapPin size={13} /> {[shopCity, shopState].filter(Boolean).join(", ")}
@@ -190,6 +224,41 @@ export default function SellerShopPage() {
             </div>
           </div>
         </div>
+
+        {/* Share popover — shown when native share is unavailable */}
+        {shareOpen && (
+          <div className="mt-5 pt-5 border-t border-white/20">
+            <p className="text-sm font-semibold text-white mb-3">Share this shop</p>
+            <div className="flex flex-wrap gap-2">
+              <a href={`https://wa.me/?text=${encodedText}%20${encodedUrl}`}
+                target="_blank" rel="noopener noreferrer"
+                className="rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-3 py-1.5 text-xs text-white font-medium transition-colors">
+                WhatsApp
+              </a>
+              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
+                target="_blank" rel="noopener noreferrer"
+                className="rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-3 py-1.5 text-xs text-white font-medium transition-colors">
+                Facebook
+              </a>
+              <a href={`https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`}
+                target="_blank" rel="noopener noreferrer"
+                className="rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-3 py-1.5 text-xs text-white font-medium transition-colors">
+                X
+              </a>
+              <a href={`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`}
+                target="_blank" rel="noopener noreferrer"
+                className="rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-3 py-1.5 text-xs text-white font-medium transition-colors">
+                Telegram
+              </a>
+              <button
+                onClick={copyShopLink}
+                className="flex items-center gap-1.5 rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 px-3 py-1.5 text-xs text-white font-medium transition-colors">
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? "Copied!" : "Copy link"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Search + Sort bar ── */}
