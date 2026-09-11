@@ -392,9 +392,9 @@ export default function SellerDashboardPage() {
   const DEFAULT_DELIVERY_CFG: DeliveryConfig = {
     selfShipEnabled: true,
     freeShippingAbove: 0,
-    localCharge: 40,
-    regionalCharge: 60,
-    nationalCharge: 80,
+    localCharge: 10,
+    regionalCharge: 10,
+    nationalCharge: 10,
     codEnabled: true,
     codExtraCharge: 30,
     estimatedDaysLocal: 2,
@@ -766,33 +766,6 @@ export default function SellerDashboardPage() {
               ) : (
                 <form onSubmit={saveDeliveryConfig} className="space-y-6">
 
-                  {/* Enable/disable self-ship */}
-                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5">
-                    <label className="flex items-center justify-between gap-4 cursor-pointer">
-                      <div>
-                        <p className="font-semibold text-sm text-[#1c1917]">Enable Seller Shipping</p>
-                        <p className="text-xs text-[#78716c] mt-0.5">
-                          Allow buyers to choose &quot;Seller Ships&quot; at checkout. Disable to hide that option.
-                        </p>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={deliveryCfg.selfShipEnabled}
-                          onChange={(e) => setDeliveryCfg((c) => ({ ...c, selfShipEnabled: e.target.checked }))}
-                        />
-                        <div
-                          onClick={() => setDeliveryCfg((c) => ({ ...c, selfShipEnabled: !c.selfShipEnabled }))}
-                          className={"w-11 h-6 rounded-full cursor-pointer transition-colors shrink-0 " +
-                            (deliveryCfg.selfShipEnabled ? "bg-[#059669]" : "bg-[#e7e5e4]")}>
-                          <div className={"w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 " +
-                            (deliveryCfg.selfShipEnabled ? "translate-x-5.5 ml-0.5" : "translate-x-0.5 ml-0.5")} />
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-
                   {/* Delivery charges by zone */}
                   <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-4">
                     <h3 className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
@@ -858,35 +831,19 @@ export default function SellerDashboardPage() {
                   </div>
 
                   {/* COD settings */}
-                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm text-[#1c1917]">Cash on Delivery (COD)</h3>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <span className="text-xs text-[#78716c]">{deliveryCfg.codEnabled ? "Enabled" : "Disabled"}</span>
-                        <div
-                          onClick={() => setDeliveryCfg((c) => ({ ...c, codEnabled: !c.codEnabled }))}
-                          className={"w-10 h-5 rounded-full cursor-pointer transition-colors " +
-                            (deliveryCfg.codEnabled ? "bg-[#059669]" : "bg-[#e7e5e4]")}>
-                          <div className={"w-4 h-4 bg-white rounded-full shadow-sm transition-transform mt-0.5 " +
-                            (deliveryCfg.codEnabled ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5")} />
-                        </div>
-                      </label>
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-3">
+                    <h3 className="font-semibold text-sm text-[#1c1917]">Cash on Delivery (COD)</h3>
+                    <label className="text-xs font-medium text-[#57534e]">COD Handling Charge</label>
+                    <div className="relative max-w-xs">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#78716c]">Rs.</span>
+                      <input
+                        type="number" min={0} max={999}
+                        value={deliveryCfg.codExtraCharge}
+                        onChange={(e) => setDeliveryCfg((c) => ({ ...c, codExtraCharge: Number(e.target.value) }))}
+                        className="w-full rounded-xl border border-[#e7e5e4] pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#059669]"
+                      />
                     </div>
-                    {deliveryCfg.codEnabled && (
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-[#57534e]">COD Handling Charge</label>
-                        <div className="relative max-w-xs">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#78716c]">Rs.</span>
-                          <input
-                            type="number" min={0} max={999}
-                            value={deliveryCfg.codExtraCharge}
-                            onChange={(e) => setDeliveryCfg((c) => ({ ...c, codExtraCharge: Number(e.target.value) }))}
-                            className="w-full rounded-xl border border-[#e7e5e4] pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#059669]"
-                          />
-                        </div>
-                        <p className="text-xs text-[#78716c]">Extra charge added to COD orders to cover cash-collection costs.</p>
-                      </div>
-                    )}
+                    <p className="text-xs text-[#78716c]">Extra charge added to COD orders to cover cash-collection costs. Set to 0 for no COD charge.</p>
                   </div>
 
                   {/* Delivery note */}

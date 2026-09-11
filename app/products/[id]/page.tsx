@@ -4,10 +4,10 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import api from "@/services/api";
-import { Product } from "@/types";
+import { Product, DeliveryConfig } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
-import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail } from "lucide-react";
+import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail, Ruler, Weight, Tag, Sparkles, BadgeCheck } from "lucide-react";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
 
@@ -121,8 +121,27 @@ export default function ProductDetailPage() {
           )}
         </div>
         <div>
-          <p className="text-xs text-[#78716c] font-medium mb-1 uppercase tracking-wide">{product.category}</p>
-          <h1 className="text-2xl font-extrabold text-[#1c1917] mb-2">{product.name}</h1>
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="text-xs text-[#78716c] font-medium uppercase tracking-wide">{product.category}</span>
+            {product.subCategory && (
+              <span className="text-xs text-[#78716c]">/ {product.subCategory}</span>
+            )}
+            {product.handmade && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                <Sparkles size={10} /> Handmade
+              </span>
+            )}
+            {product.isFeatured && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] px-2 py-0.5 rounded-full">
+                <BadgeCheck size={10} /> Featured
+              </span>
+            )}
+          </div>
+          <h1 className="text-2xl font-extrabold text-[#1c1917] mb-1">{product.name}</h1>
+          {product.shortDesc && (
+            <p className="text-sm text-[#57534e] mb-2 leading-relaxed">{product.shortDesc}</p>
+          )}
           <div className="flex items-center gap-2 mb-4">
             <div className="flex">{[1,2,3,4,5].map((s) => <Star key={s} size={14} className={s <= Math.round(product.rating) ? "fill-amber-400 text-amber-400" : "text-gray-200 fill-gray-200"} />)}</div>
             <span className="text-sm text-[#78716c]">{product.rating.toFixed(1)} - {product.numReviews} reviews</span>
@@ -155,6 +174,7 @@ export default function ProductDetailPage() {
               <button onClick={() => setQty((q) => Math.min(product.stock, q + 1))} className="px-3 py-2 text-lg hover:bg-[#ecfdf5]">+</button>
             </div>
             <span className="text-xs text-[#78716c]">{product.stock} in stock</span>
+            {product.sku && <span className="text-xs text-[#a8a29e]">SKU: {product.sku}</span>}
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mb-3">
             <Button className="flex-1" size="lg" onClick={() => {
@@ -188,16 +208,48 @@ export default function ProductDetailPage() {
             </div>
           )}
           {!shareOpen && <div className="mb-3" />}
-          <div className="space-y-2 mb-6">
-            {[
-              [Truck, product.freeShipping ? "Free shipping on this item" : "Delivery from Rs.40 - Platform delivery available"],
-              [ShieldCheck, "Secure checkout - Razorpay and Cash on Delivery"],
-              [Package, "Handmade by verified maker"],
-            ].map(([Icon, text]: any) => (
-              <div key={text} className="flex items-center gap-2 text-sm text-[#57534e]">
-                <Icon size={14} className="text-[#059669] shrink-0" />{text}
-              </div>))}
-          </div>
+          {/* Delivery info strip — pulled from seller's delivery config */}
+          {(() => {
+            const sellerAny = product.seller as any;
+            const cfg: DeliveryConfig | undefined = sellerAny?.sellerProfile?.deliveryConfig;
+            const freeAbove = cfg?.freeShippingAbove ?? 0;
+            const localCharge = cfg?.localCharge ?? 10;
+            const codCharge = cfg?.codExtraCharge ?? 0;
+            const deliveryNote = cfg?.deliveryNote ?? "";
+
+            const shippingLine = product.freeShipping
+              ? "Free shipping on this item"
+              : freeAbove > 0
+                ? `Starts from Rs.${localCharge} · Free on orders Rs.${freeAbove.toLocaleString("en-IN")}+`
+                : `Starts from Rs.${localCharge} · Calculated at checkout`;
+
+            const codLine = codCharge > 0
+              ? `Cash on Delivery available · +Rs.${codCharge} handling charge`
+              : "Cash on Delivery available";
+
+            return (
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center gap-2 text-sm text-[#57534e]">
+                  <Truck size={14} className="text-[#059669] shrink-0" />
+                  {shippingLine}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-[#57534e]">
+                  <ShieldCheck size={14} className="text-[#059669] shrink-0" />
+                  {codLine}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-[#57534e]">
+                  <Package size={14} className="text-[#059669] shrink-0" />
+                  Handmade &amp; carefully packed by the seller
+                </div>
+                {deliveryNote && (
+                  <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-1">
+                    <Truck size={12} className="shrink-0 mt-0.5" />
+                    {deliveryNote}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           {product.seller && (
             <Link href={`/shop/${(product.seller as any)._id}`}>
               <div className="bg-[#ecfdf5] rounded-2xl p-4 border border-[#a7f3d0] hover:border-[#059669] hover:shadow-sm transition-all cursor-pointer">
@@ -260,18 +312,121 @@ export default function ProductDetailPage() {
           </div>)}
         {tab === "shipping" && (
           <div className="text-sm text-[#57534e] space-y-4 max-w-2xl">
-            <div className="bg-[#ecfdf5] rounded-2xl p-5 border border-[#fcd9b0]">
-              <h4 className="font-bold text-[#1c1917] mb-3">Delivery Options</h4>
-              <ul className="space-y-1.5 list-disc list-inside">
-                <li>Platform Delivery - We arrange courier. Rs.40-Rs.80. Free on orders Rs.999+.</li>
-                <li>Seller Ships - Seller ships via own courier.</li>
-                <li>Local Pickup - Free. Coordinate with seller.</li>
-              </ul>
-            </div>
-            <div className="bg-white rounded-2xl p-5 border border-[#e7e5e4]">
-              <h4 className="font-bold text-[#1c1917] mb-2">Returns</h4>
-              <p>Returns accepted within 7 days for damaged or significantly different items.</p>
-            </div>
+            {/* Delivery options — seller-configured */}
+            {(() => {
+              const sellerAny = product.seller as any;
+              const cfg: DeliveryConfig | undefined = sellerAny?.sellerProfile?.deliveryConfig;
+              const local    = cfg?.localCharge           ?? 10;
+              const regional = cfg?.regionalCharge        ?? 10;
+              const national = cfg?.nationalCharge        ?? 10;
+              const etaLocal    = cfg?.estimatedDaysLocal    ?? 2;
+              const etaRegional = cfg?.estimatedDaysRegional ?? 4;
+              const etaNational = cfg?.estimatedDaysNational ?? 7;
+              const codCharge   = cfg?.codExtraCharge        ?? 0;
+              const freeAbove   = cfg?.freeShippingAbove     ?? 0;
+              const deliveryNote = cfg?.deliveryNote         ?? "";
+
+              return (
+                <>
+                  <div className="bg-[#ecfdf5] rounded-2xl p-5 border border-[#a7f3d0]">
+                    <h4 className="font-bold text-[#1c1917] mb-4 flex items-center gap-2">
+                      <Truck size={15} className="text-[#059669]" /> Delivery Options
+                    </h4>
+                    <div className="space-y-3">
+                      {/* Seller ships */}
+                      <div className="bg-white rounded-xl border border-[#e7e5e4] p-3.5">
+                        <p className="font-semibold text-xs text-[#1c1917] mb-2">Seller Ships</p>
+                        <div className="grid grid-cols-3 gap-2 text-xs text-[#57534e]">
+                          <div className="space-y-0.5">
+                            <p className="font-medium text-[#1c1917]">Same City</p>
+                            <p className="text-[#059669] font-semibold">Rs.{local}</p>
+                            <p className="text-[#a8a29e]">{etaLocal}–{etaLocal + 1} days</p>
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="font-medium text-[#1c1917]">Same State</p>
+                            <p className="text-[#059669] font-semibold">Rs.{regional}</p>
+                            <p className="text-[#a8a29e]">{etaRegional}–{etaRegional + 1} days</p>
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="font-medium text-[#1c1917]">Rest of India</p>
+                            <p className="text-[#059669] font-semibold">Rs.{national}</p>
+                            <p className="text-[#a8a29e]">{etaNational}–{etaNational + 1} days</p>
+                          </div>
+                        </div>
+                        {freeAbove > 0 && (
+                          <p className="mt-2 text-xs text-[#059669] font-medium">
+                            🎉 Free shipping on orders above Rs.{freeAbove.toLocaleString("en-IN")}
+                          </p>
+                        )}
+                      </div>
+                      {/* Local pickup */}
+                      <div className="bg-white rounded-xl border border-[#e7e5e4] p-3.5 flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-xs text-[#1c1917]">Local Pickup</p>
+                          <p className="text-xs text-[#78716c] mt-0.5">Collect directly from seller. No shipping fee.</p>
+                        </div>
+                        <span className="text-xs font-bold text-[#059669]">Free</span>
+                      </div>
+                      {/* COD */}
+                      {/* <div className="bg-white rounded-xl border border-[#e7e5e4] p-3.5 flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-xs text-[#1c1917]">Cash on Delivery</p>
+                          <p className="text-xs text-[#78716c] mt-0.5">
+                            {codCharge > 0 ? `+Rs.${codCharge} COD handling charge` : "No extra COD charge"}
+                          </p>
+                        </div>
+                        <ShieldCheck size={15} className="text-[#059669]" />
+                      </div> */}
+                    </div>
+                    {deliveryNote && (
+                      <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        {deliveryNote}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Product details — fields collected at listing */}
+                  <div className="bg-white rounded-2xl p-5 border border-[#e7e5e4] space-y-3">
+                    <h4 className="font-bold text-[#1c1917] mb-1">Product Details</h4>
+                    <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                      {product.sku && (
+                        <div className="flex items-center gap-2 text-[#57534e]">
+                          <Tag size={12} className="text-[#059669] shrink-0" />
+                          <span className="text-[#a8a29e]">SKU</span>
+                          <span className="font-medium ml-auto">{product.sku}</span>
+                        </div>
+                      )}
+                      {product.weight && (
+                        <div className="flex items-center gap-2 text-[#57534e]">
+                          <Weight size={12} className="text-[#059669] shrink-0" />
+                          <span className="text-[#a8a29e]">Weight</span>
+                          <span className="font-medium ml-auto">{product.weight}g</span>
+                        </div>
+                      )}
+                      {(product as any).length && (
+                        <div className="flex items-center gap-2 text-[#57534e]">
+                          <Ruler size={12} className="text-[#059669] shrink-0" />
+                          <span className="text-[#a8a29e]">Dimensions</span>
+                          <span className="font-medium ml-auto">
+                            {(product as any).length} × {(product as any).width} × {(product as any).height} cm
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 text-[#57534e]">
+                        <Sparkles size={12} className="text-[#059669] shrink-0" />
+                        <span className="text-[#a8a29e]">Made by</span>
+                        <span className="font-medium ml-auto">Artisan / Handmade</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-5 border border-[#e7e5e4]">
+                    <h4 className="font-bold text-[#1c1917] mb-2">Returns &amp; Refunds</h4>
+                    <p>Returns accepted within 7 days for damaged or significantly different items. Contact the seller directly to initiate a return.</p>
+                  </div>
+                </>
+              );
+            })()}
           </div>)}
       </div>
     </div>

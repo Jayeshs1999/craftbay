@@ -78,6 +78,7 @@ export interface Product {
   subCategory?: string;
   tags: string[];
   handmade: boolean;
+  weight?: number;
   freeShipping: boolean;
   shippingCharge: number;
   reviews: Review[];

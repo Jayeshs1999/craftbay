@@ -17,6 +17,10 @@ export default function CartPage() {
   const shopState = sellerInfo?.sellerProfile?.shopState;
   const sellerId  = sellerInfo?._id;
 
+  // Seller's configured free-shipping threshold (0 = never free)
+  const freeShippingAbove: number = sellerInfo?.sellerProfile?.deliveryConfig?.freeShippingAbove ?? 0;
+  const freeShippingActive = freeShippingAbove > 0 && cartTotal >= freeShippingAbove;
+
   if (items.length === 0) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-[#78716c]">
       <ShoppingBag size={56} className="opacity-30" />
@@ -117,16 +121,23 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-[#57534e]">
                 <span>Shipping</span>
-                <span className="text-green-600">{cartTotal >= 999 ? "Free" : "Calculated at checkout"}</span>
+                <span className={freeShippingActive ? "text-green-600" : ""}>
+                  {freeShippingActive ? "Free" : "Calculated at checkout"}
+                </span>
               </div>
               <div className="border-t border-[#e7e5e4] pt-3 flex justify-between font-bold text-[#1c1917]">
                 <span>Total</span>
-                <span className="text-[#059669]">Rs.{cartTotal.toLocaleString("en-IN")}+</span>
+                <span className="text-[#059669]">Rs.{cartTotal.toLocaleString("en-IN")}{freeShippingActive ? "" : "+"}</span>
               </div>
             </div>
-            {cartTotal >= 999 && (
+            {freeShippingActive && (
               <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-xl px-3 py-2 mb-4">
                 Free shipping applied on this order!
+              </div>
+            )}
+            {freeShippingAbove > 0 && !freeShippingActive && (
+              <div className="bg-[#f7f8fa] border border-[#e7e5e4] text-[#57534e] text-xs rounded-xl px-3 py-2 mb-4">
+                Add Rs.{(freeShippingAbove - cartTotal).toLocaleString("en-IN")} more for free shipping
               </div>
             )}
             <Link href="/checkout">
