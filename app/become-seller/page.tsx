@@ -129,7 +129,13 @@ export default function BecomeSellerPage() {
             <Input
               label="Pickup Pincode *" name="pickupPincode" value={form.pickupPincode}
               onChange={handleChange} placeholder="411001" required
-              helpText="Courier will be arranged from this pincode for platform delivery." />
+              helpText="Your shop's pincode — shown to buyers for local pickup." />
+            <p className="text-xs text-[#78716c] text-center">
+              By activating your seller account you agree to our{" "}
+              <a href="/terms" className="text-[#059669] hover:underline">Terms &amp; Conditions</a>
+              {" "}and{" "}
+              <a href="/privacy" className="text-[#059669] hover:underline">Privacy Policy</a>.
+            </p>
             <Button type="submit" className="w-full" size="lg" loading={loading}>
               <Store size={16} /> Activate Seller Account
             </Button>

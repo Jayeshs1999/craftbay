@@ -214,7 +214,9 @@ function RegistrationForm({
 
       <p className="text-center text-xs text-[#64748b] mt-5">
         By signing up you agree to our{" "}
-        <Link href="/terms" className="text-[#059669] hover:underline">Terms</Link>
+        <Link href="/terms" className="text-[#059669] hover:underline">Terms &amp; Conditions</Link>
+        {" "}and{" "}
+        <Link href="/privacy" className="text-[#059669] hover:underline">Privacy Policy</Link>
       </p>
       <p className="text-center text-sm text-[#64748b] mt-3">
         Have an account?{" "}

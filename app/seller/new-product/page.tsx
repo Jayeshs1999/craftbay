@@ -22,7 +22,7 @@ export default function NewProductPage() {
     name: "", description: "", shortDesc: "",
     price: "", comparePrice: "", stock: "", sku: "",
     category: "", subCategory: "", tags: "",
-    weight: "", freeShipping: false, shippingCharge: "",
+    weight: "", freeShipping: false,
   });
   const [images,   setImages]   = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -159,10 +159,17 @@ export default function NewProductPage() {
         {/* Shipping */}
         <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6 space-y-4">
           <h2 className="font-bold text-[#1c1917]">Shipping</h2>
+          <p className="text-xs text-[#78716c] -mt-1">
+            Delivery charges are configured in your{" "}
+            <a href="/seller#settings" className="text-[#059669] underline underline-offset-2 hover:text-[#047857]">
+              shop delivery settings
+            </a>
+            {" "}and apply to all your products automatically.
+          </p>
           <Input
             label="Weight (grams)" name="weight" type="number" value={form.weight}
             onChange={handleChange} placeholder="200"
-            helpText="Used to calculate platform delivery charge" />
+            helpText="Shown on the product page. Optional." />
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox" name="freeShipping"
@@ -170,11 +177,10 @@ export default function NewProductPage() {
               onChange={handleChange} className="accent-[#059669] w-4 h-4" />
             <span className="text-sm text-[#1c1917]">Offer free shipping on this product</span>
           </label>
-          {!form.freeShipping && (
-            <Input
-              label="Your Shipping Charge (Rs.)" name="shippingCharge" type="number"
-              value={form.shippingCharge} onChange={handleChange}
-              placeholder="0 = use platform calculation" />
+          {form.freeShipping && (
+            <p className="text-xs text-[#059669] bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-3 py-2">
+              Buyers will see &quot;Free shipping&quot; on this product, overriding your shop-level delivery charge.
+            </p>
           )}
         </div>
 
