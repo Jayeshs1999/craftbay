@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Order, User } from "@/types";
 import {
   Package, Users, ShoppingBag, TrendingUp, AlertTriangle,
-  CheckCircle, XCircle, Clock, Truck, Bell, Eye, ChevronDown,
-  ChevronUp, Phone, Mail, RefreshCw,
+  CheckCircle, XCircle, Clock, Bell, ChevronDown,
+  ChevronUp, Phone, Mail, RefreshCw, Send, Store,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -389,10 +389,350 @@ function OrderRow({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+// ─── Mail Types ───────────────────────────────────────────────────────────────
+
+const MAIL_TYPES = [
+  {
+    value: "no_products",
+    label: "Empty Shop",
+    desc: "Seller registered but added 0 products",
+    color: "bg-red-50 text-red-700 border-red-200",
+    icon: "🏪",
+  },
+  {
+    value: "one_product",
+    label: "Only 1 Product",
+    desc: "Nudge to add more products for first order",
+    color: "bg-amber-50 text-amber-700 border-amber-200",
+    icon: "📦",
+  },
+  {
+    value: "keep_going",
+    label: "Keep Going",
+    desc: "Motivational nudge for any seller",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+    icon: "💪",
+  },
+  {
+    value: "share_shop",
+    label: "Share Shop Link",
+    desc: "Remind seller to share their shop on social media",
+    color: "bg-purple-50 text-purple-700 border-purple-200",
+    icon: "🔗",
+  },
+  {
+    value: "tips",
+    label: "5 Tips to First Order",
+    desc: "Actionable tips to get their first sale",
+    color: "bg-green-50 text-green-700 border-green-200",
+    icon: "💡",
+  },
+];
+
+type AdminSellerWithCount = User & { productCount: number };
+
+// ─── Mail Sellers Panel ───────────────────────────────────────────────────────
+
+function MailSellersPanel() {
+  const [sellerFilter,  setSellerFilter]  = useState<"all" | "no_products" | "one_product">("all");
+  const [sellers,       setSellers]       = useState<AdminSellerWithCount[]>([]);
+  const [loadingSellers, setLoadingSellers] = useState(false);
+  const [selected,      setSelected]      = useState<Set<string>>(new Set());
+  const [mailType,      setMailType]      = useState("no_products");
+  const [customNote,    setCustomNote]    = useState("");
+  const [sending,       setSending]       = useState(false);
+  const [result,        setResult]        = useState<{ sent: any[]; failed: any[] } | null>(null);
+
+  const fetchSellers = useCallback(async () => {
+    setLoadingSellers(true);
+    setSelected(new Set());
+    setResult(null);
+    try {
+      const { data } = await api.get("/admin/sellers", { params: { filter: sellerFilter } });
+      setSellers(data.sellers);
+    } catch {
+      toast.error("Failed to load sellers");
+    } finally {
+      setLoadingSellers(false);
+    }
+  }, [sellerFilter]);
+
+  useEffect(() => { fetchSellers(); }, [fetchSellers]);
+
+  function toggleSeller(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selected.size === sellers.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(sellers.map((s) => s._id)));
+    }
+  }
+
+  async function sendMails() {
+    if (selected.size === 0) { toast.error("Select at least one seller"); return; }
+    if (!confirm(`Send "${MAIL_TYPES.find(m => m.value === mailType)?.label}" email to ${selected.size} seller(s)?`)) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const { data } = await api.post("/admin/mail-sellers", {
+        sellerIds: Array.from(selected),
+        mailType,
+        customNote: customNote.trim() || undefined,
+      });
+      setResult(data);
+      toast.success(`✅ Sent to ${data.sent.length} seller(s)`);
+      setSelected(new Set());
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to send");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const chosenMailType = MAIL_TYPES.find((m) => m.value === mailType)!;
+
+  return (
+    <div className="space-y-6">
+
+      {/* Step 1 — Choose email type */}
+      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
+        <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest mb-3">
+          Step 1 — Choose Email Type
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {MAIL_TYPES.map((mt) => (
+            <button
+              key={mt.value}
+              onClick={() => setMailType(mt.value)}
+              className={`text-left rounded-xl border p-3.5 transition-all ${
+                mailType === mt.value
+                  ? "border-[#059669] bg-[#ecfdf5] ring-2 ring-[#059669]/20"
+                  : "border-[#e7e5e4] hover:border-[#059669]/40 hover:bg-[#f9fafb]"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">{mt.icon}</span>
+                <span className="text-sm font-semibold text-[#1c1917]">{mt.label}</span>
+                {mailType === mt.value && <CheckCircle size={14} className="ml-auto text-[#059669]" />}
+              </div>
+              <p className="text-xs text-[#78716c] leading-relaxed">{mt.desc}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Preview subject line */}
+        <div className="mt-4 bg-[#f5f5f4] rounded-xl px-4 py-3 flex items-start gap-2">
+          <Mail size={13} className="text-[#78716c] mt-0.5 shrink-0" />
+          <div>
+            <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-0.5">Email Subject Preview</p>
+            <p className="text-xs text-[#374151] font-medium">
+              {mailType === "no_products"  && "[Seller Name], your shop is empty — let's fix that 🛍️"}
+              {mailType === "one_product"  && "One product is a start, [Seller Name] — here's what happens next 🌱"}
+              {mailType === "keep_going"   && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
+              {mailType === "share_shop"   && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
+              {mailType === "tips"         && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
+            </p>
+          </div>
+        </div>
+
+        {/* Optional personal note */}
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-[#78716c] mb-1.5">
+            Personal note to add at the bottom of the email <span className="text-[#a8a29e]">(optional)</span>
+          </label>
+          <textarea
+            className="w-full border border-[#e7e5e4] rounded-xl p-3 text-sm text-[#1c1917] resize-none focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20"
+            rows={2}
+            placeholder="e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"
+            value={customNote}
+            onChange={(e) => setCustomNote(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Step 2 — Filter & Select Sellers */}
+      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+          <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest">
+            Step 2 — Select Sellers
+          </p>
+          <div className="flex gap-1.5 flex-wrap">
+            {(["all", "no_products", "one_product"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setSellerFilter(f)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  sellerFilter === f
+                    ? "bg-[#1c1917] text-white"
+                    : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+                }`}>
+                {f === "all" ? "All Sellers" : f === "no_products" ? "0 Products" : "1 Product"}
+              </button>
+            ))}
+            <button
+              onClick={fetchSellers}
+              className="p-1.5 text-[#78716c] border border-[#e7e5e4] hover:bg-[#f5f5f4] rounded-lg transition-colors">
+              <RefreshCw size={13} />
+            </button>
+          </div>
+        </div>
+
+        {loadingSellers ? (
+          <div className="space-y-2">
+            {[1,2,3].map((i) => <div key={i} className="skeleton h-14 rounded-xl" />)}
+          </div>
+        ) : sellers.length === 0 ? (
+          <div className="text-center py-10 text-[#78716c]">
+            <Store size={32} className="mx-auto mb-2 text-[#e7e5e4]" />
+            <p className="text-sm">No sellers match this filter</p>
+          </div>
+        ) : (
+          <>
+            {/* Select all bar */}
+            <div className="flex items-center justify-between mb-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selected.size === sellers.length && sellers.length > 0}
+                  onChange={toggleAll}
+                  className="w-4 h-4 rounded border-[#e7e5e4] text-[#059669] focus:ring-[#059669]/30 cursor-pointer"
+                />
+                <span className="text-xs text-[#78716c] font-medium">
+                  {selected.size === sellers.length && sellers.length > 0
+                    ? `Deselect all (${sellers.length})`
+                    : `Select all ${sellers.length} seller${sellers.length !== 1 ? "s" : ""}`}
+                </span>
+              </label>
+              {selected.size > 0 && (
+                <span className="text-xs font-semibold text-[#059669] bg-[#ecfdf5] px-2.5 py-1 rounded-full">
+                  {selected.size} selected
+                </span>
+              )}
+            </div>
+
+            {/* Seller list */}
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+              {sellers.map((seller) => (
+                <label
+                  key={seller._id}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-all ${
+                    selected.has(seller._id)
+                      ? "border-[#059669] bg-[#f0fdf4]"
+                      : "border-[#e7e5e4] hover:border-[#059669]/40"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.has(seller._id)}
+                    onChange={() => toggleSeller(seller._id)}
+                    className="w-4 h-4 rounded border-[#e7e5e4] text-[#059669] focus:ring-[#059669]/30 cursor-pointer shrink-0"
+                  />
+                  <div className="w-8 h-8 rounded-full bg-[#d1fae5] flex items-center justify-center text-xs font-bold text-[#059669] shrink-0">
+                    {seller.name?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#1c1917] truncate">
+                      {seller.name}
+                      {seller.sellerProfile?.shopName && (
+                        <span className="text-[#78716c] font-normal"> · {seller.sellerProfile.shopName}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-[#78716c] truncate flex items-center gap-1">
+                      <Mail size={10} /> {seller.email}
+                    </p>
+                  </div>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                    seller.productCount === 0
+                      ? "bg-red-100 text-red-700"
+                      : seller.productCount === 1
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-green-100 text-green-700"
+                  }`}>
+                    {seller.productCount} product{seller.productCount !== 1 ? "s" : ""}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Step 3 — Send */}
+      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
+        <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest mb-4">
+          Step 3 — Send Email
+        </p>
+
+        <div className="bg-[#f5f5f4] rounded-xl px-4 py-3 mb-4 space-y-1">
+          <div className="flex justify-between text-xs">
+            <span className="text-[#78716c]">Email type</span>
+            <span className="font-semibold text-[#1c1917]">{chosenMailType.icon} {chosenMailType.label}</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-[#78716c]">Recipients</span>
+            <span className="font-semibold text-[#1c1917]">{selected.size} seller{selected.size !== 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-[#78716c]">Personal note</span>
+            <span className="font-semibold text-[#1c1917]">{customNote.trim() ? "Yes" : "No"}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={sendMails}
+          disabled={sending || selected.size === 0}
+          className="w-full bg-[#059669] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#047857] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+          {sending ? (
+            <><RefreshCw size={15} className="animate-spin" /> Sending…</>
+          ) : (
+            <><Send size={15} /> Send Email to {selected.size} Seller{selected.size !== 1 ? "s" : ""}</>
+          )}
+        </button>
+
+        {/* Result */}
+        {result && (
+          <div className="mt-4 space-y-2">
+            {result.sent.length > 0 && (
+              <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-[#065f46] mb-1 flex items-center gap-1.5">
+                  <CheckCircle size={13} /> {result.sent.length} email{result.sent.length !== 1 ? "s" : ""} sent successfully
+                </p>
+                {result.sent.map((s) => (
+                  <p key={s.id} className="text-xs text-[#374151]">✓ {s.name} · {s.email}</p>
+                ))}
+              </div>
+            )}
+            {result.failed.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1.5">
+                  <XCircle size={13} /> {result.failed.length} failed
+                </p>
+                {result.failed.map((f) => (
+                  <p key={f.id} className="text-xs text-red-600">✗ {f.name || f.id} — {f.reason}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 export default function AdminPage() {
   const { user, isLoading } = useAuthStore();
   const router = useRouter();
 
+  const [activeTab,   setActiveTab]   = useState<"orders" | "mail">("orders");
   const [stats,   setStats]   = useState<AdminStats | null>(null);
   const [orders,  setOrders]  = useState<AdminOrder[]>([]);
   const [total,   setTotal]   = useState(0);
@@ -457,7 +797,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-extrabold text-[#1c1917]">Super Admin Dashboard</h1>
-            <p className="text-sm text-[#78716c] mt-0.5">Full order tracking · Buyer–Seller visibility · Seller nudge</p>
+            <p className="text-sm text-[#78716c] mt-0.5">Full order tracking · Buyer–Seller visibility · Seller nudge · Mail sellers</p>
           </div>
           <button
             onClick={() => { fetchStats(); fetchOrders(1); }}
@@ -486,6 +826,34 @@ export default function AdminPage() {
           <StatCard label="Live Products"       value={stats.totalProducts}    icon={Package} />
         </div>
       )}
+
+      {/* Tab switcher */}
+      <div className="flex gap-1 bg-[#f5f5f4] p-1 rounded-2xl mb-6 w-fit">
+        <button
+          onClick={() => setActiveTab("orders")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            activeTab === "orders"
+              ? "bg-white text-[#1c1917] shadow-sm"
+              : "text-[#78716c] hover:text-[#1c1917]"
+          }`}>
+          <Package size={15} /> Orders
+        </button>
+        <button
+          onClick={() => setActiveTab("mail")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            activeTab === "mail"
+              ? "bg-white text-[#1c1917] shadow-sm"
+              : "text-[#78716c] hover:text-[#1c1917]"
+          }`}>
+          <Send size={15} /> Mail Sellers
+        </button>
+      </div>
+
+      {/* ── MAIL SELLERS TAB ── */}
+      {activeTab === "mail" && <MailSellersPanel />}
+
+      {/* ── ORDERS TAB ── */}
+      {activeTab === "orders" && <>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-5 items-center">
@@ -561,6 +929,8 @@ export default function AdminPage() {
           ))}
         </div>
       )}
+
+      </> /* end orders tab */}
 
       {/* Nudge modal */}
       {nudgeOrder && (
