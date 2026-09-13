@@ -206,6 +206,39 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── DEMO VIDEO ── */}
+      <section className="py-16 px-4 bg-white border-b border-[#e2e8f0]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 bg-[#ecfdf5] border border-[#a7f3d0] text-[#059669] text-xs font-bold px-4 py-1.5 rounded-full mb-4 uppercase tracking-wide">
+              Watch Demo
+            </span>
+            <h2 className="text-3xl font-extrabold text-[#0f172a] mb-2">See how it works in 5 minutes</h2>
+            <p className="text-[#64748b] max-w-xl mx-auto">
+              Watch how any Indian maker can open a free shop, list products and start receiving orders — step by step.
+            </p>
+          </div>
+          <div className="relative w-full rounded-2xl overflow-hidden border border-[#e2e8f0] shadow-lg" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              className="absolute top-0 left-0 w-full h-full"
+              src="https://www.youtube.com/embed/Hr1jugB2zlU?si=cwGbFiVTIty801PS"
+              title="Banavoo.in Demo — How to Create Your Free Shop & Add Products"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/become-seller">
+              <button className="inline-flex items-center gap-2 bg-[#059669] text-white font-bold px-7 py-3.5 rounded-xl text-sm hover:bg-[#047857] shadow-sm transition-all cursor-pointer">
+                Open My Free Shop <ArrowRight size={15} />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── WHY BANAVOO ── */}
       <section className="bg-[#ecfdf5] py-16 px-4">
         <div className="max-w-5xl mx-auto">
