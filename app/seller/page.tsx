@@ -391,6 +391,8 @@ export default function SellerDashboardPage() {
   // ── Delivery config state ───────────────────────────────────────────────────
   const DEFAULT_DELIVERY_CFG: DeliveryConfig = {
     selfShipEnabled: true,
+    pickupEnabled: true,
+    banavooShipEnabled: true,
     freeShippingAbove: 0,
     localCharge: 10,
     regionalCharge: 10,
@@ -755,8 +757,7 @@ export default function SellerDashboardPage() {
                 <Settings size={18} className="text-[#059669]" /> Delivery Settings
               </h2>
               <p className="text-sm text-[#78716c] mb-6">
-                Configure how you charge buyers for delivery when they choose <span className="font-medium text-[#1c1917]">Seller Ships</span>.
-                These rates are shown to buyers at checkout.
+                Control which delivery methods buyers can choose at checkout, and configure shipping charges.
               </p>
 
               {cfgLoading ? (
@@ -765,6 +766,61 @@ export default function SellerDashboardPage() {
                 </div>
               ) : (
                 <form onSubmit={saveDeliveryConfig} className="space-y-6">
+
+                  {/* ── Delivery Method Toggles ── */}
+                  <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-4">
+                    <h3 className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
+                      <Truck size={15} className="text-[#059669]" /> Available Delivery Methods
+                    </h3>
+                    <p className="text-xs text-[#78716c] -mt-1">
+                      At least one method must remain enabled. Disabled methods won&apos;t appear at buyer checkout.
+                    </p>
+                    {(() => {
+                      // Only count real (non-coming-soon) methods for the minimum-1 guard
+                      const enabledCount = [deliveryCfg.selfShipEnabled, deliveryCfg.pickupEnabled].filter(Boolean).length;
+                      const methods: { key: keyof DeliveryConfig; label: string; desc: string; comingSoon?: boolean }[] = [
+                        { key: "selfShipEnabled",    label: "Seller Ships",     desc: "You ship via your own courier. Charges configured below." },
+                        { key: "pickupEnabled",      label: "Local Pickup",     desc: "Buyer collects from your location. No shipping charge." },
+                        { key: "banavooShipEnabled", label: "Banavoo Express",  desc: "Managed shipping via Banavoo.in — end-to-end fulfilment.", comingSoon: true },
+                      ];
+                      return (
+                        <div className="space-y-3">
+                          {methods.map(({ key, label, desc, comingSoon }) => {
+                            const isOn = deliveryCfg[key] as boolean;
+                            const isLastEnabled = enabledCount === 1 && isOn && !comingSoon;
+                            return (
+                              <div key={key} className={"flex items-start justify-between gap-4 p-3.5 rounded-xl border transition-colors " +
+                                (isOn ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] bg-white")}>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-semibold text-[#1c1917]">{label}</span>
+                                    {comingSoon && (
+                                      <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md">Coming Soon</span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-[#78716c] mt-0.5">{desc}</p>
+                                  {isLastEnabled && (
+                                    <p className="text-xs text-amber-600 mt-1">⚠ Must keep at least one method enabled</p>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={isLastEnabled || comingSoon}
+                                  onClick={() => !isLastEnabled && !comingSoon && setDeliveryCfg((c) => ({ ...c, [key]: !isOn }))}
+                                  title={comingSoon ? "Not available yet" : isLastEnabled ? "Cannot disable — last active method" : undefined}
+                                  className={"relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none " +
+                                    (comingSoon || isLastEnabled ? "opacity-40 cursor-not-allowed " : "") +
+                                    (isOn ? "bg-[#059669]" : "bg-[#d1d5db]")}>
+                                  <span className={"pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform " +
+                                    (isOn ? "translate-x-5" : "translate-x-0")} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
 
                   {/* Delivery charges by zone */}
                   <div className="bg-white border border-[#e7e5e4] rounded-2xl p-5 space-y-4">

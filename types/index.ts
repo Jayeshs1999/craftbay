@@ -13,6 +13,8 @@ export interface User {
 
 export interface DeliveryConfig {
   selfShipEnabled: boolean;
+  pickupEnabled: boolean;
+  banavooShipEnabled: boolean;
   freeShippingAbove: number;
   localCharge: number;
   regionalCharge: number;
@@ -109,7 +111,7 @@ export interface Address {
   isDefault: boolean;
 }
 
-export type DeliveryMode = "platform" | "self_ship" | "pickup";
+export type DeliveryMode = "platform" | "self_ship" | "pickup" | "banavoo_ship";
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled" | "return_requested" | "returned";
 export type PaymentMethod = "razorpay" | "cod";
 

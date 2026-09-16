@@ -3,10 +3,10 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useCartStore } from "@/store/cartStore";
-import { DeliveryMode } from "@/types";
+import { DeliveryMode, DeliveryConfig } from "@/types";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon, Loader2 } from "lucide-react";
+import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon, Loader2, Zap } from "lucide-react";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 import toast from "react-hot-toast";
 import FieldLabel from "@/components/FieldLabel";
@@ -19,9 +19,11 @@ const STATES = [
   "Uttar Pradesh","Uttarakhand","West Bengal",
 ];
 
-const DELIVERY_MODE_META: { mode: DeliveryMode; label: string; baseDesc: string }[] = [
-  { mode: "self_ship", label: "Seller Ships",       baseDesc: "Seller ships via their own courier." },
-  { mode: "pickup",    label: "Local Pickup — Free", baseDesc: "Pick up directly from the seller. No shipping fee." },
+// All possible delivery methods — enabled/disabled resolved at runtime from seller config
+const ALL_DELIVERY_MODES: { mode: DeliveryMode; label: string; baseDesc: string; configKey: keyof Pick<DeliveryConfig, "selfShipEnabled" | "pickupEnabled" | "banavooShipEnabled">; comingSoon?: boolean }[] = [
+  { mode: "self_ship",    label: "Seller Ships",       baseDesc: "Seller ships via their own courier.",                                            configKey: "selfShipEnabled" },
+  { mode: "pickup",       label: "Local Pickup — Free", baseDesc: "Pick up directly from the seller. No shipping fee.",                            configKey: "pickupEnabled" },
+  { mode: "banavoo_ship", label: "Banavoo Express",     baseDesc: "End-to-end fulfilment managed by Banavoo.in. Track your order in real-time.",   configKey: "banavooShipEnabled", comingSoon: true },
 ];
 
 export default function CheckoutPage() {
@@ -36,6 +38,12 @@ export default function CheckoutPage() {
   const [step,         setStep]         = useState<1 | 2 | 3>(1);
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("self_ship");
   const [payMethod,    setPayMethod]    = useState<"razorpay" | "cod">("cod");
+  // Seller's delivery config — used to show/hide methods at checkout
+  const [sellerDeliveryCfg, setSellerDeliveryCfg] = useState<Pick<DeliveryConfig, "selfShipEnabled" | "pickupEnabled" | "banavooShipEnabled">>({
+    selfShipEnabled: true,
+    pickupEnabled: true,
+    banavooShipEnabled: true,
+  });
   const [quote,        setQuote]        = useState<{ shippingCharge: number; platformFee: number; totalAmount: number; deliveryNotes?: string[] } | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   // per-mode quote cache: keyed by deliveryMode so step 2 can show charges for each option
@@ -48,6 +56,21 @@ export default function CheckoutPage() {
     fullName: "", phone: "", line1: "", line2: "",
     city: "", state: "", pincode: "", country: "India",
   });
+
+  // Fetch the seller's delivery config as soon as we know which seller's items are in the cart
+  useEffect(() => {
+    const sellerId = useCartStore.getState().cartSellerId;
+    if (!sellerId) return;
+    api.get(`/sellers/${sellerId}/delivery-config`)
+      .then(({ data }) => {
+        setSellerDeliveryCfg(data);
+        // Auto-select first enabled non-coming-soon method
+        const first = ALL_DELIVERY_MODES.find((m) => !m.comingSoon && data[m.configKey]);
+        if (first) setDeliveryMode(first.mode);
+      })
+      .catch(() => { /* keep defaults */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -151,6 +174,13 @@ export default function CheckoutPage() {
       setLoading(false);
     }
   }
+
+  // Build the delivery method list for this checkout: show all 3, but
+  // disable any the seller has turned off (and always disable coming-soon ones)
+  const deliveryModeMeta = ALL_DELIVERY_MODES.map((m) => ({
+    ...m,
+    disabled: m.comingSoon || !sellerDeliveryCfg[m.configKey],
+  }));
 
   if (!user || (items.length === 0 && !ordered.current)) return null;
 
@@ -256,25 +286,40 @@ export default function CheckoutPage() {
                 <Truck size={18} className="text-[#059669]" /> Delivery Method
               </h2>
               <div className="space-y-3 mb-6">
-                {DELIVERY_MODE_META.map(({ mode, label, baseDesc }) => {
+                {deliveryModeMeta.map(({ mode, label, baseDesc, disabled, comingSoon }) => {
                   const mq = modeQuotes[mode];
                   const charge = mode === "pickup" ? 0 : mq?.shippingCharge;
                   return (
                     <label key={mode}
-                      className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
-                        (deliveryMode === mode ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
-                      <input type="radio" name="delivery" value={mode} checked={deliveryMode === mode}
-                        onChange={() => setDeliveryMode(mode)} className="mt-0.5 accent-[#059669]" />
+                      className={"flex items-start gap-3 p-4 rounded-xl border transition-all " +
+                        (disabled
+                          ? "border-[#e7e5e4] opacity-50 cursor-not-allowed"
+                          : deliveryMode === mode
+                            ? "border-[#059669] bg-[#ecfdf5] cursor-pointer"
+                            : "border-[#e7e5e4] hover:border-[#059669]/50 cursor-pointer")}>
+                      <input type="radio" name="delivery" value={mode}
+                        checked={deliveryMode === mode}
+                        disabled={disabled}
+                        onChange={() => !disabled && setDeliveryMode(mode)}
+                        className="mt-0.5 accent-[#059669]" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
-                          {quoteLoading ? (
-                            <Loader2 size={13} className="text-[#78716c] animate-spin shrink-0" />
-                          ) : charge !== undefined ? (
-                            <span className={"text-sm font-bold shrink-0 " + (charge === 0 ? "text-[#059669]" : "text-[#1c1917]")}>
-                              {charge === 0 ? "Free" : `Rs.${charge}`}
-                            </span>
-                          ) : null}
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="flex items-center gap-1.5">
+                            {mode === "banavoo_ship" && <Zap size={13} className="text-[#7c5cd8] shrink-0" />}
+                            <p className="font-semibold text-sm text-[#1c1917]">{label}</p>
+                            {comingSoon && (
+                              <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md">Coming Soon</span>
+                            )}
+                          </span>
+                          {!disabled && (
+                            quoteLoading ? (
+                              <Loader2 size={13} className="text-[#78716c] animate-spin shrink-0" />
+                            ) : charge !== undefined ? (
+                              <span className={"text-sm font-bold shrink-0 " + (charge === 0 ? "text-[#059669]" : "text-[#1c1917]")}>
+                                {charge === 0 ? "Free" : `Rs.${charge}`}
+                              </span>
+                            ) : null
+                          )}
                         </div>
                         <p className="text-xs text-[#78716c] mt-0.5">{baseDesc}
                           {mode === "self_ship" && mq?.deliveryNotes && mq.deliveryNotes.length > 0 && (
@@ -454,9 +499,9 @@ export default function CheckoutPage() {
             {/* Delivery mode badge in sidebar */}
             {deliveryMode && (
               <div className={"mt-3 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg " +
-                (isPickup ? "bg-amber-50 text-amber-700" : "bg-[#f7f8fa] text-[#57534e]")}>
-                {isPickup ? <StoreIcon size={12} /> : <Truck size={12} />}
-                {isPickup ? "Local Pickup — Free" : "Seller Ships"}
+                (deliveryMode === "pickup" ? "bg-amber-50 text-amber-700" : deliveryMode === "banavoo_ship" ? "bg-purple-50 text-purple-700" : "bg-[#f7f8fa] text-[#57534e]")}>
+                {deliveryMode === "pickup" ? <StoreIcon size={12} /> : deliveryMode === "banavoo_ship" ? <Zap size={12} /> : <Truck size={12} />}
+                {deliveryMode === "pickup" ? "Local Pickup — Free" : deliveryMode === "banavoo_ship" ? "Banavoo Express" : "Seller Ships"}
               </div>
             )}
           </div>
