@@ -141,9 +141,17 @@ export interface Order {
   courier?: string;
   paymentMethod: PaymentMethod;
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  paidAt?: string;
+  sellerPaid?: boolean;
+  sellerPaidAt?: string;
   orderStatus: OrderStatus;
   statusHistory: { status: string; note?: string; updatedBy: string; timestamp: string }[];
+  cancelReason?: string;
+  notes?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ApiResponse<T> {

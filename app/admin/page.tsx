@@ -7,7 +7,7 @@ import { Order, User } from "@/types";
 import {
   Package, Users, ShoppingBag, TrendingUp, AlertTriangle,
   CheckCircle, XCircle, Clock, Bell, ChevronDown,
-  ChevronUp, Phone, Mail, RefreshCw, Send, Store,
+  ChevronUp, Phone, Mail, RefreshCw, Send, Store, Banknote, ShieldCheck,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -38,6 +38,8 @@ type AdminOrder = Omit<Order, "buyer" | "items"> & {
   items: (Omit<Order["items"][number], "seller"> & {
     seller: AdminSeller;
   })[];
+  sellerPaid?: boolean;
+  sellerPaidAt?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -189,17 +191,26 @@ function NudgeModal({
 // ─── Order Row ────────────────────────────────────────────────────────────────
 
 function OrderRow({
-  order, onNudge,
+  order, onNudge, onPayoutReleased,
 }: {
-  order: AdminOrder; onNudge: (o: AdminOrder) => void;
+  order: AdminOrder;
+  onNudge: (o: AdminOrder) => void;
+  onPayoutReleased?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [statusValue, setStatusValue] = useState(order.orderStatus);
   const [updating, setUpdating] = useState(false);
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutDone, setPayoutDone] = useState(order.sellerPaid ?? false);
 
   const meta = STATUS_META[order.orderStatus] || STATUS_META.pending;
   const age  = hoursAgo(order.createdAt);
   const isUnresponded = ["pending", "confirmed"].includes(order.orderStatus) && age >= 24;
+
+  // Show release button only for delivered + online (Razorpay) + payout not yet done
+  const canReleasePayout = order.orderStatus === "delivered" &&
+    order.paymentMethod === "razorpay" &&
+    !payoutDone;
 
   const uniqueSellers = Array.from(
     new Map(order.items.map((i) => [i.seller?._id, i.seller])).values()
@@ -221,6 +232,21 @@ function OrderRow({
     }
   }
 
+  async function releasePayout() {
+    if (!confirm(`Release payout of ₹${order.itemsTotal?.toLocaleString("en-IN")} to seller(s) for order #${order._id.slice(-8).toUpperCase()}?`)) return;
+    setPayoutLoading(true);
+    try {
+      await api.post(`/admin/orders/${order._id}/release-payout`);
+      setPayoutDone(true);
+      toast.success("Payout released — seller notified by email");
+      onPayoutReleased?.();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to release payout");
+    } finally {
+      setPayoutLoading(false);
+    }
+  }
+
   const buyer = order.buyer;
 
   return (
@@ -237,6 +263,22 @@ function OrderRow({
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>
                 {meta.label}
               </span>
+              {/* Payment method badge */}
+              {order.paymentMethod === "razorpay" && (
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+                  order.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                }`}>
+                  <ShieldCheck size={8} /> {order.paymentStatus === "paid" ? "Paid Online" : "Unpaid"}
+                </span>
+              )}
+              {/* Payout badge */}
+              {order.orderStatus === "delivered" && order.paymentMethod === "razorpay" && (
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+                  payoutDone ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"
+                }`}>
+                  <Banknote size={8} /> {payoutDone ? "Payout Released" : "Payout Pending"}
+                </span>
+              )}
               {isUnresponded && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
                   <AlertTriangle size={9} /> No seller action {age}h
@@ -381,6 +423,32 @@ function OrderRow({
               {updating ? "…" : "Apply"}
             </button>
           </div>
+
+          {/* Payout release — only for delivered Razorpay orders */}
+          {(canReleasePayout || payoutDone) && (
+            <div className={`flex items-center gap-3 p-3 rounded-xl border ${payoutDone ? "bg-purple-50 border-purple-200" : "bg-orange-50 border-orange-200"}`}>
+              <Banknote size={16} className={payoutDone ? "text-purple-600 shrink-0" : "text-orange-600 shrink-0"} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-semibold ${payoutDone ? "text-purple-700" : "text-orange-700"}`}>
+                  {payoutDone ? "Payout Released to Seller" : "Payout Pending — Order Delivered"}
+                </p>
+                <p className="text-[11px] text-[#78716c]">
+                  {payoutDone
+                    ? `₹${order.itemsTotal?.toLocaleString("en-IN")} sent to seller · ${order.sellerPaidAt ? fmtDate(order.sellerPaidAt) : ""}`
+                    : `Release ₹${order.itemsTotal?.toLocaleString("en-IN")} to seller(s) — payment was collected online.`}
+                </p>
+              </div>
+              {canReleasePayout && (
+                <button
+                  onClick={releasePayout}
+                  disabled={payoutLoading}
+                  className="flex items-center gap-1.5 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors shrink-0">
+                  {payoutLoading ? <RefreshCw size={12} className="animate-spin" /> : <Banknote size={12} />}
+                  {payoutLoading ? "Releasing…" : "Release Payout"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1043,13 +1111,115 @@ function MailSellersPanel() {
   );
 }
 
+// ─── Payouts Panel ────────────────────────────────────────────────────────────
+
+function PayoutsPanel() {
+  const [payoutFilter, setPayoutFilter] = useState<"pending" | "released">("pending");
+  const [payouts,      setPayouts]      = useState<AdminOrder[]>([]);
+  const [loading,      setLoading]      = useState(false);
+  const [page,         setPage]         = useState(1);
+  const [pages,        setPages]        = useState(1);
+  const [total,        setTotal]        = useState(0);
+
+  const fetchPayouts = useCallback(async (p = 1) => {
+    setLoading(true);
+    try {
+      const paid = payoutFilter === "released" ? "true" : "false";
+      const { data } = await api.get("/admin/payouts", { params: { page: p, limit: 20, paid } });
+      setPayouts(data.orders);
+      setPage(data.page);
+      setPages(data.pages);
+      setTotal(data.total);
+    } catch {
+      toast.error("Failed to load payouts");
+    } finally {
+      setLoading(false);
+    }
+  }, [payoutFilter]);
+
+  useEffect(() => { fetchPayouts(1); }, [fetchPayouts]);
+
+  return (
+    <div className="space-y-5">
+      {/* Info banner */}
+      <div className="bg-orange-50 border border-orange-200 rounded-2xl px-5 py-4 flex gap-3">
+        <Banknote size={20} className="text-orange-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-bold text-orange-800 mb-0.5">Seller Payouts — Super Admin Control</p>
+          <p className="text-xs text-orange-700 leading-relaxed">
+            When an online (Razorpay) order is delivered, the buyer&apos;s payment is held by Banavoo.
+            The super admin verifies delivery and manually releases the payout to the seller.
+            Seller receives a notification email once payout is released.
+          </p>
+        </div>
+      </div>
+
+      {/* Filter + refresh */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex gap-1.5">
+          {(["pending", "released"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setPayoutFilter(f)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                payoutFilter === f
+                  ? f === "pending" ? "bg-orange-500 text-white" : "bg-purple-600 text-white"
+                  : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+              }`}>
+              {f === "pending" ? "Payout Pending" : "Payout Released"}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-[#78716c]">{total} order{total !== 1 ? "s" : ""}</p>
+          <button onClick={() => fetchPayouts(1)}
+            className="p-1.5 text-[#78716c] border border-[#e7e5e4] hover:bg-[#f5f5f4] rounded-lg transition-colors">
+            <RefreshCw size={13} />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3].map((i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
+        </div>
+      ) : payouts.length === 0 ? (
+        <div className="text-center py-16 text-[#78716c]">
+          <Banknote size={40} className="mx-auto mb-3 text-[#e7e5e4]" />
+          <p className="text-sm">No {payoutFilter === "pending" ? "pending" : "released"} payouts found.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {payouts.map((o) => (
+            <OrderRow key={o._id} order={o} onNudge={() => {}} onPayoutReleased={() => fetchPayouts(page)} />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+            <button key={p} onClick={() => fetchPayouts(p)}
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
+                page === p ? "bg-[#059669] text-white" : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+              }`}>
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
   const { user, isLoading } = useAuthStore();
   const router = useRouter();
 
-  const [activeTab,   setActiveTab]   = useState<"orders" | "mail" | "mail_buyers">("orders");
+  const [activeTab,   setActiveTab]   = useState<"orders" | "mail" | "mail_buyers" | "payouts">("orders");
   const [stats,   setStats]   = useState<AdminStats | null>(null);
   const [orders,  setOrders]  = useState<AdminOrder[]>([]);
   const [total,   setTotal]   = useState(0);
@@ -1156,6 +1326,15 @@ export default function AdminPage() {
           <Package size={15} /> Orders
         </button>
         <button
+          onClick={() => setActiveTab("payouts")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            activeTab === "payouts"
+              ? "bg-white text-[#1c1917] shadow-sm"
+              : "text-[#78716c] hover:text-[#1c1917]"
+          }`}>
+          <Banknote size={15} /> Payouts
+        </button>
+        <button
           onClick={() => setActiveTab("mail")}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
             activeTab === "mail"
@@ -1180,6 +1359,9 @@ export default function AdminPage() {
 
       {/* ── MAIL BUYERS TAB ── */}
       {activeTab === "mail_buyers" && <MailBuyersPanel />}
+
+      {/* ── PAYOUTS TAB ── */}
+      {activeTab === "payouts" && <PayoutsPanel />}
 
       {/* ── ORDERS TAB ── */}
       {activeTab === "orders" && <>
@@ -1239,7 +1421,7 @@ export default function AdminPage() {
       ) : (
         <div className="space-y-3">
           {orders.map((o) => (
-            <OrderRow key={o._id} order={o} onNudge={setNudgeOrder} />
+            <OrderRow key={o._id} order={o} onNudge={setNudgeOrder} onPayoutReleased={() => fetchStats()} />
           ))}
         </div>
       )}
