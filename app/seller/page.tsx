@@ -203,6 +203,11 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[#1c1917] group-hover:text-[#059669] truncate transition-colors">{item.name}</p>
                     {item.variant && <p className="text-xs text-[#78716c]">{item.variant}</p>}
+                    {item.customizationRequirement && (
+                      <p className="text-xs text-[#d97706] mt-0.5 truncate">
+                        Custom: {item.customizationRequirement}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-semibold text-[#1c1917]">×{item.quantity}</p>
@@ -212,6 +217,29 @@ function OrderDetailModal({ order, onClose, onStatusUpdate }: OrderModalProps) {
               ))}
             </div>
           </div>
+
+          {/* Customisation Requirements (if any items have them) */}
+          {order.items.some((item) => item.customizationRequirement) && (
+            <div className="bg-[#fffbeb] border border-[#fcd34d] rounded-xl p-4">
+              <p className="text-xs font-semibold text-[#92400e] uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                Customisation Requirements
+              </p>
+              <div className="space-y-3">
+                {order.items.filter((item) => item.customizationRequirement).map((item, i) => (
+                  <div key={i}>
+                    <p className="text-xs font-medium text-[#78716c] mb-1">{item.name}</p>
+                    <p className="text-sm text-[#1c1917] whitespace-pre-wrap bg-white rounded-lg px-3 py-2 border border-[#fcd34d]">
+                      {item.customizationRequirement}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-[#78716c] mt-3">
+                Contact the buyer to confirm details before starting work.
+              </p>
+            </div>
+          )}
 
           {/* Price Breakdown */}
           <div className="bg-[#ecfdf5] rounded-xl p-4 space-y-1.5 text-sm">

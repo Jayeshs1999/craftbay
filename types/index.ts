@@ -80,6 +80,9 @@ export interface Product {
   subCategory?: string;
   tags: string[];
   handmade: boolean;
+  isCustomizable: boolean;
+  customizationDays: number;
+  customizationNote?: string;
   weight?: number;
   freeShipping: boolean;
   shippingCharge: number;
@@ -95,6 +98,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   variant?: string;
+  customizationRequirement?: string;
 }
 
 export interface Address {
@@ -123,6 +127,8 @@ export interface OrderItem {
   price: number;
   quantity: number;
   variant?: string;
+  customizationRequirement?: string;
+  customizationDays?: number;
 }
 
 export interface Order {
