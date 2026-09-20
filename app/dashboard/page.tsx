@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import api from "@/services/api";
 import { Order, Product } from "@/types";
-import { Package, Truck, CheckCircle, XCircle, Clock, ShoppingBag } from "lucide-react";
+import { Package, Truck, CheckCircle, XCircle, Clock, ShoppingBag, Settings2 } from "lucide-react";
 import Button from "@/components/Button";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 
@@ -148,6 +148,16 @@ export default function DashboardPage() {
             const Icon = meta.icon;
             const canCancel = ["pending", "confirmed", "processing"].includes(order.orderStatus);
 
+            // Max customization days across items that have a requirement
+            const maxCustomDays = order.items.reduce(
+              (max, item) => Math.max(max, item.customizationRequirement ? (item.customizationDays ?? 0) : 0),
+              0
+            );
+            // Adjusted delivery = original shipping ETA + customization days
+            const adjustedDelivery = order.estimatedDelivery
+              ? new Date(new Date(order.estimatedDelivery).getTime() + maxCustomDays * 86_400_000)
+              : null;
+
             return (
               <div key={order._id} className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
                 <div className="flex items-start justify-between gap-4 mb-3">
@@ -161,28 +171,45 @@ export default function DashboardPage() {
                       })}
                     </p>
                   </div>
-                  <span className={"inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full " + meta.color}>
-                    <Icon size={10} />
-                    {meta.label}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    {order.items.some((item) => item.customizationRequirement) && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-[#fef3c7] text-[#92400e] border border-[#fcd34d] px-2 py-0.5 rounded-full">
+                        <Settings2 size={9} /> Custom Order
+                      </span>
+                    )}
+                    <span className={"inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full " + meta.color}>
+                      <Icon size={10} />
+                      {meta.label}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="space-y-2 mb-3">
                   {order.items.map((item, i) => (
-                    <Link
-                      key={i}
-                      href={`/products/${typeof item.product === "string" ? item.product : (item.product as unknown as Product)?._id ?? ""}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-2 bg-[#f5f5f4] hover:bg-[#ecfdf5] hover:border-[#059669] border border-transparent rounded-xl p-1.5 pr-3 transition-all group"
-                    >
-                      {item.image && (
-                        <div className="w-9 h-9 rounded-lg overflow-hidden bg-white shrink-0 border border-[#e7e5e4]">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <div key={i}>
+                      <Link
+                        href={`/products/${typeof item.product === "string" ? item.product : (item.product as unknown as Product)?._id ?? ""}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-2 bg-[#f5f5f4] hover:bg-[#ecfdf5] hover:border-[#059669] border border-transparent rounded-xl p-1.5 pr-3 transition-all group"
+                      >
+                        {item.image && (
+                          <div className="w-9 h-9 rounded-lg overflow-hidden bg-white shrink-0 border border-[#e7e5e4]">
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <span className="text-xs text-[#1c1917] font-medium group-hover:text-[#059669] transition-colors">{item.name}</span>
+                        <span className="text-xs text-[#78716c]">×{item.quantity}</span>
+                      </Link>
+                      {item.customizationRequirement && (
+                        <div className="mt-1 ml-1 flex items-start gap-1.5 bg-[#fffbeb] border border-[#fcd34d] rounded-xl px-3 py-2">
+                          <Settings2 size={11} className="text-[#d97706] shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-semibold text-[#92400e] mb-0.5">Your customisation</p>
+                            <p className="text-xs text-[#78716c] leading-relaxed">{item.customizationRequirement}</p>
+                          </div>
                         </div>
                       )}
-                      <span className="text-xs text-[#1c1917] font-medium group-hover:text-[#059669] transition-colors">{item.name}</span>
-                      <span className="text-xs text-[#78716c]">×{item.quantity}</span>
-                    </Link>
+                    </div>
                   ))}
                 </div>
 
@@ -206,14 +233,25 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {order.estimatedDelivery &&
+                {adjustedDelivery &&
                   order.orderStatus !== "delivered" &&
                   order.orderStatus !== "cancelled" && (
-                  <p className="text-xs text-[#78716c] mt-2">
-                    Est. delivery: {new Date(order.estimatedDelivery).toLocaleDateString("en-IN", {
-                      day: "numeric", month: "short", year: "numeric",
-                    })}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap mt-2">
+                    <p className="text-xs text-[#78716c]">
+                      Est. delivery:{" "}
+                      <strong>
+                        {adjustedDelivery.toLocaleDateString("en-IN", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </strong>
+                    </p>
+                    {maxCustomDays > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-[#fef3c7] text-[#92400e] border border-[#fcd34d] px-1.5 py-0.5 rounded-full">
+                        <Settings2 size={8} />
+                        includes {maxCustomDays}d customisation
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             );

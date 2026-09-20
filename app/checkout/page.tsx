@@ -166,6 +166,7 @@ export default function CheckoutPage() {
 
       const cartPayload = items.map((i) => ({
         product: i.product._id, quantity: i.quantity, variant: i.variant,
+        customizationRequirement: i.customizationRequirement,
       }));
 
       // ── Online payment via Razorpay ───────────────────────────────────────

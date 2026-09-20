@@ -83,6 +83,11 @@ export default function CartPage() {
                     </p>
                   </Link>
                   {item.variant && <p className="text-xs text-[#78716c] mt-0.5">{item.variant}</p>}
+                  {item.customizationRequirement && (
+                    <p className="text-xs text-[#d97706] mt-0.5 line-clamp-2" title={item.customizationRequirement}>
+                      Custom: {item.customizationRequirement}
+                    </p>
+                  )}
                   <p className="text-[#059669] font-bold mt-1">Rs.{item.product.price.toLocaleString("en-IN")}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center border border-[#e7e5e4] rounded-lg overflow-hidden">

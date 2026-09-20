@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Upload, X, Plus } from "lucide-react";
+import { Upload, X, Plus, Settings2 } from "lucide-react";
 import toast from "react-hot-toast";
 import FieldLabel from "@/components/FieldLabel";
 
@@ -23,6 +23,9 @@ export default function NewProductPage() {
     price: "", comparePrice: "", stock: "", sku: "",
     category: "", subCategory: "", tags: "",
     weight: "", freeShipping: false,
+    isCustomizable: false,
+    customizationDays: "",
+    customizationNote: "",
   });
   const [images,   setImages]   = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -53,6 +56,10 @@ export default function NewProductPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (images.length === 0) { toast.error("Please add at least one image"); return; }
+    if (form.isCustomizable && (!form.customizationDays || Number(form.customizationDays) < 1)) {
+      toast.error("Please enter how many days you need to complete the customization");
+      return;
+    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -154,6 +161,60 @@ export default function NewProductPage() {
             <Input label="Stock *" name="stock" type="number" min="0" value={form.stock} onChange={handleChange} placeholder="10" required />
           </div>
           <Input label="SKU" name="sku" value={form.sku} onChange={handleChange} placeholder="Optional product code" />
+        </div>
+
+        {/* Customization */}
+        <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6 space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Settings2 size={18} className="text-[#059669]" />
+            <h2 className="font-bold text-[#1c1917]">Customization</h2>
+          </div>
+          <p className="text-xs text-[#78716c] -mt-2">
+            Enable this if buyers can request personalised versions of this product (e.g. name engraving, custom colour, specific design).
+          </p>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox" name="isCustomizable"
+              checked={form.isCustomizable as unknown as boolean}
+              onChange={handleChange} className="accent-[#059669] w-4 h-4" />
+            <span className="text-sm text-[#1c1917] font-medium">This product can be customised</span>
+          </label>
+
+          {form.isCustomizable && (
+            <div className="space-y-4 pl-6 border-l-2 border-[#a7f3d0]">
+              <Input
+                label="Days needed to complete customisation *"
+                name="customizationDays"
+                type="number"
+                min="1"
+                value={form.customizationDays}
+                onChange={handleChange}
+                placeholder="e.g. 7"
+                helpText="Buyers will see this as the estimated time to prepare their custom order"
+                required={form.isCustomizable as unknown as boolean}
+              />
+              <div>
+                <FieldLabel>Instructions for buyers</FieldLabel>
+                <textarea
+                  name="customizationNote"
+                  value={form.customizationNote}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="e.g. Please share the name to engrave, preferred colour, and any reference images in your order note."
+                  className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] resize-none"
+                />
+                <p className="text-xs text-[#78716c] mt-1">
+                  This text will be shown to buyers on the product page to guide what details to provide.
+                </p>
+              </div>
+              <div className="flex gap-3 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3 text-xs text-[#065f46]">
+                <Settings2 size={14} className="text-[#059669] shrink-0 mt-0.5" />
+                <p>
+                  After the order is placed, you can contact the buyer directly to clarify any requirements before starting work.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Shipping */}
