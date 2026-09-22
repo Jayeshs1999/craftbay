@@ -7,7 +7,7 @@ import { Order, User } from "@/types";
 import {
   Package, Users, ShoppingBag, TrendingUp, AlertTriangle,
   CheckCircle, XCircle, Clock, Bell, ChevronDown,
-  ChevronUp, Phone, Mail, RefreshCw, Send, Store, Banknote, ShieldCheck,
+  ChevronUp, Phone, Mail, RefreshCw, Send, Store, Banknote, ShieldCheck, Camera, ExternalLink,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -812,6 +812,13 @@ const MAIL_TYPES = [
     color: "bg-green-50 text-green-700 border-green-200",
     icon: "💡",
   },
+  {
+    value: "product_image_issue",
+    label: "Fix Product Photos",
+    desc: "Ask seller to delete blurry/wrong photos & upload clear images",
+    color: "bg-amber-50 text-amber-700 border-amber-200",
+    icon: "📸",
+  },
 ];
 
 type AdminSellerWithCount = User & { productCount: number };
@@ -923,6 +930,7 @@ function MailSellersPanel() {
               {mailType === "keep_going"   && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
               {mailType === "share_shop"   && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
               {mailType === "tips"         && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
+              {mailType === "product_image_issue" && "⚠️ Action Required: Please update product photos on [Shop Name] 📸"}
             </p>
           </div>
         </div>
@@ -930,12 +938,16 @@ function MailSellersPanel() {
         {/* Optional personal note */}
         <div className="mt-4">
           <label className="block text-xs font-medium text-[#78716c] mb-1.5">
-            Personal note to add at the bottom of the email <span className="text-[#a8a29e]">(optional)</span>
+            Personal note / feedback for seller <span className="text-[#a8a29e]">(optional)</span>
           </label>
           <textarea
             className="w-full border border-[#e7e5e4] rounded-xl p-3 text-sm text-[#1c1917] resize-none focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20"
             rows={2}
-            placeholder="e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"
+            placeholder={
+              mailType === "product_image_issue"
+                ? "e.g. Please replace the low resolution and duplicate photos with bright daylight pictures showing front and back views."
+                : "e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"
+            }
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
           />
@@ -1219,9 +1231,18 @@ export default function AdminPage() {
   const { user, isLoading } = useAuthStore();
   const router = useRouter();
 
-  const [activeTab,   setActiveTab]   = useState<"orders" | "mail" | "mail_buyers" | "payouts">("orders");
+  const [activeTab,   setActiveTab]   = useState<"orders" | "payouts" | "products" | "mail" | "mail_buyers">("orders");
   const [stats,   setStats]   = useState<AdminStats | null>(null);
   const [orders,  setOrders]  = useState<AdminOrder[]>([]);
+  const [productsList, setProductsList] = useState<any[]>([]);
+  const [prodPage, setProdPage] = useState(1);
+  const [prodPages, setProdPages] = useState(1);
+  const [prodTotal, setProdTotal] = useState(0);
+  const [prodSearch, setProdSearch] = useState("");
+  const [prodLoading, setProdLoading] = useState(false);
+  const [selectedProductForModal, setSelectedProductForModal] = useState<any | null>(null);
+  const [productNoticeNote, setProductNoticeNote] = useState("");
+  const [sendingProductNotice, setSendingProductNotice] = useState(false);
   const [total,   setTotal]   = useState(0);
   const [page,    setPage]    = useState(1);
   const [pages,   setPages]   = useState(1);
@@ -1259,11 +1280,51 @@ export default function AdminPage() {
     finally { setFetching(false); }
   }, [filter, unresponded]);
 
+  const fetchAdminProducts = useCallback(async (p = 1) => {
+    setProdLoading(true);
+    try {
+      const { data } = await api.get("/admin/products", {
+        params: { page: p, limit: 12, search: prodSearch.trim() || undefined },
+      });
+      setProductsList(data.products);
+      setProdPage(data.page);
+      setProdPages(data.pages);
+      setProdTotal(data.total);
+    } catch {
+      toast.error("Failed to load products");
+    } finally {
+      setProdLoading(false);
+    }
+  }, [prodSearch]);
+
   useEffect(() => {
     if (!user || user.role !== "admin") return;
     fetchStats();
     fetchOrders(1);
   }, [user, fetchStats, fetchOrders]);
+
+  useEffect(() => {
+    if (activeTab === "products" && user?.role === "admin") {
+      fetchAdminProducts(1);
+    }
+  }, [activeTab, user, fetchAdminProducts]);
+
+  async function handleSendProductImageNotice() {
+    if (!selectedProductForModal) return;
+    setSendingProductNotice(true);
+    try {
+      const { data } = await api.post(`/admin/products/${selectedProductForModal._id}/notify-image-issue`, {
+        note: productNoticeNote.trim() || undefined,
+      });
+      toast.success(data.message || "Email sent successfully");
+      setSelectedProductForModal(null);
+      setProductNoticeNote("");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to send notice");
+    } finally {
+      setSendingProductNotice(false);
+    }
+  }
 
   if (isLoading || !user) {
     return (
@@ -1335,6 +1396,15 @@ export default function AdminPage() {
           <Banknote size={15} /> Payouts
         </button>
         <button
+          onClick={() => setActiveTab("products")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            activeTab === "products"
+              ? "bg-white text-[#1c1917] shadow-sm"
+              : "text-[#78716c] hover:text-[#1c1917]"
+          }`}>
+          <Camera size={15} /> Product Photos Check
+        </button>
+        <button
           onClick={() => setActiveTab("mail")}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
             activeTab === "mail"
@@ -1362,6 +1432,203 @@ export default function AdminPage() {
 
       {/* ── PAYOUTS TAB ── */}
       {activeTab === "payouts" && <PayoutsPanel />}
+
+      {/* ── PRODUCT PHOTOS CHECK TAB ── */}
+      {activeTab === "products" && (
+        <div className="space-y-6">
+          {/* Banner */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex gap-3">
+            <Camera size={22} className="text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-900 mb-0.5">Product Image Moderation & Notification</p>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Review photos uploaded by sellers. If a seller uploaded blurry, incorrect, or low-quality photos, click <strong>&quot;Request Photo Fix&quot;</strong> to directly send them an email instructing them to delete the wrong images and edit the product with clear photos.
+              </p>
+            </div>
+          </div>
+
+          {/* Search & Header */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2 flex-1 max-w-md">
+              <input
+                type="text"
+                placeholder="Search products by title or category..."
+                value={prodSearch}
+                onChange={(e) => setProdSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") fetchAdminProducts(1); }}
+                className="w-full border border-[#e7e5e4] rounded-xl px-3.5 py-2 text-xs text-[#1c1917] focus:outline-none focus:border-[#059669]"
+              />
+              <button
+                onClick={() => fetchAdminProducts(1)}
+                className="px-3.5 py-2 bg-[#1c1917] text-white text-xs font-semibold rounded-xl hover:bg-[#374151] transition-colors shrink-0">
+                Search
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-[#78716c]">{prodTotal} product{prodTotal !== 1 ? "s" : ""}</p>
+              <button
+                onClick={() => fetchAdminProducts(1)}
+                className="p-2 text-[#78716c] border border-[#e7e5e4] hover:bg-[#f5f5f4] rounded-lg transition-colors">
+                <RefreshCw size={13} />
+              </button>
+            </div>
+          </div>
+
+          {/* Product cards grid */}
+          {prodLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1,2,3,4,5,6].map((i) => (
+                <div key={i} className="skeleton h-56 rounded-2xl" />
+              ))}
+            </div>
+          ) : productsList.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-[#e7e5e4] text-[#78716c]">
+              <Camera size={36} className="mx-auto mb-2 text-[#e7e5e4]" />
+              <p className="text-sm">No products found</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {productsList.map((prod) => (
+                <div key={prod._id} className="bg-white rounded-2xl border border-[#e7e5e4] overflow-hidden flex flex-col justify-between shadow-sm">
+                  <div>
+                    {/* Images thumbnail strip */}
+                    <div className="bg-[#f5f5f4] p-2 flex gap-1.5 overflow-x-auto min-h-[110px] items-center">
+                      {prod.images && prod.images.length > 0 ? (
+                        prod.images.map((img: any, idx: number) => (
+                          <div key={idx} className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-[#e7e5e4] bg-white">
+                            <img
+                              src={img.url}
+                              alt={`Photo ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            {img.isMain && (
+                              <span className="absolute bottom-0 left-0 right-0 bg-[#059669] text-white text-[9px] font-bold text-center py-0.5">
+                                Main
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="w-full py-6 text-center text-xs text-red-500 font-medium">
+                          No images uploaded
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-sm font-bold text-[#1c1917] line-clamp-2 leading-snug">{prod.name}</h3>
+                        <span className="text-xs font-bold text-[#059669] shrink-0">₹{prod.price}</span>
+                      </div>
+
+                      <div className="text-xs text-[#78716c] space-y-0.5">
+                        <p><strong>Seller:</strong> {prod.seller?.name || "Unknown"} {prod.seller?.sellerProfile?.shopName ? `(${prod.seller.sellerProfile.shopName})` : ""}</p>
+                        <p className="flex items-center gap-1"><Mail size={11} /> {prod.seller?.email || "No email"}</p>
+                        <p><strong>Category:</strong> {prod.category} · <strong>Images:</strong> {prod.images?.length || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 border-t border-[#f5f5f4] mt-2 flex gap-2">
+                    <a
+                      href={`/products/${prod._id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-2 text-xs font-semibold text-[#78716c] hover:text-[#1c1917] border border-[#e7e5e4] rounded-xl hover:bg-[#f5f5f4] transition-colors flex items-center gap-1">
+                      <ExternalLink size={12} /> View
+                    </a>
+                    <button
+                      onClick={() => {
+                        setSelectedProductForModal(prod);
+                        setProductNoticeNote("");
+                      }}
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                      <Mail size={13} /> Request Photo Fix
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {prodPages > 1 && (
+            <div className="flex justify-center gap-2 mt-4">
+              {Array.from({ length: prodPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => fetchAdminProducts(p)}
+                  className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
+                    prodPage === p ? "bg-[#059669] text-white" : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+                  }`}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Modal for sending image issue notice */}
+          {selectedProductForModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#e7e5e4] space-y-4 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between border-b pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📸</span>
+                    <div>
+                      <h3 className="text-base font-bold text-[#1c1917]">Send Product Image Issue Email</h3>
+                      <p className="text-xs text-[#78716c]">Alert seller to remove incorrect photos & upload proper images</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedProductForModal(null)}
+                    className="p-1.5 text-[#78716c] hover:text-[#1c1917] rounded-lg">
+                    <XCircle size={18} />
+                  </button>
+                </div>
+
+                <div className="bg-[#f5f5f4] rounded-xl p-3 text-xs space-y-1.5">
+                  <p><strong>Product:</strong> {selectedProductForModal.name}</p>
+                  <p><strong>Seller:</strong> {selectedProductForModal.seller?.name} ({selectedProductForModal.seller?.email})</p>
+                  <p><strong>Shop:</strong> {selectedProductForModal.seller?.sellerProfile?.shopName || "N/A"}</p>
+                  <p className="text-[#059669]">
+                    ✓ Will include direct one-click link for seller to edit: <code className="bg-white px-1 py-0.5 rounded border">/seller/edit-product/{selectedProductForModal._id}</code>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                    Specific Photo Feedback / Note (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. The first image is very blurry and does not show the actual item clearly. Please take a photo in natural daylight and upload it."
+                    value={productNoticeNote}
+                    onChange={(e) => setProductNoticeNote(e.target.value)}
+                    className="w-full border border-[#e7e5e4] rounded-xl p-3 text-xs text-[#1c1917] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20 resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProductForModal(null)}
+                    className="flex-1 border border-[#e7e5e4] text-[#78716c] text-xs font-semibold py-2.5 rounded-xl hover:bg-[#f5f5f4] transition-colors">
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendProductImageNotice}
+                    disabled={sendingProductNotice}
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50">
+                    {sendingProductNotice ? <RefreshCw size={13} className="animate-spin" /> : <Send size={13} />}
+                    {sendingProductNotice ? "Sending Email..." : "Send Photo Fix Notice"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── ORDERS TAB ── */}
       {activeTab === "orders" && <>
