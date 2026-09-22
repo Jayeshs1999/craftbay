@@ -7,9 +7,9 @@ interface CartState {
   /** _id of the seller whose products are currently in the cart. null = cart empty */
   cartSellerId: string | null;
   /** null = nothing pending; set when user tries to add from a different seller */
-  pendingAdd: { product: Product; quantity: number; variant?: string } | null;
+  pendingAdd: { product: Product; quantity: number; variant?: string; customizationRequirement?: string } | null;
 
-  addItem:            (product: Product, quantity?: number, variant?: string) => "ok" | "conflict";
+  addItem:            (product: Product, quantity?: number, variant?: string, customizationRequirement?: string) => "ok" | "conflict";
   confirmReplace:     () => void;          // clear cart then add the pending item
   cancelPendingAdd:   () => void;          // discard the pending add
   removeItem:         (productId: string, variant?: string) => void;
@@ -26,13 +26,13 @@ export const useCartStore = create<CartState>()(
       cartSellerId: null,
       pendingAdd: null,
 
-      addItem: (product, quantity = 1, variant) => {
+      addItem: (product, quantity = 1, variant, customizationRequirement) => {
         const sellerId = (product.seller as any)?._id ?? (product.seller as unknown as string);
         const { cartSellerId, items } = get();
 
         // If cart has items from a DIFFERENT seller → flag conflict, do NOT add
         if (cartSellerId && cartSellerId !== sellerId && items.length > 0) {
-          set({ pendingAdd: { product, quantity, variant } });
+          set({ pendingAdd: { product, quantity, variant, customizationRequirement } });
           return "conflict";
         }
 
@@ -45,14 +45,14 @@ export const useCartStore = create<CartState>()(
               cartSellerId: sellerId,
               items: s.items.map((i) =>
                 i.product._id === product._id && i.variant === variant
-                  ? { ...i, quantity: Math.min(i.quantity + quantity, product.stock) }
+                  ? { ...i, quantity: Math.min(i.quantity + quantity, product.stock), customizationRequirement: customizationRequirement ?? i.customizationRequirement }
                   : i
               ),
             };
           }
           return {
             cartSellerId: sellerId,
-            items: [...s.items, { product, quantity, variant }],
+            items: [...s.items, { product, quantity, variant, customizationRequirement }],
           };
         });
         return "ok";
@@ -63,7 +63,7 @@ export const useCartStore = create<CartState>()(
         if (!pendingAdd) return;
         const sellerId = (pendingAdd.product.seller as any)?._id ?? (pendingAdd.product.seller as unknown as string);
         set({
-          items: [{ product: pendingAdd.product, quantity: pendingAdd.quantity, variant: pendingAdd.variant }],
+          items: [{ product: pendingAdd.product, quantity: pendingAdd.quantity, variant: pendingAdd.variant, customizationRequirement: pendingAdd.customizationRequirement }],
           cartSellerId: sellerId,
           pendingAdd: null,
         });

@@ -1,11 +1,11 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Upload, X, Plus, Settings2 } from "lucide-react";
+import { Upload, X, Settings2 } from "lucide-react";
 import toast from "react-hot-toast";
 import FieldLabel from "@/components/FieldLabel";
 
@@ -14,9 +14,17 @@ const CATEGORIES = [
   "Candles","Bags","Skincare","Toys","Stationery","Food","Other",
 ];
 
-export default function NewProductPage() {
+interface ExistingImage {
+  url: string;
+  publicId: string;
+  isMain: boolean;
+}
+
+export default function EditProductPage() {
   const user   = useAuthStore((s) => s.user);
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const id     = params.id;
 
   const [form, setForm] = useState({
     name: "", description: "", shortDesc: "",
@@ -27,35 +35,91 @@ export default function NewProductPage() {
     customizationDays: "",
     customizationNote: "",
   });
-  const [images,   setImages]   = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+
+  // Existing (server) images that are still kept
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  // New image files the seller is adding
+  const [newImages,   setNewImages]   = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<string[]>([]);
+
+  const [fetching, setFetching] = useState(true);
   const [loading,  setLoading]  = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const { data } = await api.get(`/products/${id}/edit`);
+        setExistingImages(data.images || []);
+        setForm({
+          name:              data.name         || "",
+          description:       data.description  || "",
+          shortDesc:         data.shortDesc    || "",
+          price:             String(data.price ?? ""),
+          comparePrice:      data.comparePrice != null ? String(data.comparePrice) : "",
+          stock:             String(data.stock ?? ""),
+          sku:               data.sku          || "",
+          category:          data.category     || "",
+          subCategory:       data.subCategory  || "",
+          tags:              Array.isArray(data.tags) ? data.tags.join(", ") : (data.tags || ""),
+          weight:            data.weight != null ? String(data.weight) : "",
+          freeShipping:      Boolean(data.freeShipping),
+          isCustomizable:    Boolean(data.isCustomizable),
+          customizationDays: data.customizationDays ? String(data.customizationDays) : "",
+          customizationNote: data.customizationNote || "",
+        });
+      } catch {
+        toast.error("Failed to load product");
+        router.push("/seller");
+      } finally {
+        setFetching(false);
+      }
+    })();
+  }, [id]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const t = e.target as HTMLInputElement;
     setForm((f) => ({ ...f, [t.name]: t.type === "checkbox" ? t.checked : t.value }));
   }
 
-  function handleImages(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleNewImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
-    if (images.length + files.length > 6) { toast.error("Max 6 images"); return; }
-    setImages((prev) => [...prev, ...files]);
+    const total = existingImages.length + newImages.length + files.length;
+    if (total > 6) { toast.error("Max 6 images total"); return; }
+    setNewImages((prev) => [...prev, ...files]);
     files.forEach((f) => {
       const reader = new FileReader();
-      reader.onload = (ev) => setPreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.onload = (ev) => setNewPreviews((prev) => [...prev, ev.target?.result as string]);
       reader.readAsDataURL(f);
     });
     e.target.value = "";
   }
 
-  function removeImage(i: number) {
-    setImages((prev) => prev.filter((_, idx) => idx !== i));
-    setPreviews((prev) => prev.filter((_, idx) => idx !== i));
+  async function removeExistingImage(img: ExistingImage) {
+    const remaining = existingImages.filter((i) => i.publicId !== img.publicId);
+    if (remaining.length === 0 && newImages.length === 0) {
+      toast.error("Product must have at least one image");
+      return;
+    }
+    try {
+      await api.delete(`/products/${id}/image`, { data: { publicId: img.publicId } });
+      setExistingImages(remaining);
+    } catch {
+      toast.error("Failed to remove image");
+    }
+  }
+
+  function removeNewImage(i: number) {
+    setNewImages((prev) => prev.filter((_, idx) => idx !== i));
+    setNewPreviews((prev) => prev.filter((_, idx) => idx !== i));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (images.length === 0) { toast.error("Please add at least one image"); return; }
+    if (existingImages.length === 0 && newImages.length === 0) {
+      toast.error("Product must have at least one image");
+      return;
+    }
     if (form.isCustomizable && (!form.customizationDays || Number(form.customizationDays) < 1)) {
       toast.error("Please enter how many days you need to complete the customization");
       return;
@@ -64,15 +128,28 @@ export default function NewProductPage() {
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
-      images.forEach((img) => fd.append("images", img));
-      await api.post("/products", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      newImages.forEach((img) => fd.append("images", img));
+      await api.put(`/products/${id}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+      toast.success("Product updated!");
       router.push("/seller");
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create product");
+      toast.error(err.response?.data?.message || "Failed to update product");
     } finally {
       setLoading(false);
     }
   }
+
+  if (fetching) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="skeleton h-32 rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  const totalImages = existingImages.length + newImages.length;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -81,8 +158,8 @@ export default function NewProductPage() {
         Back to Dashboard
       </a>
       <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-[#1c1917]">Add New Product</h1>
-        <p className="text-[#78716c] text-sm">List your handmade creation for buyers to discover</p>
+        <h1 className="text-2xl font-extrabold text-[#1c1917]">Edit Product</h1>
+        <p className="text-[#78716c] text-sm">Update your product details</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -90,27 +167,41 @@ export default function NewProductPage() {
         {/* Images */}
         <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6">
           <h2 className="font-bold text-[#1c1917] mb-1">Product Images *</h2>
-          <p className="text-xs text-[#78716c] mb-4">Add up to 6 images. First image will be the main photo.</p>
+          <p className="text-xs text-[#78716c] mb-4">Up to 6 images. First image is the main photo.</p>
           <div className="flex flex-wrap gap-3">
-            {previews.map((src, i) => (
-              <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-[#e7e5e4]">
-                <img src={src} alt="" className="w-full h-full object-cover" />
-                {i === 0 && (
+            {/* Existing images */}
+            {existingImages.map((img, i) => (
+              <div key={img.publicId} className="relative w-24 h-24 rounded-xl overflow-hidden border border-[#e7e5e4]">
+                <img src={img.url} alt="" className="w-full h-full object-cover" />
+                {img.isMain && (
                   <span className="absolute bottom-0 left-0 right-0 bg-[#059669] text-white text-[10px] text-center py-0.5">
                     Main
                   </span>
                 )}
-                <button type="button" onClick={() => removeImage(i)}
+                <button type="button" onClick={() => removeExistingImage(img)}
                   className="absolute top-1 right-1 bg-white rounded-full p-0.5 shadow">
                   <X size={10} />
                 </button>
               </div>
             ))}
-            {previews.length < 6 && (
+            {/* New images being added */}
+            {newPreviews.map((src, i) => (
+              <div key={`new-${i}`} className="relative w-24 h-24 rounded-xl overflow-hidden border border-[#e7e5e4]">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <span className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-[10px] text-center py-0.5">
+                  New
+                </span>
+                <button type="button" onClick={() => removeNewImage(i)}
+                  className="absolute top-1 right-1 bg-white rounded-full p-0.5 shadow">
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+            {totalImages < 6 && (
               <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#e7e5e4] flex flex-col items-center justify-center cursor-pointer hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-[#78716c] hover:text-[#059669]">
                 <Upload size={20} className="mb-1" />
                 <span className="text-xs">Add photo</span>
-                <input type="file" accept="image/*" multiple onChange={handleImages} className="hidden" />
+                <input type="file" accept="image/*" multiple onChange={handleNewImages} className="hidden" />
               </label>
             )}
           </div>
@@ -126,7 +217,7 @@ export default function NewProductPage() {
             <FieldLabel required>Description</FieldLabel>
             <textarea
               name="description" value={form.description} onChange={handleChange} rows={4} required
-              placeholder="Describe your product -- materials, dimensions, how it was made, care instructions..."
+              placeholder="Describe your product — materials, dimensions, how it was made, care instructions..."
               className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] resize-none" />
           </div>
           <Input
@@ -148,7 +239,7 @@ export default function NewProductPage() {
           </div>
           <Input
             label="Tags" name="tags" value={form.tags} onChange={handleChange}
-            placeholder="handmade, pottery, gift -- comma separated"
+            placeholder="handmade, pottery, gift — comma separated"
             helpText="Add tags to help buyers find your product" />
         </div>
 
@@ -170,7 +261,7 @@ export default function NewProductPage() {
             <h2 className="font-bold text-[#1c1917]">Customization</h2>
           </div>
           <p className="text-xs text-[#78716c] -mt-2">
-            Enable this if buyers can request personalised versions of this product (e.g. name engraving, custom colour, specific design).
+            Enable this if buyers can request personalised versions of this product.
           </p>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -179,7 +270,6 @@ export default function NewProductPage() {
               onChange={handleChange} className="accent-[#059669] w-4 h-4" />
             <span className="text-sm text-[#1c1917] font-medium">This product can be customised</span>
           </label>
-
           {form.isCustomizable && (
             <div className="space-y-4 pl-6 border-l-2 border-[#a7f3d0]">
               <Input
@@ -200,18 +290,9 @@ export default function NewProductPage() {
                   value={form.customizationNote}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="e.g. Please share the name to engrave, preferred colour, and any reference images in your order note."
+                  placeholder="e.g. Please share the name to engrave, preferred colour, and any reference images."
                   className="w-full rounded-xl border border-[#e7e5e4] px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#059669] resize-none"
                 />
-                <p className="text-xs text-[#78716c] mt-1">
-                  This text will be shown to buyers on the product page to guide what details to provide.
-                </p>
-              </div>
-              <div className="flex gap-3 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3 text-xs text-[#065f46]">
-                <Settings2 size={14} className="text-[#059669] shrink-0 mt-0.5" />
-                <p>
-                  After the order is placed, you can contact the buyer directly to clarify any requirements before starting work.
-                </p>
               </div>
             </div>
           )}
@@ -220,13 +301,6 @@ export default function NewProductPage() {
         {/* Shipping */}
         <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6 space-y-4">
           <h2 className="font-bold text-[#1c1917]">Shipping</h2>
-          <p className="text-xs text-[#78716c] -mt-1">
-            Delivery charges are configured in your{" "}
-            <a href="/seller#settings" className="text-[#059669] underline underline-offset-2 hover:text-[#047857]">
-              shop delivery settings
-            </a>
-            {" "}and apply to all your products automatically.
-          </p>
           <Input
             label="Weight (grams)" name="weight" type="number" value={form.weight}
             onChange={handleChange} placeholder="200"
@@ -248,7 +322,7 @@ export default function NewProductPage() {
         <div className="flex gap-3">
           <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
           <Button type="submit" loading={loading} size="lg">
-            <Plus size={16} /> Publish Product
+            Save Changes
           </Button>
         </div>
       </form>

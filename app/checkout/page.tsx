@@ -1,15 +1,19 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import api from "@/services/api";
 import { useCartStore } from "@/store/cartStore";
 import { DeliveryMode, DeliveryConfig } from "@/types";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon, Loader2, Zap } from "lucide-react";
+import { Truck, MapPin, CreditCard, Package, CheckCircle, StoreIcon, Loader2, Zap, ShieldCheck } from "lucide-react";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 import toast from "react-hot-toast";
 import FieldLabel from "@/components/FieldLabel";
+
+// Emails allowed to use online payment (demo whitelist)
+const ONLINE_PAYMENT_EMAILS = ["jayeshsevatkar55@gmail.com"];
 
 const STATES = [
   "Andhra Pradesh","Assam","Bihar","Delhi","Goa","Gujarat","Haryana",
@@ -148,7 +152,6 @@ export default function CheckoutPage() {
   async function placeOrder() {
     setLoading(true);
     try {
-      // For pickup, we still need a minimal address (contact info); use a placeholder for location fields
       const orderAddress = isPickup
         ? {
             fullName: address.fullName,
@@ -161,11 +164,81 @@ export default function CheckoutPage() {
           }
         : address;
 
+      const cartPayload = items.map((i) => ({
+        product: i.product._id, quantity: i.quantity, variant: i.variant,
+        customizationRequirement: i.customizationRequirement,
+      }));
+
+      // ── Online payment via Razorpay ───────────────────────────────────────
+      if (payMethod === "razorpay") {
+        // Step 1: validate cart + get a Razorpay order ID (no DB order created yet)
+        let rpData: { razorpayOrderId: string; amount: number; currency: string; key: string };
+        try {
+          const { data } = await api.post("/orders/razorpay-init", {
+            cartItems: cartPayload, shippingAddress: orderAddress, deliveryMode,
+          });
+          rpData = data;
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || "Could not initiate payment. Please try again.");
+          return;   // stay on checkout, nothing was created
+        }
+
+        // Step 2: open Razorpay modal — if user dismisses, nothing happened
+        const paymentResult = await new Promise<
+          { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string } | null
+        >((resolve) => {
+          const options = {
+            key:         rpData.key,
+            amount:      rpData.amount,
+            currency:    rpData.currency,
+            name:        "Banavoo.in",
+            description: "Online Payment",
+            order_id:    rpData.razorpayOrderId,
+            prefill: {
+              name:    user?.name  || "",
+              email:   user?.email || "",
+              contact: orderAddress.phone || "",
+            },
+            theme: { color: "#059669" },
+            handler: (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+              resolve(response);
+            },
+            modal: {
+              ondismiss: () => resolve(null),   // user closed modal — resolve with null (no error, no order)
+            },
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        });
+
+        // User closed/dismissed the payment modal without paying
+        if (!paymentResult) {
+          toast("Payment cancelled. Your order was not placed.", { icon: "ℹ️" });
+          return;   // stay on checkout page — cart is still intact
+        }
+
+        // Step 3: verify signature + create DB order atomically on the backend
+        try {
+          const { data: order } = await api.post("/orders/razorpay-confirm", {
+            ...paymentResult,
+            cartItems: cartPayload, shippingAddress: orderAddress, deliveryMode,
+          });
+          ordered.current = true;
+          clearCart();
+          router.push(`/order-success?id=${order._id}&paid=true`);
+        } catch (err: any) {
+          // Payment went through but server-side confirm failed (very rare)
+          toast.error(err.response?.data?.message || "Payment received but order creation failed. Contact support.");
+        }
+        return;
+      }
+
+      // ── Cash on Delivery ─────────────────────────────────────────────────
       const { data } = await api.post("/orders", {
-        cartItems: items.map((i) => ({ product: i.product._id, quantity: i.quantity, variant: i.variant })),
-        shippingAddress: orderAddress, deliveryMode, paymentMethod: payMethod,
+        cartItems: cartPayload, shippingAddress: orderAddress, deliveryMode, paymentMethod: "cod",
       });
-      ordered.current = true;   // block the "items=0 → /cart" guard
+      ordered.current = true;
       clearCart();
       router.push(`/order-success?id=${data._id}`);
     } catch (err: any) {
@@ -189,7 +262,16 @@ export default function CheckoutPage() {
     ? !!(address.fullName && address.phone)
     : !!(address.fullName && address.phone && address.line1 && address.city && address.state && address.pincode);
 
+  // Button label for step 3
+  const orderBtnLabel = isPickup
+    ? `Place Order — Rs.${cartTotal.toLocaleString("en-IN")} (pay at pickup)`
+    : payMethod === "razorpay"
+      ? `Pay Now via Razorpay — Rs.${quote ? quote.totalAmount.toLocaleString("en-IN") : cartTotal.toLocaleString("en-IN")}`
+      : `Place Order${quote ? ` — Rs.${quote.totalAmount.toLocaleString("en-IN")}` : ""}`;
+
   return (
+    <>
+    <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
     <div className="max-w-4xl mx-auto px-4 py-8">
       <a href="/cart" className="inline-flex items-center gap-1 text-sm text-[#78716c] hover:text-[#059669] transition-colors mb-5 group">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
@@ -385,17 +467,39 @@ export default function CheckoutPage() {
               ) : (
                 /* ── Shipping: standard payment options ── */
                 <div className="space-y-3 mb-6">
-                  {/* Online Payment — disabled until Razorpay is configured */}
-                  <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e7e5e4] opacity-50 cursor-not-allowed">
-                    <input type="radio" name="pay" value="razorpay" disabled className="mt-0.5 accent-[#059669]" />
-                    <div>
-                      <p className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
-                        Online Payment
-                        <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md">Coming Soon</span>
-                      </p>
-                      <p className="text-xs text-[#78716c] mt-0.5">Pay via UPI, card, or netbanking (Razorpay)</p>
-                    </div>
-                  </label>
+                  {/* Online Payment — Razorpay (whitelisted emails only) */}
+                  {ONLINE_PAYMENT_EMAILS.includes(user?.email ?? "") ? (
+                    <label className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
+                      (payMethod === "razorpay" ? "border-[#059669] bg-[#ecfdf5]" : "border-[#e7e5e4] hover:border-[#059669]/50")}>
+                      <input type="radio" name="pay" value="razorpay" checked={payMethod === "razorpay"}
+                        onChange={() => setPayMethod("razorpay")} className="mt-0.5 accent-[#059669]" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
+                          <ShieldCheck size={14} className="text-[#059669] shrink-0" />
+                          Online Payment
+                          <span className="text-[10px] font-medium bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] px-1.5 py-0.5 rounded-md ml-auto">Secure</span>
+                        </p>
+                        <p className="text-xs text-[#78716c] mt-0.5">Pay via UPI, card, or netbanking (Razorpay)</p>
+                        <div className="flex gap-2 mt-2 flex-wrap">
+                          {["UPI", "Credit Card", "Debit Card", "Net Banking"].map((m) => (
+                            <span key={m} className="text-[10px] font-medium bg-[#f1f5f9] text-[#475569] px-2 py-0.5 rounded">{m}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </label>
+                  ) : (
+                    <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e7e5e4] opacity-50 cursor-not-allowed">
+                      <input type="radio" name="pay" value="razorpay" disabled className="mt-0.5 accent-[#059669]" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm text-[#1c1917] flex items-center gap-2">
+                          <ShieldCheck size={14} className="text-[#78716c] shrink-0" />
+                          Online Payment
+                          <span className="text-[10px] font-medium bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded-md ml-auto">Coming Soon</span>
+                        </p>
+                        <p className="text-xs text-[#78716c] mt-0.5">Pay via UPI, card, or netbanking (Razorpay)</p>
+                      </div>
+                    </label>
+                  )}
 
                   {/* Cash on Delivery */}
                   <label className={"flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all " +
@@ -407,8 +511,6 @@ export default function CheckoutPage() {
                       <p className="text-xs text-[#78716c] mt-0.5">
                         {modeQuotes.self_ship
                           ? (() => {
-                              // COD surcharge = quote with COD - quote without COD (base charge)
-                              // We show the total shipping charge already includes it
                               const codTotal = modeQuotes.self_ship.shippingCharge;
                               return codTotal > 0
                                 ? `Rs.${codTotal} delivery charge (includes COD handling fee)`
@@ -424,9 +526,7 @@ export default function CheckoutPage() {
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
                 <Button size="lg" loading={loading} onClick={placeOrder} className="flex-1">
-                  {isPickup
-                    ? `Place Order — Rs.${cartTotal.toLocaleString("en-IN")} (pay at pickup)`
-                    : `Place Order${quote ? ` — Rs.${quote.totalAmount.toLocaleString("en-IN")}` : ""}`}
+                  {orderBtnLabel}
                 </Button>
               </div>
             </div>
@@ -508,5 +608,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

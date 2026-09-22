@@ -4,13 +4,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/services/api";
 import { Order } from "@/types";
-import { CheckCircle, Package, ShoppingBag, LayoutDashboard, PartyPopper, Loader2, StoreIcon } from "lucide-react";
+import { CheckCircle, Package, ShoppingBag, LayoutDashboard, PartyPopper, Loader2, StoreIcon, ShieldCheck, Clock } from "lucide-react";
 import Button from "@/components/Button";
 
 // ─── Inner component (uses useSearchParams — must be inside <Suspense>) ───────
 function OrderSuccessContent() {
   const params  = useSearchParams();
   const orderId = params.get("id") ?? "";
+  const justPaid = params.get("paid") === "true";
 
   const [order,   setOrder]   = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,14 +37,23 @@ function OrderSuccessContent() {
         {/* ── Card ─────────────────────────────────────────────────────── */}
         <div className="bg-white rounded-3xl border border-[#e7e5e4] shadow-xl overflow-hidden">
 
-          {/* Green header */}
-          <div className="bg-[#059669] px-8 py-10 text-center">
+          {/* Header — changes colour based on payment status */}
+          <div className={`px-8 py-10 text-center ${justPaid || order?.paymentMethod === "cod" ? "bg-[#059669]" : "bg-amber-500"}`}>
             <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30">
-              <CheckCircle size={44} className="text-white" strokeWidth={2.5} />
+              {justPaid || order?.paymentMethod === "cod"
+                ? <CheckCircle size={44} className="text-white" strokeWidth={2.5} />
+                : <Clock size={44} className="text-white" strokeWidth={2.5} />
+              }
             </div>
-            <h1 className="text-2xl font-extrabold text-white mb-1">Order Placed!</h1>
-            <p className="text-green-100 text-sm">
-              A confirmation has been sent to your email.
+            <h1 className="text-2xl font-extrabold text-white mb-1">
+              {justPaid ? "Payment Successful!" : order?.paymentMethod === "cod" ? "Order Placed!" : "Order Saved — Payment Pending"}
+            </h1>
+            <p className="text-white/80 text-sm">
+              {justPaid
+                ? "Your payment is confirmed. Order is being processed."
+                : order?.paymentMethod === "cod"
+                  ? "A confirmation has been sent to your email."
+                  : "Your order is saved but payment is not yet complete."}
             </p>
           </div>
 
@@ -79,14 +89,34 @@ function OrderSuccessContent() {
               </div>
             )}
 
-            {/* Total */}
+            {/* Total + Payment Method */}
             {order && (
-              <div className="flex items-center justify-between border-t border-[#e7e5e4] pt-4">
-                <span className="text-sm font-semibold text-[#57534e]">Total Paid</span>
-                <span className="text-lg font-extrabold text-[#059669]">
-                  Rs.{order.totalAmount.toLocaleString("en-IN")}
-                </span>
-              </div>
+              <>
+                <div className="flex items-center justify-between border-t border-[#e7e5e4] pt-4">
+                  <span className="text-sm font-semibold text-[#57534e]">
+                    {order.paymentStatus === "paid" ? "Total Paid" : "Order Total"}
+                  </span>
+                  <span className="text-lg font-extrabold text-[#059669]">
+                    Rs.{order.totalAmount.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  {order.paymentMethod === "razorpay" ? (
+                    <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      order.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}>
+                      <ShieldCheck size={11} />
+                      {order.paymentStatus === "paid" ? "Paid via Razorpay" : "Online Payment — Pending"}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                      Cash on Delivery
+                    </span>
+                  )}
+                </div>
+              </>
             )}
 
             {/* What's next */}

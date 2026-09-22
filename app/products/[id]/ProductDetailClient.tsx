@@ -6,8 +6,9 @@ import api from "@/services/api";
 import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
-import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail } from "lucide-react";
+import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail, Settings2, Clock } from "lucide-react";
 import Button from "@/components/Button";
+import toast from "react-hot-toast";
 
 interface ProductDetailClientProps {
   initialProduct: Product;
@@ -28,6 +29,8 @@ export default function ProductDetailClient({ initialProduct, id }: ProductDetai
   const [reviewing, setReviewing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [customizationReq, setCustomizationReq] = useState("");
+  const [customizationError, setCustomizationError] = useState("");
 
   const variantStr = Object.entries(variant).map(([k, v]) => k + ": " + v).join(", ");
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
@@ -62,6 +65,34 @@ export default function ProductDetailClient({ initialProduct, id }: ProductDetai
       setProduct(data);
       setComment("");
     } catch { } finally { setReviewing(false); }
+  }
+
+  function handleAddToCart() {
+    if (product.isCustomizable && !customizationReq.trim()) {
+      setCustomizationError("Please describe your customisation requirements before adding to cart.");
+      return;
+    }
+    setCustomizationError("");
+    const result = addItem(product, qty, variantStr || undefined, product.isCustomizable ? customizationReq.trim() : undefined);
+    if (result === "conflict") {
+      toast.error("Your cart has items from another seller. Start a new cart to add this item.");
+    } else {
+      toast.success("Added to cart!");
+    }
+  }
+
+  function handleBuyNow() {
+    if (product.isCustomizable && !customizationReq.trim()) {
+      setCustomizationError("Please describe your customisation requirements before buying.");
+      return;
+    }
+    setCustomizationError("");
+    const result = addItem(product, qty, variantStr || undefined, product.isCustomizable ? customizationReq.trim() : undefined);
+    if (result === "conflict") {
+      toast.error("Your cart has items from another seller. Start a new cart to add this item.");
+    } else {
+      router.push("/cart");
+    }
   }
 
   return (
@@ -110,6 +141,20 @@ export default function ProductDetailClient({ initialProduct, id }: ProductDetai
         <div>
           <p className="text-xs text-[#78716c] font-medium mb-1 uppercase tracking-wide">{product.category}</p>
           <h1 className="text-2xl font-extrabold text-[#1c1917] mb-2">{product.name}</h1>
+
+          {/* Customizable badge */}
+          {product.isCustomizable && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 bg-[#fef3c7] text-[#92400e] text-xs font-semibold px-2.5 py-1 rounded-full border border-[#fcd34d]">
+                <Settings2 size={11} /> Customisable
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs text-[#78716c]">
+                <Clock size={11} className="text-[#059669]" />
+                {product.customizationDays} day{product.customizationDays !== 1 ? "s" : ""} to complete
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 mb-4">
             <div className="flex">{[1, 2, 3, 4, 5].map((s) => <Star key={s} size={14} className={s <= Math.round(product.rating) ? "fill-amber-400 text-amber-400" : "text-gray-200 fill-gray-200"} />)}</div>
             <span className="text-sm text-[#78716c]">{product.rating.toFixed(1)} - {product.numReviews} reviews</span>
@@ -143,11 +188,39 @@ export default function ProductDetailClient({ initialProduct, id }: ProductDetai
             </div>
             <span className="text-xs text-[#78716c]">{product.stock} in stock</span>
           </div>
+
+          {/* Customization requirement box */}
+          {product.isCustomizable && (
+            <div className="mb-6 bg-[#fffbeb] border border-[#fcd34d] rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Settings2 size={15} className="text-[#d97706] shrink-0" />
+                <p className="text-sm font-semibold text-[#92400e]">Customisation Details Required</p>
+              </div>
+              {product.customizationNote && (
+                <p className="text-xs text-[#78716c] mb-3 leading-relaxed">{product.customizationNote}</p>
+              )}
+              <div className="flex items-center gap-1.5 text-xs text-[#57534e] mb-3">
+                <Clock size={12} className="text-[#059669] shrink-0" />
+                <span>Estimated completion: <strong>{product.customizationDays} day{product.customizationDays !== 1 ? "s" : ""}</strong> after order confirmation. The seller may contact you to clarify details.</span>
+              </div>
+              <textarea
+                value={customizationReq}
+                onChange={(e) => { setCustomizationReq(e.target.value); if (e.target.value.trim()) setCustomizationError(""); }}
+                placeholder="Describe your requirements — e.g. name to engrave, colour preference, size..."
+                rows={3}
+                className={"w-full rounded-xl border px-3.5 py-2.5 text-sm focus:outline-none resize-none " + (customizationError ? "border-red-400 focus:border-red-400" : "border-[#fcd34d] focus:border-[#d97706]")}
+              />
+              {customizationError && (
+                <p className="text-xs text-red-500 mt-1">{customizationError}</p>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-3 mb-3">
-            <Button className="flex-1" size="lg" onClick={() => addItem(product, qty, variantStr || undefined)} disabled={product.stock === 0}>
+            <Button className="flex-1" size="lg" onClick={handleAddToCart} disabled={product.stock === 0}>
               <ShoppingCart size={18} /> {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Button>
-            <Button variant="outline" size="lg" onClick={() => { addItem(product, qty, variantStr || undefined); router.push("/cart"); }}>Buy Now</Button>
+            <Button variant="outline" size="lg" onClick={handleBuyNow} disabled={product.stock === 0}>Buy Now</Button>
             <div className="flex gap-2">
               <Button variant="ghost" size="lg" className="!px-3" aria-label="Add to wishlist"><Heart size={18} /></Button>
               <Button variant="outline" size="lg" className="!px-3" onClick={shareProduct} aria-label="Share product"><Share2 size={18} /></Button>
@@ -199,6 +272,21 @@ export default function ProductDetailClient({ initialProduct, id }: ProductDetai
         {tab === "desc" && (
           <div>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#1c1917]">{product.description}</p>
+            {product.isCustomizable && (
+              <div className="mt-6 bg-[#fffbeb] border border-[#fcd34d] rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Settings2 size={15} className="text-[#d97706]" />
+                  <h4 className="font-bold text-[#92400e]">Customisation Available</h4>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-[#57534e] mb-2">
+                  <Clock size={13} className="text-[#059669]" />
+                  <span>Estimated time to complete your custom order: <strong>{product.customizationDays} day{product.customizationDays !== 1 ? "s" : ""}</strong></span>
+                </div>
+                {product.customizationNote && (
+                  <p className="text-sm text-[#57534e]">{product.customizationNote}</p>
+                )}
+              </div>
+            )}
             {product.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
                 {product.tags.map((tag) => <span key={tag} className="bg-[#f5f5f4] text-[#57534e] text-xs px-2.5 py-1 rounded-full">#{tag}</span>)}
