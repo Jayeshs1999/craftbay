@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/services/api";
@@ -23,8 +23,15 @@ export default function BecomeSellerPage() {
   const { user, setUser } = useAuthStore();
 
   const [form, setForm] = useState({
-    shopName: "", shopDesc: "", shopCity: "", shopState: "", pickupPincode: "",
+    shopName: "", shopDesc: "", shopCity: "", shopState: "", pickupPincode: "", phone: user?.phone || "",
   });
+
+  // Keep phone populated if user profile finishes loading later
+  useEffect(() => {
+    if (user?.phone && !form.phone) {
+      setForm((f) => ({ ...f, phone: user.phone || "" }));
+    }
+  }, [user?.phone]);
   const [loading, setLoading] = useState(false);
 
   if (!user) return (
@@ -52,9 +59,15 @@ export default function BecomeSellerPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const cleanPhone = form.phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      toast.error("Mobile number must be exactly 10 digits");
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.put("/auth/become-seller", form);
+      await api.put("/auth/become-seller", { ...form, phone: cleanPhone });
       const { data } = await api.get("/auth/me");
       setUser(data);
       router.push("/seller");
@@ -130,6 +143,10 @@ export default function BecomeSellerPage() {
               label="Pickup Pincode *" name="pickupPincode" value={form.pickupPincode}
               onChange={handleChange} placeholder="411001" required
               helpText="Your shop's pincode — shown to buyers for local pickup." />
+            <Input
+              label="Mobile Number *" name="phone" type="tel" value={form.phone}
+              onChange={handleChange} placeholder="9876543210" maxLength={10} required
+              helpText="10-digit contact number for order updates and courier pickups." />
             <p className="text-xs text-[#78716c] text-center">
               By activating your seller account you agree to our{" "}
               <a href="/terms" className="text-[#059669] hover:underline">Terms &amp; Conditions</a>
