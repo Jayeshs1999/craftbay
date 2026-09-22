@@ -5,7 +5,7 @@ import Link from "next/link";
 import api from "@/services/api";
 import { Product, Order, OrderStatus, OrderItem, DeliveryConfig } from "@/types";
 import {
-  Package, ShoppingBag, Eye, TrendingUp, Plus, Trash2,
+  Package, ShoppingBag, Eye, TrendingUp, Plus, Trash2, Pencil,
   Truck, CheckCircle, X, Phone, MapPin, User as UserIcon,
   ClipboardList, Clock, XCircle, ChevronDown, ChevronUp,
   Hash, AlertCircle, StoreIcon, Settings,
@@ -643,6 +643,10 @@ export default function SellerDashboardPage() {
                           <div className="flex items-center justify-between mt-3">
                             <span className="font-bold text-[#059669]">Rs.{product.price.toLocaleString("en-IN")}</span>
                             <div className="flex gap-2">
+                              <Link href={`/seller/edit-product/${product._id}`}
+                                className="p-1.5 rounded-lg border border-[#e7e5e4] hover:bg-[#ecfdf5] hover:border-[#059669] text-[#78716c] hover:text-[#059669] transition-colors">
+                                <Pencil size={13} />
+                              </Link>
                               <button
                                 onClick={() => toggleActive(product._id, product.isActive)}
                                 className="text-xs px-2.5 py-1 border border-[#e7e5e4] rounded-lg hover:bg-[#ecfdf5] text-[#78716c] transition-colors">
