@@ -7,7 +7,7 @@ import { Order, User } from "@/types";
 import {
   Package, Users, ShoppingBag, TrendingUp, AlertTriangle,
   CheckCircle, XCircle, Clock, Bell, ChevronDown,
-  ChevronUp, Phone, Mail, RefreshCw, Send, Store, Banknote, ShieldCheck,
+  ChevronUp, Phone, Mail, RefreshCw, Send, Store, Banknote, ShieldCheck, Camera, ExternalLink,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -232,65 +232,38 @@ function OrderTableRow({
 
   return (
     <>
-      <tr
-        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isUnresponded ? "bg-red-50 hover:bg-red-50" : ""}`}
-      >
-        {/* Expand toggle + Order ID */}
+      <tr className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isUnresponded ? "bg-red-50 hover:bg-red-50" : ""}`}>
         <td className="px-3 py-3 whitespace-nowrap">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setExpanded((x) => !x)}
-              className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors">
+            <button onClick={() => setExpanded((x) => !x)} className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors">
               {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
-            <span className="font-mono text-xs font-bold text-gray-800">
-              #{order._id.slice(-8).toUpperCase()}
-            </span>
-            {isUnresponded && (
-              <span title={`No seller action for ${age}h`}>
-                <AlertTriangle size={13} className="text-red-500" />
-              </span>
-            )}
+            <span className="font-mono text-xs font-bold text-gray-800">#{order._id.slice(-8).toUpperCase()}</span>
+            {isUnresponded && <span title={`No seller action for ${age}h`}><AlertTriangle size={13} className="text-red-500" /></span>}
           </div>
           <p className="text-[11px] text-gray-400 ml-7">{fmtDate(order.createdAt)}</p>
         </td>
-
-        {/* Status */}
         <td className="px-3 py-3 whitespace-nowrap">
-          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>
-            {meta.label}
-          </span>
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>{meta.label}</span>
           {order.paymentMethod === "razorpay" && (
-            <span className={`ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-              order.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-            }`}>
+            <span className={`ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${order.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
               {order.paymentStatus === "paid" ? "Paid" : "Unpaid"}
             </span>
           )}
         </td>
-
-        {/* Buyer */}
         <td className="px-3 py-3">
           <p className="text-xs font-semibold text-gray-800 truncate max-w-[120px]">{buyer?.name ?? "—"}</p>
           <p className="text-[11px] text-gray-400 truncate max-w-[120px]">{buyer?.email ?? "—"}</p>
           {buyer?.phone && <p className="text-[11px] text-gray-400">{buyer.phone}</p>}
         </td>
-
-        {/* Seller(s) */}
         <td className="px-3 py-3">
           {uniqueSellers.map((s: any) => (
             <div key={s._id} className="flex items-center gap-1 flex-wrap mb-0.5">
               <p className="text-xs font-semibold text-gray-800 truncate max-w-[110px]">{s.name}</p>
-              {s.phone && (
-                <a href={`tel:${s.phone}`} className="text-[11px] text-emerald-600 hover:underline flex items-center gap-0.5">
-                  <Phone size={9} />
-                </a>
-              )}
+              {s.phone && <a href={`tel:${s.phone}`} className="text-[11px] text-emerald-600 hover:underline flex items-center gap-0.5"><Phone size={9} /></a>}
             </div>
           ))}
         </td>
-
-        {/* Amount */}
         <td className="px-3 py-3 whitespace-nowrap text-right">
           <span className="font-bold text-emerald-700 text-sm">₹{order.totalAmount.toLocaleString("en-IN")}</span>
           {order.orderStatus === "delivered" && order.paymentMethod === "razorpay" && (
@@ -299,43 +272,31 @@ function OrderTableRow({
             </p>
           )}
         </td>
-
-        {/* Actions */}
         <td className="px-3 py-3 whitespace-nowrap text-right">
           <div className="flex items-center justify-end gap-1.5">
-            <button
-              onClick={() => onNudge(order)}
-              title="Email seller reminder"
+            <button onClick={() => onNudge(order)} title="Email seller reminder"
               className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 border border-orange-200 px-2 py-1 rounded-lg hover:bg-orange-50 transition-colors">
               <Bell size={11} /> Nudge
             </button>
             {canReleasePayout && (
-              <button
-                onClick={releasePayout}
-                disabled={payoutLoading}
+              <button onClick={releasePayout} disabled={payoutLoading}
                 className="flex items-center gap-1 text-[11px] font-bold bg-orange-500 text-white px-2 py-1 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                {payoutLoading ? <RefreshCw size={11} className="animate-spin" /> : <Banknote size={11} />}
-                Pay
+                {payoutLoading ? <RefreshCw size={11} className="animate-spin" /> : <Banknote size={11} />} Pay
               </button>
             )}
           </div>
         </td>
       </tr>
-
-      {/* Expanded detail row */}
       {expanded && (
         <tr className="bg-gray-50 border-b border-gray-100">
           <td colSpan={6} className="px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Items */}
               <div>
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Items Ordered</p>
                 <div className="space-y-1.5">
                   {order.items.map((item, i) => (
                     <div key={i} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-3 py-2">
-                      {item.image && (
-                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0" />
-                      )}
+                      {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0" />}
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-gray-800 truncate">{item.name}</p>
                         {item.variant && <p className="text-[11px] text-gray-500">{item.variant}</p>}
@@ -349,9 +310,7 @@ function OrderTableRow({
                   ))}
                 </div>
               </div>
-
               <div className="space-y-4">
-                {/* Delivery address */}
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Delivery Address</p>
                   <p className="text-xs text-gray-700">
@@ -361,16 +320,12 @@ function OrderTableRow({
                       order.shippingAddress.pincode].filter(Boolean).join(", ")}
                   </p>
                 </div>
-
-                {/* Status history */}
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Status History</p>
                   <div className="space-y-1">
                     {order.statusHistory.slice().reverse().map((h, i) => (
                       <div key={i} className="flex items-start gap-2 text-[11px]">
-                        <span className={`mt-0.5 px-1.5 py-0.5 rounded-full font-semibold ${STATUS_META[h.status]?.color || "bg-gray-100 text-gray-600"}`}>
-                          {h.status}
-                        </span>
+                        <span className={`mt-0.5 px-1.5 py-0.5 rounded-full font-semibold ${STATUS_META[h.status]?.color || "bg-gray-100 text-gray-600"}`}>{h.status}</span>
                         <span className="text-gray-500">
                           {h.note && <span className="text-gray-700">{h.note} · </span>}
                           by <strong>{h.updatedBy}</strong> · {fmtDate(h.timestamp)} {fmtTime(h.timestamp)}
@@ -379,27 +334,17 @@ function OrderTableRow({
                     ))}
                   </div>
                 </div>
-
-                {/* Admin force status */}
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-gray-500 shrink-0">Force status:</label>
-                  <select
-                    value={statusValue}
-                    onChange={(e) => setStatusValue(e.target.value as any)}
+                  <select value={statusValue} onChange={(e) => setStatusValue(e.target.value as any)}
                     className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-emerald-500">
-                    {ALL_STATUSES.map((s) => (
-                      <option key={s} value={s}>{STATUS_META[s]?.label || s}</option>
-                    ))}
+                    {ALL_STATUSES.map((s) => <option key={s} value={s}>{STATUS_META[s]?.label || s}</option>)}
                   </select>
-                  <button
-                    onClick={forceStatus}
-                    disabled={updating || statusValue === order.orderStatus}
+                  <button onClick={forceStatus} disabled={updating || statusValue === order.orderStatus}
                     className="bg-gray-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">
                     {updating ? "…" : "Apply"}
                   </button>
                 </div>
-
-                {/* Payout info */}
                 {(canReleasePayout || payoutDone) && (
                   <div className={`flex items-center gap-3 p-3 rounded-xl border ${payoutDone ? "bg-purple-50 border-purple-200" : "bg-orange-50 border-orange-200"}`}>
                     <Banknote size={16} className={payoutDone ? "text-purple-600 shrink-0" : "text-orange-600 shrink-0"} />
@@ -414,9 +359,7 @@ function OrderTableRow({
                       </p>
                     </div>
                     {canReleasePayout && (
-                      <button
-                        onClick={releasePayout}
-                        disabled={payoutLoading}
+                      <button onClick={releasePayout} disabled={payoutLoading}
                         className="flex items-center gap-1.5 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors shrink-0">
                         {payoutLoading ? <RefreshCw size={12} className="animate-spin" /> : <Banknote size={12} />}
                         {payoutLoading ? "Releasing…" : "Release Payout"}
@@ -436,9 +379,9 @@ function OrderTableRow({
 // ─── Buyer Mail Types ─────────────────────────────────────────────────────────
 
 const BUYER_MAIL_TYPES = [
-  { value: "become_seller_intro", label: "Become a Seller — Intro", desc: "Gentle intro: 'Did you know you can also sell on Banavoo?'", icon: "🌿" },
-  { value: "become_seller_nudge", label: "Your Craft Deserves a Shop", desc: "Warm encouragement for buyers who make handmade products", icon: "🎨" },
-  { value: "seller_benefits",     label: "Seller Benefits (Comparison)", desc: "Shows Instagram vs Big Marketplaces vs Banavoo.in table", icon: "💰" },
+  { value: "become_seller_intro", label: "Become a Seller — Intro",       desc: "Gentle intro: 'Did you know you can also sell on Banavoo?'",    icon: "🌿" },
+  { value: "become_seller_nudge", label: "Your Craft Deserves a Shop",     desc: "Warm encouragement for buyers who make handmade products",       icon: "🎨" },
+  { value: "seller_benefits",     label: "Seller Benefits (Comparison)",   desc: "Shows Instagram vs Big Marketplaces vs Banavoo.in table",       icon: "💰" },
 ];
 
 type AdminBuyerWithCount = { _id: string; name: string; email: string; createdAt: string; orderCount: number };
@@ -462,23 +405,15 @@ function MailBuyersPanel() {
     try {
       const { data } = await api.get("/admin/buyers", { params: { filter: buyerFilter } });
       setBuyers(data.buyers);
-    } catch {
-      toast.error("Failed to load buyers");
-    } finally {
-      setLoadingBuyers(false);
-    }
+    } catch { toast.error("Failed to load buyers"); }
+    finally { setLoadingBuyers(false); }
   }, [buyerFilter]);
 
   useEffect(() => { fetchBuyers(); }, [fetchBuyers]);
 
   function toggleBuyer(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelected((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
-
   function toggleAll() {
     setSelected(selected.size === buyers.length ? new Set() : new Set(buyers.map((b) => b._id)));
   }
@@ -486,22 +421,14 @@ function MailBuyersPanel() {
   async function sendMails() {
     if (selected.size === 0) { toast.error("Select at least one buyer"); return; }
     if (!confirm(`Send "${BUYER_MAIL_TYPES.find(m => m.value === mailType)?.label}" email to ${selected.size} buyer(s)?`)) return;
-    setSending(true);
-    setResult(null);
+    setSending(true); setResult(null);
     try {
-      const { data } = await api.post("/admin/mail-buyers", {
-        buyerIds: Array.from(selected),
-        mailType,
-        customNote: customNote.trim() || undefined,
-      });
+      const { data } = await api.post("/admin/mail-buyers", { buyerIds: Array.from(selected), mailType, customNote: customNote.trim() || undefined });
       setResult(data);
       toast.success(`✅ Sent to ${data.sent.length} buyer(s)`);
       setSelected(new Set());
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to send");
-    } finally {
-      setSending(false);
-    }
+    } catch (e: any) { toast.error(e.response?.data?.message || "Failed to send"); }
+    finally { setSending(false); }
   }
 
   const chosenMailType = BUYER_MAIL_TYPES.find((m) => m.value === mailType)!;
@@ -518,15 +445,12 @@ function MailBuyersPanel() {
         </div>
       </div>
 
-      {/* Step 1 */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Step 1 — Choose Email Type</p>
         <div className="grid sm:grid-cols-3 gap-3">
           {BUYER_MAIL_TYPES.map((mt) => (
             <button key={mt.value} onClick={() => setMailType(mt.value)}
-              className={`text-left rounded-xl border p-3.5 transition-all ${
-                mailType === mt.value ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20" : "border-gray-200 hover:border-emerald-300"
-              }`}>
+              className={`text-left rounded-xl border p-3.5 transition-all ${mailType === mt.value ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20" : "border-gray-200 hover:border-emerald-300"}`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{mt.icon}</span>
                 <span className="text-sm font-semibold text-gray-800">{mt.label}</span>
@@ -559,32 +483,23 @@ function MailBuyersPanel() {
         </div>
       </div>
 
-      {/* Step 2 — Buyers table */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 2 — Select Buyers</p>
           <div className="flex gap-1.5 flex-wrap">
             {(["all", "no_orders", "has_orders"] as const).map((f) => (
               <button key={f} onClick={() => setBuyerFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  buyerFilter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                }`}>
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${buyerFilter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                 {f === "all" ? "All Buyers" : f === "no_orders" ? "Never Ordered" : "Has Orders"}
               </button>
             ))}
-            <button onClick={fetchBuyers} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
-              <RefreshCw size={13} />
-            </button>
+            <button onClick={fetchBuyers} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors"><RefreshCw size={13} /></button>
           </div>
         </div>
-
         {loadingBuyers ? (
           <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
         ) : buyers.length === 0 ? (
-          <div className="text-center py-10 text-gray-400">
-            <Users size={32} className="mx-auto mb-2 text-gray-200" />
-            <p className="text-sm">No buyers match this filter</p>
-          </div>
+          <div className="text-center py-10 text-gray-400"><Users size={32} className="mx-auto mb-2 text-gray-200" /><p className="text-sm">No buyers match this filter</p></div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-2">
@@ -595,9 +510,7 @@ function MailBuyersPanel() {
                   {selected.size === buyers.length && buyers.length > 0 ? `Deselect all (${buyers.length})` : `Select all ${buyers.length}`}
                 </span>
               </label>
-              {selected.size > 0 && (
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{selected.size} selected</span>
-              )}
+              {selected.size > 0 && <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{selected.size} selected</span>}
             </div>
             <div className="overflow-x-auto rounded-xl border border-gray-200">
               <table className="w-full text-xs">
@@ -612,8 +525,7 @@ function MailBuyersPanel() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {buyers.map((buyer) => (
-                    <tr key={buyer._id}
-                      onClick={() => toggleBuyer(buyer._id)}
+                    <tr key={buyer._id} onClick={() => toggleBuyer(buyer._id)}
                       className={`cursor-pointer transition-colors ${selected.has(buyer._id) ? "bg-emerald-50" : "hover:bg-gray-50"}`}>
                       <td className="px-3 py-2 text-center">
                         <input type="checkbox" checked={selected.has(buyer._id)} onChange={() => toggleBuyer(buyer._id)}
@@ -623,9 +535,7 @@ function MailBuyersPanel() {
                       <td className="px-3 py-2 font-semibold text-gray-800">{buyer.name}</td>
                       <td className="px-3 py-2 text-gray-500">{buyer.email}</td>
                       <td className="px-3 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded-full font-semibold ${buyer.orderCount === 0 ? "bg-gray-100 text-gray-500" : "bg-amber-100 text-amber-700"}`}>
-                          {buyer.orderCount}
-                        </span>
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${buyer.orderCount === 0 ? "bg-gray-100 text-gray-500" : "bg-amber-100 text-amber-700"}`}>{buyer.orderCount}</span>
                       </td>
                       <td className="px-3 py-2 text-gray-400">{fmtDate(buyer.createdAt)}</td>
                     </tr>
@@ -637,7 +547,6 @@ function MailBuyersPanel() {
         )}
       </div>
 
-      {/* Step 3 */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Step 3 — Send Email</p>
         <div className="bg-gray-50 rounded-xl px-4 py-3 mb-4 space-y-1">
@@ -673,50 +582,12 @@ function MailBuyersPanel() {
 // ─── Seller Mail Types ────────────────────────────────────────────────────────
 
 const MAIL_TYPES = [
-<<<<<<< Updated upstream
-  {
-    value: "no_products",
-    label: "Empty Shop",
-    desc: "Seller registered but added 0 products",
-    color: "bg-red-50 text-red-700 border-red-200",
-    icon: "🏪",
-  },
-  {
-    value: "one_product",
-    label: "Only 1 Product",
-    desc: "Nudge to add more products for first order",
-    color: "bg-amber-50 text-amber-700 border-amber-200",
-    icon: "📦",
-  },
-  {
-    value: "keep_going",
-    label: "Keep Going",
-    desc: "Motivational nudge for any seller",
-    color: "bg-blue-50 text-blue-700 border-blue-200",
-    icon: "💪",
-  },
-  {
-    value: "share_shop",
-    label: "Share Shop Link",
-    desc: "Remind seller to share their shop on social media",
-    color: "bg-purple-50 text-purple-700 border-purple-200",
-    icon: "🔗",
-  },
-  {
-    value: "tips",
-    label: "5 Tips to First Order",
-    desc: "Actionable tips to get their first sale",
-    color: "bg-green-50 text-green-700 border-green-200",
-    icon: "💡",
-  },
-=======
-  { value: "no_products",       label: "Empty Shop",          desc: "Seller registered but added 0 products",                      color: "bg-red-50 text-red-700 border-red-200",    icon: "🏪" },
-  { value: "one_product",       label: "Only 1 Product",       desc: "Nudge to add more products for first order",                  color: "bg-amber-50 text-amber-700 border-amber-200", icon: "📦" },
-  { value: "keep_going",        label: "Keep Going",           desc: "Motivational nudge for any seller",                           color: "bg-blue-50 text-blue-700 border-blue-200",  icon: "💪" },
-  { value: "share_shop",        label: "Share Shop Link",      desc: "Remind seller to share their shop on social media",           color: "bg-purple-50 text-purple-700 border-purple-200", icon: "🔗" },
-  { value: "tips",              label: "5 Tips to First Order",desc: "Actionable tips to get their first sale",                     color: "bg-green-50 text-green-700 border-green-200", icon: "💡" },
-  { value: "product_image_issue", label: "Fix Product Photos", desc: "Ask seller to delete blurry/wrong photos & upload clear images", color: "bg-amber-50 text-amber-700 border-amber-200", icon: "📸" },
->>>>>>> Stashed changes
+  { value: "no_products",         label: "Empty Shop",           desc: "Seller registered but added 0 products",                         color: "bg-red-50 text-red-700 border-red-200",       icon: "🏪" },
+  { value: "one_product",         label: "Only 1 Product",        desc: "Nudge to add more products for first order",                     color: "bg-amber-50 text-amber-700 border-amber-200", icon: "📦" },
+  { value: "keep_going",          label: "Keep Going",            desc: "Motivational nudge for any seller",                              color: "bg-blue-50 text-blue-700 border-blue-200",    icon: "💪" },
+  { value: "share_shop",          label: "Share Shop Link",       desc: "Remind seller to share their shop on social media",              color: "bg-purple-50 text-purple-700 border-purple-200", icon: "🔗" },
+  { value: "tips",                label: "5 Tips to First Order", desc: "Actionable tips to get their first sale",                        color: "bg-green-50 text-green-700 border-green-200", icon: "💡" },
+  { value: "product_image_issue", label: "Fix Product Photos",    desc: "Ask seller to delete blurry/wrong photos & upload clear images", color: "bg-amber-50 text-amber-700 border-amber-200", icon: "📸" },
 ];
 
 type AdminSellerWithCount = User & { productCount: number };
@@ -734,29 +605,19 @@ function MailSellersPanel() {
   const [result,         setResult]         = useState<{ sent: any[]; failed: any[] } | null>(null);
 
   const fetchSellers = useCallback(async () => {
-    setLoadingSellers(true);
-    setSelected(new Set());
-    setResult(null);
+    setLoadingSellers(true); setSelected(new Set()); setResult(null);
     try {
       const { data } = await api.get("/admin/sellers", { params: { filter: sellerFilter } });
       setSellers(data.sellers);
-    } catch {
-      toast.error("Failed to load sellers");
-    } finally {
-      setLoadingSellers(false);
-    }
+    } catch { toast.error("Failed to load sellers"); }
+    finally { setLoadingSellers(false); }
   }, [sellerFilter]);
 
   useEffect(() => { fetchSellers(); }, [fetchSellers]);
 
   function toggleSeller(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelected((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
-
   function toggleAll() {
     setSelected(selected.size === sellers.length ? new Set() : new Set(sellers.map((s) => s._id)));
   }
@@ -764,37 +625,26 @@ function MailSellersPanel() {
   async function sendMails() {
     if (selected.size === 0) { toast.error("Select at least one seller"); return; }
     if (!confirm(`Send "${MAIL_TYPES.find(m => m.value === mailType)?.label}" email to ${selected.size} seller(s)?`)) return;
-    setSending(true);
-    setResult(null);
+    setSending(true); setResult(null);
     try {
-      const { data } = await api.post("/admin/mail-sellers", {
-        sellerIds: Array.from(selected),
-        mailType,
-        customNote: customNote.trim() || undefined,
-      });
+      const { data } = await api.post("/admin/mail-sellers", { sellerIds: Array.from(selected), mailType, customNote: customNote.trim() || undefined });
       setResult(data);
       toast.success(`✅ Sent to ${data.sent.length} seller(s)`);
       setSelected(new Set());
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to send");
-    } finally {
-      setSending(false);
-    }
+    } catch (e: any) { toast.error(e.response?.data?.message || "Failed to send"); }
+    finally { setSending(false); }
   }
 
   const chosenMailType = MAIL_TYPES.find((m) => m.value === mailType)!;
 
   return (
     <div className="space-y-5">
-      {/* Step 1 */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Step 1 — Choose Email Type</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {MAIL_TYPES.map((mt) => (
             <button key={mt.value} onClick={() => setMailType(mt.value)}
-              className={`text-left rounded-xl border p-3.5 transition-all ${
-                mailType === mt.value ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20" : "border-gray-200 hover:border-emerald-300"
-              }`}>
+              className={`text-left rounded-xl border p-3.5 transition-all ${mailType === mt.value ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20" : "border-gray-200 hover:border-emerald-300"}`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{mt.icon}</span>
                 <span className="text-sm font-semibold text-gray-800">{mt.label}</span>
@@ -807,78 +657,48 @@ function MailSellersPanel() {
         <div className="mt-4 bg-gray-50 rounded-xl px-4 py-3 flex items-start gap-2">
           <Mail size={13} className="text-gray-400 mt-0.5 shrink-0" />
           <div>
-<<<<<<< Updated upstream
-            <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-0.5">Email Subject Preview</p>
-            <p className="text-xs text-[#374151] font-medium">
-              {mailType === "no_products"  && "[Seller Name], your shop is empty — let's fix that 🛍️"}
-              {mailType === "one_product"  && "One product is a start, [Seller Name] — here's what happens next 🌱"}
-              {mailType === "keep_going"   && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
-              {mailType === "share_shop"   && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
-              {mailType === "tips"         && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
-=======
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Email Subject Preview</p>
             <p className="text-xs text-gray-700 font-medium">
-              {mailType === "no_products"          && "[Seller Name], your shop is empty — let's fix that 🛍️"}
-              {mailType === "one_product"          && "One product is a start, [Seller Name] — here's what happens next 🌱"}
-              {mailType === "keep_going"           && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
-              {mailType === "share_shop"           && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
-              {mailType === "tips"                 && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
-              {mailType === "product_image_issue"  && "⚠️ Action Required: Please update product photos on [Shop Name] 📸"}
->>>>>>> Stashed changes
+              {mailType === "no_products"         && "[Seller Name], your shop is empty — let's fix that 🛍️"}
+              {mailType === "one_product"         && "One product is a start, [Seller Name] — here's what happens next 🌱"}
+              {mailType === "keep_going"          && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
+              {mailType === "share_shop"          && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
+              {mailType === "tips"                && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
+              {mailType === "product_image_issue" && "⚠️ Action Required: Please update product photos on [Shop Name] 📸"}
             </p>
           </div>
         </div>
         <div className="mt-4">
-<<<<<<< Updated upstream
-          <label className="block text-xs font-medium text-[#78716c] mb-1.5">
-            Personal note to add at the bottom of the email <span className="text-[#a8a29e]">(optional)</span>
-=======
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
-            Personal note / feedback for seller <span className="text-gray-400">(optional)</span>
->>>>>>> Stashed changes
-          </label>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Personal note / feedback for seller <span className="text-gray-400">(optional)</span></label>
           <textarea
             className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
             rows={2}
-<<<<<<< Updated upstream
-            placeholder="e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"
-=======
             placeholder={mailType === "product_image_issue"
               ? "e.g. Please replace the low resolution photos with bright daylight pictures."
               : "e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"}
->>>>>>> Stashed changes
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Step 2 — Sellers table */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 2 — Select Sellers</p>
           <div className="flex gap-1.5 flex-wrap">
             {(["all", "no_products", "one_product"] as const).map((f) => (
               <button key={f} onClick={() => setSellerFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  sellerFilter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                }`}>
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${sellerFilter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                 {f === "all" ? "All Sellers" : f === "no_products" ? "0 Products" : "1 Product"}
               </button>
             ))}
-            <button onClick={fetchSellers} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
-              <RefreshCw size={13} />
-            </button>
+            <button onClick={fetchSellers} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors"><RefreshCw size={13} /></button>
           </div>
         </div>
-
         {loadingSellers ? (
           <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
         ) : sellers.length === 0 ? (
-          <div className="text-center py-10 text-gray-400">
-            <Store size={32} className="mx-auto mb-2 text-gray-200" />
-            <p className="text-sm">No sellers match this filter</p>
-          </div>
+          <div className="text-center py-10 text-gray-400"><Store size={32} className="mx-auto mb-2 text-gray-200" /><p className="text-sm">No sellers match this filter</p></div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-2">
@@ -889,9 +709,7 @@ function MailSellersPanel() {
                   {selected.size === sellers.length && sellers.length > 0 ? `Deselect all (${sellers.length})` : `Select all ${sellers.length}`}
                 </span>
               </label>
-              {selected.size > 0 && (
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{selected.size} selected</span>
-              )}
+              {selected.size > 0 && <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{selected.size} selected</span>}
             </div>
             <div className="overflow-x-auto rounded-xl border border-gray-200">
               <table className="w-full text-xs">
@@ -906,8 +724,7 @@ function MailSellersPanel() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {sellers.map((seller) => (
-                    <tr key={seller._id}
-                      onClick={() => toggleSeller(seller._id)}
+                    <tr key={seller._id} onClick={() => toggleSeller(seller._id)}
                       className={`cursor-pointer transition-colors ${selected.has(seller._id) ? "bg-emerald-50" : "hover:bg-gray-50"}`}>
                       <td className="px-3 py-2 text-center">
                         <input type="checkbox" checked={selected.has(seller._id)} onChange={() => toggleSeller(seller._id)}
@@ -918,9 +735,9 @@ function MailSellersPanel() {
                       <td className="px-3 py-2 text-gray-500">{seller.sellerProfile?.shopName || "—"}</td>
                       <td className="px-3 py-2 text-gray-500">{seller.email}</td>
                       <td className="px-3 py-2 text-center">
-                        <span className={`px-2 py-0.5 rounded-full font-semibold ${
-                          seller.productCount === 0 ? "bg-red-100 text-red-700" : seller.productCount === 1 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
-                        }`}>{seller.productCount}</span>
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${seller.productCount === 0 ? "bg-red-100 text-red-700" : seller.productCount === 1 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
+                          {seller.productCount}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -931,7 +748,6 @@ function MailSellersPanel() {
         )}
       </div>
 
-      {/* Step 3 */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Step 3 — Send Email</p>
         <div className="bg-gray-50 rounded-xl px-4 py-3 mb-4 space-y-1">
@@ -979,15 +795,9 @@ function PayoutsPanel() {
     try {
       const paid = payoutFilter === "released" ? "true" : "false";
       const { data } = await api.get("/admin/payouts", { params: { page: p, limit: 20, paid } });
-      setPayouts(data.orders);
-      setPage(data.page);
-      setPages(data.pages);
-      setTotal(data.total);
-    } catch {
-      toast.error("Failed to load payouts");
-    } finally {
-      setLoading(false);
-    }
+      setPayouts(data.orders); setPage(data.page); setPages(data.pages); setTotal(data.total);
+    } catch { toast.error("Failed to load payouts"); }
+    finally { setLoading(false); }
   }, [payoutFilter]);
 
   useEffect(() => { fetchPayouts(1); }, [fetchPayouts]);
@@ -1004,28 +814,20 @@ function PayoutsPanel() {
           </p>
         </div>
       </div>
-
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex gap-1.5">
           {(["pending", "released"] as const).map((f) => (
             <button key={f} onClick={() => setPayoutFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                payoutFilter === f
-                  ? f === "pending" ? "bg-orange-500 text-white" : "bg-purple-600 text-white"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}>
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${payoutFilter === f ? (f === "pending" ? "bg-orange-500 text-white" : "bg-purple-600 text-white") : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
               {f === "pending" ? "Payout Pending" : "Payout Released"}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2">
           <p className="text-xs text-gray-500">{total} order{total !== 1 ? "s" : ""}</p>
-          <button onClick={() => fetchPayouts(1)} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
-            <RefreshCw size={13} />
-          </button>
+          <button onClick={() => fetchPayouts(1)} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors"><RefreshCw size={13} /></button>
         </div>
       </div>
-
       {loading ? (
         <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}</div>
       ) : payouts.length === 0 ? (
@@ -1061,24 +863,18 @@ function PayoutsPanel() {
                       <p className="text-gray-400">{o.buyer?.email ?? "—"}</p>
                     </td>
                     <td className="px-4 py-3">
-                      {uniqueSellers.map((s: any) => (
-                        <p key={s._id} className="font-semibold text-gray-800">{s.name}</p>
-                      ))}
+                      {uniqueSellers.map((s: any) => <p key={s._id} className="font-semibold text-gray-800">{s.name}</p>)}
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-emerald-700">
                       ₹{o.itemsTotal?.toLocaleString("en-IN") ?? o.totalAmount.toLocaleString("en-IN")}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {o.sellerPaid ? (
-                        <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">Released</span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-semibold">Pending</span>
-                      )}
+                      {o.sellerPaid
+                        ? <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">Released</span>
+                        : <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-semibold">Pending</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {!o.sellerPaid && (
-                        <PayoutReleaseButton order={o} onReleased={() => fetchPayouts(page)} />
-                      )}
+                      {!o.sellerPaid && <PayoutReleaseButton order={o} onReleased={() => fetchPayouts(page)} />}
                     </td>
                   </tr>
                 );
@@ -1087,14 +883,11 @@ function PayoutsPanel() {
           </table>
         </div>
       )}
-
       {pages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
           {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
             <button key={p} onClick={() => fetchPayouts(p)}
-              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                page === p ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}>{p}</button>
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${page === p ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>{p}</button>
           ))}
         </div>
       )}
@@ -1102,7 +895,6 @@ function PayoutsPanel() {
   );
 }
 
-// Inline payout release button for the payouts table
 function PayoutReleaseButton({ order, onReleased }: { order: AdminOrder; onReleased: () => void }) {
   const [loading, setLoading] = useState(false);
   const [done,    setDone]    = useState(false);
@@ -1115,11 +907,8 @@ function PayoutReleaseButton({ order, onReleased }: { order: AdminOrder; onRelea
       setDone(true);
       toast.success("Payout released — seller notified by email");
       onReleased();
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to release payout");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: any) { toast.error(e.response?.data?.message || "Failed to release payout"); }
+    finally { setLoading(false); }
   }
 
   if (done) return <span className="text-xs text-purple-600 font-semibold">Released ✓</span>;
@@ -1136,27 +925,18 @@ function PayoutReleaseButton({ order, onReleased }: { order: AdminOrder; onRelea
 
 type AdminTab = "orders" | "payouts" | "products" | "mail" | "mail_buyers";
 
-const NAV_ITEMS: { id: AdminTab; label: string; icon: any; badge?: string }[] = [
-  { id: "orders",      label: "Orders",             icon: Package },
-  { id: "payouts",     label: "Payouts",            icon: Banknote },
-  { id: "products",    label: "Product Photos",     icon: Camera },
-  { id: "mail",        label: "Mail Sellers",        icon: Send },
-  { id: "mail_buyers", label: "Mail Buyers",         icon: Users },
+const NAV_ITEMS: { id: AdminTab; label: string; icon: any }[] = [
+  { id: "orders",      label: "Orders",         icon: Package },
+  { id: "payouts",     label: "Payouts",         icon: Banknote },
+  { id: "products",    label: "Product Photos",  icon: Camera },
+  { id: "mail",        label: "Mail Sellers",    icon: Send },
+  { id: "mail_buyers", label: "Mail Buyers",     icon: Users },
 ];
 
 export default function AdminPage() {
   const { user, isLoading } = useAuthStore();
   const router = useRouter();
 
-<<<<<<< Updated upstream
-  const [activeTab,   setActiveTab]   = useState<"orders" | "mail" | "mail_buyers" | "payouts">("orders");
-  const [stats,   setStats]   = useState<AdminStats | null>(null);
-  const [orders,  setOrders]  = useState<AdminOrder[]>([]);
-  const [total,   setTotal]   = useState(0);
-  const [page,    setPage]    = useState(1);
-  const [pages,   setPages]   = useState(1);
-  const [filter,  setFilter]  = useState("");
-=======
   const [activeTab,   setActiveTab]   = useState<AdminTab>("orders");
   const [stats,       setStats]       = useState<AdminStats | null>(null);
   const [orders,      setOrders]      = useState<AdminOrder[]>([]);
@@ -1164,23 +944,20 @@ export default function AdminPage() {
   const [page,        setPage]        = useState(1);
   const [pages,       setPages]       = useState(1);
   const [filter,      setFilter]      = useState("");
->>>>>>> Stashed changes
   const [unresponded, setUnresponded] = useState(false);
   const [fetching,    setFetching]    = useState(false);
   const [nudgeOrder,  setNudgeOrder]  = useState<AdminOrder | null>(null);
 
-  // Products tab state
-  const [productsList,              setProductsList]              = useState<any[]>([]);
-  const [prodPage,                  setProdPage]                  = useState(1);
-  const [prodPages,                 setProdPages]                 = useState(1);
-  const [prodTotal,                 setProdTotal]                 = useState(0);
-  const [prodSearch,                setProdSearch]                = useState("");
-  const [prodLoading,               setProdLoading]               = useState(false);
-  const [selectedProductForModal,   setSelectedProductForModal]   = useState<any | null>(null);
-  const [productNoticeNote,         setProductNoticeNote]         = useState("");
-  const [sendingProductNotice,      setSendingProductNotice]      = useState(false);
+  const [productsList,            setProductsList]            = useState<any[]>([]);
+  const [prodPage,                setProdPage]                = useState(1);
+  const [prodPages,               setProdPages]               = useState(1);
+  const [prodTotal,               setProdTotal]               = useState(0);
+  const [prodSearch,              setProdSearch]              = useState("");
+  const [prodLoading,             setProdLoading]             = useState(false);
+  const [selectedProductForModal, setSelectedProductForModal] = useState<any | null>(null);
+  const [productNoticeNote,       setProductNoticeNote]       = useState("");
+  const [sendingProductNotice,    setSendingProductNotice]    = useState(false);
 
-  // Auth guard
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
       router.replace("/login?redirect=/admin");
@@ -1188,10 +965,7 @@ export default function AdminPage() {
   }, [user, isLoading, router]);
 
   const fetchStats = useCallback(async () => {
-    try {
-      const { data } = await api.get("/admin/stats");
-      setStats(data);
-    } catch {}
+    try { const { data } = await api.get("/admin/stats"); setStats(data); } catch {}
   }, []);
 
   const fetchOrders = useCallback(async (p = 1) => {
@@ -1201,46 +975,44 @@ export default function AdminPage() {
       if (filter)      params.status      = filter;
       if (unresponded) params.unresponded = "true";
       const { data } = await api.get("/admin/orders", { params });
-      setOrders(data.orders);
-      setTotal(data.total);
-      setPage(data.page);
-      setPages(data.pages);
+      setOrders(data.orders); setTotal(data.total); setPage(data.page); setPages(data.pages);
     } catch {}
     finally { setFetching(false); }
   }, [filter, unresponded]);
 
-<<<<<<< Updated upstream
-=======
   const fetchAdminProducts = useCallback(async (p = 1) => {
     setProdLoading(true);
     try {
-      const { data } = await api.get("/admin/products", {
-        params: { page: p, limit: 20, search: prodSearch.trim() || undefined },
-      });
-      setProductsList(data.products);
-      setProdPage(data.page);
-      setProdPages(data.pages);
-      setProdTotal(data.total);
-    } catch {
-      toast.error("Failed to load products");
-    } finally {
-      setProdLoading(false);
-    }
+      const { data } = await api.get("/admin/products", { params: { page: p, limit: 20, search: prodSearch.trim() || undefined } });
+      setProductsList(data.products); setProdPage(data.page); setProdPages(data.pages); setProdTotal(data.total);
+    } catch { toast.error("Failed to load products"); }
+    finally { setProdLoading(false); }
   }, [prodSearch]);
 
->>>>>>> Stashed changes
   useEffect(() => {
     if (!user || user.role !== "admin") return;
-    fetchStats();
-    fetchOrders(1);
+    fetchStats(); fetchOrders(1);
   }, [user, fetchStats, fetchOrders]);
+
+  useEffect(() => {
+    if (activeTab === "products" && user?.role === "admin") fetchAdminProducts(1);
+  }, [activeTab, user, fetchAdminProducts]);
+
+  async function handleSendProductImageNotice() {
+    if (!selectedProductForModal) return;
+    setSendingProductNotice(true);
+    try {
+      const { data } = await api.post(`/admin/products/${selectedProductForModal._id}/notify-image-issue`, { note: productNoticeNote.trim() || undefined });
+      toast.success(data.message || "Email sent successfully");
+      setSelectedProductForModal(null); setProductNoticeNote("");
+    } catch (err: any) { toast.error(err.response?.data?.message || "Failed to send notice"); }
+    finally { setSendingProductNotice(false); }
+  }
 
   if (isLoading || !user) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
-        ))}
+        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}
       </div>
     );
   }
@@ -1248,103 +1020,12 @@ export default function AdminPage() {
   if (user.role !== "admin") return null;
 
   return (
-<<<<<<< Updated upstream
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#1c1917]">Super Admin Dashboard</h1>
-            <p className="text-sm text-[#78716c] mt-0.5">Full order tracking · Buyer–Seller visibility · Seller nudge · Mail sellers</p>
-          </div>
-          <button
-            onClick={() => { fetchStats(); fetchOrders(1); }}
-            className="flex items-center gap-2 text-sm font-medium text-[#78716c] border border-[#e7e5e4] px-3 py-2 rounded-xl hover:bg-[#f5f5f4] transition-colors">
-            <RefreshCw size={14} /> Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Stats grid */}
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 mb-8">
-          <StatCard label="Total Orders"       value={stats.totalOrders}       icon={Package} />
-          <StatCard label="Pending / Confirmed" value={stats.pendingOrders}    icon={Clock} />
-          <StatCard
-            label="Unresponded (>24h)"
-            value={stats.unrespondedOrders}
-            icon={AlertTriangle}
-            warn={stats.unrespondedOrders > 0}
-          />
-          <StatCard label="Delivered"           value={stats.deliveredOrders}  icon={CheckCircle} accent />
-          <StatCard label="Cancelled"           value={stats.cancelledOrders}  icon={XCircle} />
-          <StatCard label="Platform Revenue"    value={`₹${stats.totalRevenue.toLocaleString("en-IN")}`} icon={TrendingUp} accent />
-          <StatCard label="Total Users"         value={stats.totalUsers}       icon={Users} />
-          <StatCard label="Active Sellers"      value={stats.totalSellers}     icon={ShoppingBag} />
-          <StatCard label="Live Products"       value={stats.totalProducts}    icon={Package} />
-        </div>
-      )}
-
-      {/* Tab switcher */}
-      <div className="flex gap-1 bg-[#f5f5f4] p-1 rounded-2xl mb-6 w-fit flex-wrap">
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            activeTab === "orders"
-              ? "bg-white text-[#1c1917] shadow-sm"
-              : "text-[#78716c] hover:text-[#1c1917]"
-          }`}>
-          <Package size={15} /> Orders
-        </button>
-        <button
-          onClick={() => setActiveTab("payouts")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            activeTab === "payouts"
-              ? "bg-white text-[#1c1917] shadow-sm"
-              : "text-[#78716c] hover:text-[#1c1917]"
-          }`}>
-          <Banknote size={15} /> Payouts
-        </button>
-        <button
-          onClick={() => setActiveTab("mail")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            activeTab === "mail"
-              ? "bg-white text-[#1c1917] shadow-sm"
-              : "text-[#78716c] hover:text-[#1c1917]"
-          }`}>
-          <Send size={15} /> Mail Sellers
-        </button>
-        <button
-          onClick={() => setActiveTab("mail_buyers")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            activeTab === "mail_buyers"
-              ? "bg-white text-[#1c1917] shadow-sm"
-              : "text-[#78716c] hover:text-[#1c1917]"
-          }`}>
-          <Users size={15} /> Mail Buyers
-        </button>
-      </div>
-
-      {/* ── MAIL SELLERS TAB ── */}
-      {activeTab === "mail" && <MailSellersPanel />}
-
-      {/* ── MAIL BUYERS TAB ── */}
-      {activeTab === "mail_buyers" && <MailBuyersPanel />}
-
-      {/* ── PAYOUTS TAB ── */}
-      {activeTab === "payouts" && <PayoutsPanel />}
-
-      {/* ── ORDERS TAB ── */}
-      {activeTab === "orders" && <>
-=======
     <div className="min-h-screen bg-gray-50">
-      {/* Top header bar */}
+      {/* Sticky header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-gray-900 rounded-lg">
-              <ShieldCheck size={16} className="text-white" />
-            </div>
+            <div className="p-1.5 bg-gray-900 rounded-lg"><ShieldCheck size={16} className="text-white" /></div>
             <div>
               <span className="text-sm font-extrabold text-gray-900">Super Admin</span>
               <span className="ml-2 text-xs text-gray-400 hidden sm:inline">Banavoo Control Panel</span>
@@ -1352,15 +1033,12 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-2">
             {stats && stats.unrespondedOrders > 0 && (
-              <button
-                onClick={() => { setActiveTab("orders"); setUnresponded(true); setFilter(""); }}
+              <button onClick={() => { setActiveTab("orders"); setUnresponded(true); setFilter(""); }}
                 className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                <AlertTriangle size={13} />
-                {stats.unrespondedOrders} unresponded
+                <AlertTriangle size={13} /> {stats.unrespondedOrders} unresponded
               </button>
             )}
-            <button
-              onClick={() => { fetchStats(); fetchOrders(1); }}
+            <button onClick={() => { fetchStats(); fetchOrders(1); }}
               className="flex items-center gap-1.5 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
               <RefreshCw size={13} /> Refresh
             </button>
@@ -1369,36 +1047,31 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Stats row */}
+        {/* Stats */}
         {stats && (
           <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3 mb-6">
-            <StatCard label="Orders"      value={stats.totalOrders}       icon={Package} />
-            <StatCard label="Pending"     value={stats.pendingOrders}     icon={Clock} />
-            <StatCard label=">24h"        value={stats.unrespondedOrders} icon={AlertTriangle} warn={stats.unrespondedOrders > 0} />
-            <StatCard label="Delivered"   value={stats.deliveredOrders}   icon={CheckCircle} accent />
-            <StatCard label="Cancelled"   value={stats.cancelledOrders}   icon={XCircle} />
-            <StatCard label="Revenue"     value={`₹${(stats.totalRevenue/1000).toFixed(0)}k`} icon={TrendingUp} accent />
-            <StatCard label="Users"       value={stats.totalUsers}        icon={Users} />
-            <StatCard label="Sellers"     value={stats.totalSellers}      icon={ShoppingBag} />
-            <StatCard label="Products"    value={stats.totalProducts}     icon={Package} />
+            <StatCard label="Orders"    value={stats.totalOrders}       icon={Package} />
+            <StatCard label="Pending"   value={stats.pendingOrders}     icon={Clock} />
+            <StatCard label=">24h"      value={stats.unrespondedOrders} icon={AlertTriangle} warn={stats.unrespondedOrders > 0} />
+            <StatCard label="Delivered" value={stats.deliveredOrders}   icon={CheckCircle} accent />
+            <StatCard label="Cancelled" value={stats.cancelledOrders}   icon={XCircle} />
+            <StatCard label="Revenue"   value={`₹${(stats.totalRevenue/1000).toFixed(0)}k`} icon={TrendingUp} accent />
+            <StatCard label="Users"     value={stats.totalUsers}        icon={Users} />
+            <StatCard label="Sellers"   value={stats.totalSellers}      icon={ShoppingBag} />
+            <StatCard label="Products"  value={stats.totalProducts}     icon={Package} />
           </div>
         )}
 
         <div className="flex gap-5">
-          {/* Sidebar nav */}
+          {/* Sidebar nav — desktop */}
           <nav className="w-44 shrink-0 hidden md:block">
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden sticky top-20">
               {NAV_ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                <button key={item.id} onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors border-b border-gray-100 last:border-b-0 text-left ${
-                    activeTab === item.id
-                      ? "bg-gray-900 text-white"
-                      : "text-gray-600 hover:bg-gray-50"
+                    activeTab === item.id ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"
                   }`}>
-                  <item.icon size={15} />
-                  {item.label}
+                  <item.icon size={15} /> {item.label}
                 </button>
               ))}
             </div>
@@ -1407,14 +1080,11 @@ export default function AdminPage() {
           {/* Mobile nav */}
           <div className="md:hidden w-full mb-4 flex gap-1 overflow-x-auto pb-1">
             {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
+              <button key={item.id} onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                   activeTab === item.id ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}>
-                <item.icon size={13} />
-                {item.label}
+                <item.icon size={13} /> {item.label}
               </button>
             ))}
           </div>
@@ -1425,41 +1095,29 @@ export default function AdminPage() {
             {/* ── ORDERS TAB ── */}
             {activeTab === "orders" && (
               <div>
-                {/* Filter pills */}
                 <div className="flex flex-wrap gap-1.5 mb-4 items-center">
                   <button onClick={() => { setUnresponded(false); setFilter(""); }}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && !filter ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
                     All
                   </button>
                   <button onClick={() => { setUnresponded(true); setFilter(""); }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-                      unresponded ? "bg-red-600 text-white" : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
-                    }`}>
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${unresponded ? "bg-red-600 text-white" : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"}`}>
                     <AlertTriangle size={10} /> &gt;24h
                     {stats?.unrespondedOrders ? (
-                      <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${unresponded ? "bg-white text-red-600" : "bg-red-600 text-white"}`}>
-                        {stats.unrespondedOrders}
-                      </span>
+                      <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${unresponded ? "bg-white text-red-600" : "bg-red-600 text-white"}`}>{stats.unrespondedOrders}</span>
                     ) : null}
                   </button>
                   {["pending","confirmed","processing","shipped","delivered","cancelled"].map((s) => (
                     <button key={s} onClick={() => { setUnresponded(false); setFilter(s); }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                        !unresponded && filter === s ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-                      }`}>
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && filter === s ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
                       {STATUS_META[s]?.label || s}
                     </button>
                   ))}
                   <span className="ml-auto text-xs text-gray-400">{fetching ? "Loading…" : `${total} order${total !== 1 ? "s" : ""}`}</span>
                 </div>
 
-                {/* Orders table */}
                 {fetching ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
-                    ))}
-                  </div>
+                  <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}</div>
                 ) : orders.length === 0 ? (
                   <div className="text-center py-20 bg-white rounded-xl border border-gray-200 text-gray-400">
                     <Package size={40} className="mx-auto mb-3 text-gray-200" />
@@ -1487,14 +1145,11 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {/* Pagination */}
                 {pages > 1 && (
                   <div className="flex justify-center gap-2 mt-4">
                     {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
                       <button key={p} onClick={() => fetchOrders(p)}
-                        className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                          page === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-                        }`}>{p}</button>
+                        className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${page === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>{p}</button>
                     ))}
                   </div>
                 )}
@@ -1512,39 +1167,26 @@ export default function AdminPage() {
                   <div>
                     <p className="text-sm font-bold text-amber-900 mb-0.5">Product Image Moderation</p>
                     <p className="text-xs text-amber-800 leading-relaxed">
-                      Review photos uploaded by sellers. Click <strong>&quot;Request Photo Fix&quot;</strong> to email a seller about blurry or incorrect images.
+                      Review photos uploaded by sellers. Click <strong>&quot;Fix&quot;</strong> to email a seller about blurry or incorrect images.
                     </p>
                   </div>
                 </div>
 
-                {/* Search */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="text"
-                    placeholder="Search by title or category…"
-                    value={prodSearch}
+                  <input type="text" placeholder="Search by title or category…" value={prodSearch}
                     onChange={(e) => setProdSearch(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") fetchAdminProducts(1); }}
-                    className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3.5 py-2 text-xs text-gray-800 focus:outline-none focus:border-emerald-500"
-                  />
-                  <button onClick={() => fetchAdminProducts(1)}
-                    className="px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-xl hover:bg-gray-700 transition-colors shrink-0">
-                    Search
-                  </button>
-                  <button onClick={() => fetchAdminProducts(1)}
-                    className="p-2 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors">
-                    <RefreshCw size={13} />
-                  </button>
+                    className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3.5 py-2 text-xs text-gray-800 focus:outline-none focus:border-emerald-500" />
+                  <button onClick={() => fetchAdminProducts(1)} className="px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-xl hover:bg-gray-700 transition-colors shrink-0">Search</button>
+                  <button onClick={() => fetchAdminProducts(1)} className="p-2 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors"><RefreshCw size={13} /></button>
                   <span className="text-xs text-gray-400">{prodTotal} products</span>
                 </div>
 
-                {/* Products table */}
                 {prodLoading ? (
                   <div className="space-y-2">{[1,2,3,4,5].map((i) => <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />)}</div>
                 ) : productsList.length === 0 ? (
                   <div className="text-center py-12 bg-white rounded-xl border border-gray-200 text-gray-400">
-                    <Camera size={36} className="mx-auto mb-2 text-gray-200" />
-                    <p className="text-sm">No products found</p>
+                    <Camera size={36} className="mx-auto mb-2 text-gray-200" /><p className="text-sm">No products found</p>
                   </div>
                 ) : (
                   <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -1562,16 +1204,13 @@ export default function AdminPage() {
                       <tbody className="divide-y divide-gray-100">
                         {productsList.map((prod) => (
                           <tr key={prod._id} className="hover:bg-gray-50 transition-colors">
-                            {/* Thumbnail strip */}
                             <td className="px-4 py-2">
                               <div className="flex gap-1">
                                 {prod.images && prod.images.length > 0 ? (
                                   prod.images.slice(0, 4).map((img: any, idx: number) => (
                                     <div key={idx} className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shrink-0">
                                       <img src={img.url} alt={`img ${idx+1}`} className="w-full h-full object-cover" />
-                                      {img.isMain && (
-                                        <span className="absolute bottom-0 left-0 right-0 bg-emerald-600 text-white text-[8px] font-bold text-center leading-3 py-0.5">✓</span>
-                                      )}
+                                      {img.isMain && <span className="absolute bottom-0 left-0 right-0 bg-emerald-600 text-white text-[8px] font-bold text-center leading-3 py-0.5">✓</span>}
                                     </div>
                                   ))
                                 ) : (
@@ -1580,9 +1219,7 @@ export default function AdminPage() {
                                   </div>
                                 )}
                                 {prod.images && prod.images.length > 4 && (
-                                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-500">
-                                    +{prod.images.length - 4}
-                                  </div>
+                                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-500">+{prod.images.length - 4}</div>
                                 )}
                               </div>
                             </td>
@@ -1592,9 +1229,7 @@ export default function AdminPage() {
                             </td>
                             <td className="px-4 py-2">
                               <p className="font-semibold text-gray-800">{prod.seller?.name || "Unknown"}</p>
-                              {prod.seller?.sellerProfile?.shopName && (
-                                <p className="text-gray-400">{prod.seller.sellerProfile.shopName}</p>
-                              )}
+                              {prod.seller?.sellerProfile?.shopName && <p className="text-gray-400">{prod.seller.sellerProfile.shopName}</p>}
                             </td>
                             <td className="px-4 py-2 text-gray-500">{prod.category}</td>
                             <td className="px-4 py-2 text-right font-bold text-emerald-700">₹{prod.price}</td>
@@ -1604,8 +1239,7 @@ export default function AdminPage() {
                                   className="p-1.5 text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
                                   <ExternalLink size={12} />
                                 </a>
-                                <button
-                                  onClick={() => { setSelectedProductForModal(prod); setProductNoticeNote(""); }}
+                                <button onClick={() => { setSelectedProductForModal(prod); setProductNoticeNote(""); }}
                                   className="flex items-center gap-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
                                   <Mail size={11} /> Fix
                                 </button>
@@ -1618,19 +1252,15 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {/* Pagination */}
                 {prodPages > 1 && (
                   <div className="flex justify-center gap-2 mt-4">
                     {Array.from({ length: prodPages }, (_, i) => i + 1).map((p) => (
                       <button key={p} onClick={() => fetchAdminProducts(p)}
-                        className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                          prodPage === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
-                        }`}>{p}</button>
+                        className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${prodPage === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>{p}</button>
                     ))}
                   </div>
                 )}
 
-                {/* Modal for image fix notice */}
                 {selectedProductForModal && (
                   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
@@ -1654,19 +1284,15 @@ export default function AdminPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1.5">Specific feedback (optional)</label>
-                        <textarea
-                          rows={3}
+                        <textarea rows={3}
                           placeholder="e.g. The first image is very blurry. Please take a photo in natural daylight."
                           value={productNoticeNote}
                           onChange={(e) => setProductNoticeNote(e.target.value)}
-                          className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 focus:outline-none focus:border-emerald-500 resize-none"
-                        />
+                          className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 focus:outline-none focus:border-emerald-500 resize-none" />
                       </div>
                       <div className="flex gap-2 pt-2">
                         <button onClick={() => setSelectedProductForModal(null)}
-                          className="flex-1 border border-gray-200 text-gray-500 text-xs font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-                          Cancel
-                        </button>
+                          className="flex-1 border border-gray-200 text-gray-500 text-xs font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors">Cancel</button>
                         <button onClick={handleSendProductImageNotice} disabled={sendingProductNotice}
                           className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50">
                           {sendingProductNotice ? <RefreshCw size={13} className="animate-spin" /> : <Send size={13} />}
@@ -1681,16 +1307,14 @@ export default function AdminPage() {
 
             {/* ── MAIL SELLERS TAB ── */}
             {activeTab === "mail" && <MailSellersPanel />}
->>>>>>> Stashed changes
 
             {/* ── MAIL BUYERS TAB ── */}
             {activeTab === "mail_buyers" && <MailBuyersPanel />}
 
-          </div>{/* end main content */}
-        </div>{/* end flex */}
-      </div>{/* end container */}
+          </div>
+        </div>
+      </div>
 
-      {/* Nudge modal */}
       {nudgeOrder && (
         <NudgeModal
           order={nudgeOrder}
