@@ -79,17 +79,17 @@ function StatCard({
   label: string; value: string | number; icon: any; accent?: boolean; warn?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl border p-5 flex items-center gap-4 ${
+    <div className={`rounded-xl border p-4 flex items-center gap-3 ${
       warn   ? "border-red-200 bg-red-50" :
-      accent ? "border-[#059669]/30 bg-[#ecfdf5]" :
-               "border-[#e7e5e4] bg-white"
+      accent ? "border-emerald-200 bg-emerald-50" :
+               "border-gray-200 bg-white"
     }`}>
-      <div className={`p-2.5 rounded-xl ${warn ? "bg-red-100" : accent ? "bg-[#d1fae5]" : "bg-[#f5f5f4]"}`}>
-        <Icon size={20} className={warn ? "text-red-600" : accent ? "text-[#059669]" : "text-[#78716c]"} />
+      <div className={`p-2 rounded-lg ${warn ? "bg-red-100" : accent ? "bg-emerald-100" : "bg-gray-100"}`}>
+        <Icon size={18} className={warn ? "text-red-600" : accent ? "text-emerald-600" : "text-gray-500"} />
       </div>
       <div>
-        <p className="text-2xl font-extrabold text-[#1c1917]">{value}</p>
-        <p className="text-xs text-[#78716c] mt-0.5">{label}</p>
+        <p className="text-xl font-extrabold text-gray-900 leading-tight">{value}</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">{label}</p>
       </div>
     </div>
   );
@@ -119,7 +119,6 @@ function NudgeModal({
     }
   }
 
-  // unique sellers
   const sellers = Array.from(
     new Map(order.items.map((i) => [i.seller?._id, i.seller])).values()
   ).filter(Boolean);
@@ -127,60 +126,46 @@ function NudgeModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <h3 className="text-lg font-bold text-[#1c1917] mb-1">Nudge Seller</h3>
-        <p className="text-sm text-[#78716c] mb-4">
+        <h3 className="text-lg font-bold text-gray-900 mb-1">Nudge Seller</h3>
+        <p className="text-sm text-gray-500 mb-4">
           Send an action-required email to the seller(s) for order{" "}
           <span className="font-mono font-semibold">#{order._id.slice(-8).toUpperCase()}</span>.
         </p>
-
         <div className="space-y-2 mb-4">
           {sellers.map((s: any) => (
-            <div key={s._id} className="flex items-center gap-3 bg-[#f5f5f4] rounded-xl px-3 py-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#d1fae5] flex items-center justify-center text-xs font-bold text-[#059669]">
+            <div key={s._id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">
                 {s.name?.[0]?.toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1c1917] truncate">{s.name}</p>
-                <p className="text-xs text-[#78716c] truncate">{s.email}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{s.name}</p>
+                <p className="text-xs text-gray-500 truncate">{s.email}</p>
               </div>
               {s.phone && (
-                <a href={`tel:${s.phone}`}
-                   className="ml-auto flex items-center gap-1 text-xs text-[#059669] font-medium hover:underline shrink-0">
+                <a href={`tel:${s.phone}`} className="ml-auto flex items-center gap-1 text-xs text-emerald-600 font-medium hover:underline shrink-0">
                   <Phone size={12} /> {s.phone}
                 </a>
               )}
             </div>
           ))}
         </div>
-
-        <label className="block text-xs font-medium text-[#78716c] mb-1">
-          Custom message (optional)
-        </label>
+        <label className="block text-xs font-medium text-gray-500 mb-1">Custom message (optional)</label>
         <textarea
-          className="w-full border border-[#e7e5e4] rounded-xl p-3 text-sm text-[#1c1917] resize-none focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20"
+          className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 resize-none focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           rows={3}
           placeholder="e.g. The buyer has been waiting. Please confirm ASAP."
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
-
         <div className="flex gap-3 mt-4">
-          <button
-            onClick={onClose}
-            className="flex-1 border border-[#e7e5e4] rounded-xl py-2.5 text-sm font-medium text-[#78716c] hover:bg-[#f5f5f4] transition-colors">
+          <button onClick={onClose} className="flex-1 border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
             Cancel
           </button>
           <button
             onClick={send}
             disabled={loading || sent}
-            className="flex-1 bg-[#059669] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[#047857] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-            {sent ? (
-              <><CheckCircle size={14} /> Sent!</>
-            ) : loading ? (
-              <><RefreshCw size={14} className="animate-spin" /> Sending…</>
-            ) : (
-              <><Bell size={14} /> Send Nudge</>
-            )}
+            className="flex-1 bg-emerald-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            {sent ? <><CheckCircle size={14} /> Sent!</> : loading ? <><RefreshCw size={14} className="animate-spin" /> Sending…</> : <><Bell size={14} /> Send Nudge</>}
           </button>
         </div>
       </div>
@@ -188,9 +173,9 @@ function NudgeModal({
   );
 }
 
-// ─── Order Row ────────────────────────────────────────────────────────────────
+// ─── Order Table Row ──────────────────────────────────────────────────────────
 
-function OrderRow({
+function OrderTableRow({
   order, onNudge, onPayoutReleased,
 }: {
   order: AdminOrder;
@@ -207,7 +192,6 @@ function OrderRow({
   const age  = hoursAgo(order.createdAt);
   const isUnresponded = ["pending", "confirmed"].includes(order.orderStatus) && age >= 24;
 
-  // Show release button only for delivered + online (Razorpay) + payout not yet done
   const canReleasePayout = order.orderStatus === "delivered" &&
     order.paymentMethod === "razorpay" &&
     !payoutDone;
@@ -220,10 +204,7 @@ function OrderRow({
     if (!confirm(`Override status to "${statusValue}"?`)) return;
     setUpdating(true);
     try {
-      await api.put(`/admin/orders/${order._id}/status`, {
-        status: statusValue,
-        note:   "Admin override",
-      });
+      await api.put(`/admin/orders/${order._id}/status`, { status: statusValue, note: "Admin override" });
       order.orderStatus = statusValue as any;
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Failed to update status");
@@ -250,234 +231,214 @@ function OrderRow({
   const buyer = order.buyer;
 
   return (
-    <div className={`bg-white rounded-2xl border ${isUnresponded ? "border-red-300" : "border-[#e7e5e4]"} overflow-hidden`}>
-      {/* Main row */}
-      <div className="p-4">
-        <div className="flex items-start gap-3 flex-wrap">
-          {/* Order ID + age */}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-bold text-[#1c1917]">
-                #{order._id.slice(-8).toUpperCase()}
+    <>
+      <tr
+        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isUnresponded ? "bg-red-50 hover:bg-red-50" : ""}`}
+      >
+        {/* Expand toggle + Order ID */}
+        <td className="px-3 py-3 whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setExpanded((x) => !x)}
+              className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors">
+              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+            <span className="font-mono text-xs font-bold text-gray-800">
+              #{order._id.slice(-8).toUpperCase()}
+            </span>
+            {isUnresponded && (
+              <span title={`No seller action for ${age}h`}>
+                <AlertTriangle size={13} className="text-red-500" />
               </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>
-                {meta.label}
-              </span>
-              {/* Payment method badge */}
-              {order.paymentMethod === "razorpay" && (
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
-                  order.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                }`}>
-                  <ShieldCheck size={8} /> {order.paymentStatus === "paid" ? "Paid Online" : "Unpaid"}
-                </span>
-              )}
-              {/* Payout badge */}
-              {order.orderStatus === "delivered" && order.paymentMethod === "razorpay" && (
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
-                  payoutDone ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"
-                }`}>
-                  <Banknote size={8} /> {payoutDone ? "Payout Released" : "Payout Pending"}
-                </span>
-              )}
-              {isUnresponded && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
-                  <AlertTriangle size={9} /> No seller action {age}h
-                </span>
+            )}
+          </div>
+          <p className="text-[11px] text-gray-400 ml-7">{fmtDate(order.createdAt)}</p>
+        </td>
+
+        {/* Status */}
+        <td className="px-3 py-3 whitespace-nowrap">
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.color}`}>
+            {meta.label}
+          </span>
+          {order.paymentMethod === "razorpay" && (
+            <span className={`ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+              order.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+            }`}>
+              {order.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+            </span>
+          )}
+        </td>
+
+        {/* Buyer */}
+        <td className="px-3 py-3">
+          <p className="text-xs font-semibold text-gray-800 truncate max-w-[120px]">{buyer?.name ?? "—"}</p>
+          <p className="text-[11px] text-gray-400 truncate max-w-[120px]">{buyer?.email ?? "—"}</p>
+          {buyer?.phone && <p className="text-[11px] text-gray-400">{buyer.phone}</p>}
+        </td>
+
+        {/* Seller(s) */}
+        <td className="px-3 py-3">
+          {uniqueSellers.map((s: any) => (
+            <div key={s._id} className="flex items-center gap-1 flex-wrap mb-0.5">
+              <p className="text-xs font-semibold text-gray-800 truncate max-w-[110px]">{s.name}</p>
+              {s.phone && (
+                <a href={`tel:${s.phone}`} className="text-[11px] text-emerald-600 hover:underline flex items-center gap-0.5">
+                  <Phone size={9} />
+                </a>
               )}
             </div>
-            <p className="text-xs text-[#78716c] mt-0.5">
-              {fmtDate(order.createdAt)} · {fmtTime(order.createdAt)}
+          ))}
+        </td>
+
+        {/* Amount */}
+        <td className="px-3 py-3 whitespace-nowrap text-right">
+          <span className="font-bold text-emerald-700 text-sm">₹{order.totalAmount.toLocaleString("en-IN")}</span>
+          {order.orderStatus === "delivered" && order.paymentMethod === "razorpay" && (
+            <p className={`text-[10px] font-semibold ${payoutDone ? "text-purple-600" : "text-orange-500"}`}>
+              {payoutDone ? "Paid out" : "Payout due"}
             </p>
-          </div>
+          )}
+        </td>
 
-          {/* Amount */}
-          <span className="font-bold text-[#059669] text-sm shrink-0">
-            ₹{order.totalAmount.toLocaleString("en-IN")}
-          </span>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
+        {/* Actions */}
+        <td className="px-3 py-3 whitespace-nowrap text-right">
+          <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => onNudge(order)}
               title="Email seller reminder"
-              className="flex items-center gap-1 text-xs font-semibold text-orange-600 border border-orange-200 px-2.5 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
-              <Bell size={12} /> Nudge
+              className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 border border-orange-200 px-2 py-1 rounded-lg hover:bg-orange-50 transition-colors">
+              <Bell size={11} /> Nudge
             </button>
-            <button
-              onClick={() => setExpanded((x) => !x)}
-              className="p-1.5 text-[#78716c] hover:bg-[#f5f5f4] rounded-lg transition-colors">
-              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
+            {canReleasePayout && (
+              <button
+                onClick={releasePayout}
+                disabled={payoutLoading}
+                className="flex items-center gap-1 text-[11px] font-bold bg-orange-500 text-white px-2 py-1 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                {payoutLoading ? <RefreshCw size={11} className="animate-spin" /> : <Banknote size={11} />}
+                Pay
+              </button>
+            )}
           </div>
-        </div>
+        </td>
+      </tr>
 
-        {/* Buyer + Seller summary */}
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div className="flex items-center gap-2 bg-[#f5f5f4] rounded-xl px-3 py-2">
-            <Users size={13} className="text-[#78716c] shrink-0" />
-            <div className="min-w-0">
-              <p className="text-[11px] text-[#a8a29e] font-medium uppercase tracking-wide">Buyer</p>
-              <p className="text-xs font-semibold text-[#1c1917] truncate">{buyer?.name ?? "—"}</p>
-              <p className="text-[11px] text-[#78716c] truncate">{buyer?.email ?? "—"}</p>
-              {buyer?.phone && <p className="text-[11px] text-[#78716c]">{buyer.phone}</p>}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2 bg-[#f5f5f4] rounded-xl px-3 py-2">
-            <ShoppingBag size={13} className="text-[#78716c] shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] text-[#a8a29e] font-medium uppercase tracking-wide">Seller(s)</p>
-              {uniqueSellers.map((s: any) => (
-                <div key={s._id} className="flex items-center gap-1.5 flex-wrap">
-                  <p className="text-xs font-semibold text-[#1c1917] truncate">{s.name}</p>
-                  {s.phone && (
-                    <a href={`tel:${s.phone}`} className="text-[11px] text-[#059669] hover:underline flex items-center gap-0.5">
-                      <Phone size={9} /> {s.phone}
-                    </a>
-                  )}
-                  {s.email && (
-                    <a href={`mailto:${s.email}`} className="text-[11px] text-[#78716c] hover:underline flex items-center gap-0.5">
-                      <Mail size={9} /> {s.email}
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Expanded detail */}
+      {/* Expanded detail row */}
       {expanded && (
-        <div className="border-t border-[#f5f5f4] bg-[#fafaf9] px-4 py-4 space-y-4">
-          {/* Items */}
-          <div>
-            <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-2">Items Ordered</p>
-            <div className="space-y-1.5">
-              {order.items.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white rounded-xl border border-[#e7e5e4] px-3 py-2">
-                  {item.image && (
-                    <img src={item.image} alt={item.name}
-                      className="w-10 h-10 rounded-lg object-cover border border-[#e7e5e4] shrink-0" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-[#1c1917] truncate">{item.name}</p>
-                    {item.variant && <p className="text-[11px] text-[#78716c]">{item.variant}</p>}
-                    <p className="text-[11px] text-[#a8a29e]">
-                      Seller: {(item.seller as any)?.name || item.seller}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-bold text-[#1c1917]">₹{(item.price * item.quantity).toLocaleString("en-IN")}</p>
-                    <p className="text-[11px] text-[#78716c]">×{item.quantity}</p>
-                  </div>
+        <tr className="bg-gray-50 border-b border-gray-100">
+          <td colSpan={6} className="px-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Items */}
+              <div>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Items Ordered</p>
+                <div className="space-y-1.5">
+                  {order.items.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-3 py-2">
+                      {item.image && (
+                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-800 truncate">{item.name}</p>
+                        {item.variant && <p className="text-[11px] text-gray-500">{item.variant}</p>}
+                        <p className="text-[11px] text-gray-400">Seller: {(item.seller as any)?.name || item.seller}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-bold text-gray-800">₹{(item.price * item.quantity).toLocaleString("en-IN")}</p>
+                        <p className="text-[11px] text-gray-400">×{item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Delivery address */}
-          <div>
-            <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-1">Delivery Address</p>
-            <p className="text-xs text-[#374151]">
-              {order.shippingAddress.fullName} · {order.shippingAddress.phone}<br />
-              {[order.shippingAddress.line1, order.shippingAddress.line2,
-                order.shippingAddress.city, order.shippingAddress.state,
-                order.shippingAddress.pincode].filter(Boolean).join(", ")}
-            </p>
-          </div>
-
-          {/* Status history */}
-          <div>
-            <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-2">Status History</p>
-            <div className="space-y-1">
-              {order.statusHistory.slice().reverse().map((h, i) => (
-                <div key={i} className="flex items-start gap-2 text-[11px]">
-                  <span className={`mt-0.5 px-1.5 py-0.5 rounded-full font-semibold ${
-                    STATUS_META[h.status]?.color || "bg-gray-100 text-gray-600"
-                  }`}>{h.status}</span>
-                  <span className="text-[#78716c]">
-                    {h.note && <span className="text-[#374151]">{h.note} · </span>}
-                    by <strong>{h.updatedBy}</strong> · {fmtDate(h.timestamp)} {fmtTime(h.timestamp)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Admin override status */}
-          <div className="flex items-center gap-3 pt-1">
-            <label className="text-xs font-medium text-[#78716c] shrink-0">Force status:</label>
-            <select
-              value={statusValue}
-              onChange={(e) => setStatusValue(e.target.value as any)}
-              className="flex-1 border border-[#e7e5e4] rounded-lg px-2 py-1.5 text-xs text-[#1c1917] focus:outline-none focus:border-[#059669]">
-              {ALL_STATUSES.map((s) => (
-                <option key={s} value={s}>{STATUS_META[s]?.label || s}</option>
-              ))}
-            </select>
-            <button
-              onClick={forceStatus}
-              disabled={updating || statusValue === order.orderStatus}
-              className="bg-[#1c1917] text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#374151] disabled:opacity-40 transition-colors">
-              {updating ? "…" : "Apply"}
-            </button>
-          </div>
-
-          {/* Payout release — only for delivered Razorpay orders */}
-          {(canReleasePayout || payoutDone) && (
-            <div className={`flex items-center gap-3 p-3 rounded-xl border ${payoutDone ? "bg-purple-50 border-purple-200" : "bg-orange-50 border-orange-200"}`}>
-              <Banknote size={16} className={payoutDone ? "text-purple-600 shrink-0" : "text-orange-600 shrink-0"} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-xs font-semibold ${payoutDone ? "text-purple-700" : "text-orange-700"}`}>
-                  {payoutDone ? "Payout Released to Seller" : "Payout Pending — Order Delivered"}
-                </p>
-                <p className="text-[11px] text-[#78716c]">
-                  {payoutDone
-                    ? `₹${order.itemsTotal?.toLocaleString("en-IN")} sent to seller · ${order.sellerPaidAt ? fmtDate(order.sellerPaidAt) : ""}`
-                    : `Release ₹${order.itemsTotal?.toLocaleString("en-IN")} to seller(s) — payment was collected online.`}
-                </p>
               </div>
-              {canReleasePayout && (
-                <button
-                  onClick={releasePayout}
-                  disabled={payoutLoading}
-                  className="flex items-center gap-1.5 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors shrink-0">
-                  {payoutLoading ? <RefreshCw size={12} className="animate-spin" /> : <Banknote size={12} />}
-                  {payoutLoading ? "Releasing…" : "Release Payout"}
-                </button>
-              )}
+
+              <div className="space-y-4">
+                {/* Delivery address */}
+                <div>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Delivery Address</p>
+                  <p className="text-xs text-gray-700">
+                    {order.shippingAddress.fullName} · {order.shippingAddress.phone}<br />
+                    {[order.shippingAddress.line1, order.shippingAddress.line2,
+                      order.shippingAddress.city, order.shippingAddress.state,
+                      order.shippingAddress.pincode].filter(Boolean).join(", ")}
+                  </p>
+                </div>
+
+                {/* Status history */}
+                <div>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Status History</p>
+                  <div className="space-y-1">
+                    {order.statusHistory.slice().reverse().map((h, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[11px]">
+                        <span className={`mt-0.5 px-1.5 py-0.5 rounded-full font-semibold ${STATUS_META[h.status]?.color || "bg-gray-100 text-gray-600"}`}>
+                          {h.status}
+                        </span>
+                        <span className="text-gray-500">
+                          {h.note && <span className="text-gray-700">{h.note} · </span>}
+                          by <strong>{h.updatedBy}</strong> · {fmtDate(h.timestamp)} {fmtTime(h.timestamp)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Admin force status */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-gray-500 shrink-0">Force status:</label>
+                  <select
+                    value={statusValue}
+                    onChange={(e) => setStatusValue(e.target.value as any)}
+                    className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-emerald-500">
+                    {ALL_STATUSES.map((s) => (
+                      <option key={s} value={s}>{STATUS_META[s]?.label || s}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={forceStatus}
+                    disabled={updating || statusValue === order.orderStatus}
+                    className="bg-gray-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">
+                    {updating ? "…" : "Apply"}
+                  </button>
+                </div>
+
+                {/* Payout info */}
+                {(canReleasePayout || payoutDone) && (
+                  <div className={`flex items-center gap-3 p-3 rounded-xl border ${payoutDone ? "bg-purple-50 border-purple-200" : "bg-orange-50 border-orange-200"}`}>
+                    <Banknote size={16} className={payoutDone ? "text-purple-600 shrink-0" : "text-orange-600 shrink-0"} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-semibold ${payoutDone ? "text-purple-700" : "text-orange-700"}`}>
+                        {payoutDone ? "Payout Released to Seller" : "Payout Pending — Order Delivered"}
+                      </p>
+                      <p className="text-[11px] text-gray-500">
+                        {payoutDone
+                          ? `₹${order.itemsTotal?.toLocaleString("en-IN")} sent · ${order.sellerPaidAt ? fmtDate(order.sellerPaidAt) : ""}`
+                          : `Release ₹${order.itemsTotal?.toLocaleString("en-IN")} to seller(s)`}
+                      </p>
+                    </div>
+                    {canReleasePayout && (
+                      <button
+                        onClick={releasePayout}
+                        disabled={payoutLoading}
+                        className="flex items-center gap-1.5 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors shrink-0">
+                        {payoutLoading ? <RefreshCw size={12} className="animate-spin" /> : <Banknote size={12} />}
+                        {payoutLoading ? "Releasing…" : "Release Payout"}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
+          </td>
+        </tr>
       )}
-    </div>
+    </>
   );
 }
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 // ─── Buyer Mail Types ─────────────────────────────────────────────────────────
 
 const BUYER_MAIL_TYPES = [
-  {
-    value: "become_seller_intro",
-    label: "Become a Seller — Intro",
-    desc: "Gentle intro: 'Did you know you can also sell on Banavoo?'",
-    icon: "🌿",
-  },
-  {
-    value: "become_seller_nudge",
-    label: "Your Craft Deserves a Shop",
-    desc: "Warm encouragement for buyers who make handmade products",
-    icon: "🎨",
-  },
-  {
-    value: "seller_benefits",
-    label: "Seller Benefits (Comparison)",
-    desc: "Shows Instagram vs Big Marketplaces vs Banavoo.in table",
-    icon: "💰",
-  },
+  { value: "become_seller_intro", label: "Become a Seller — Intro", desc: "Gentle intro: 'Did you know you can also sell on Banavoo?'", icon: "🌿" },
+  { value: "become_seller_nudge", label: "Your Craft Deserves a Shop", desc: "Warm encouragement for buyers who make handmade products", icon: "🎨" },
+  { value: "seller_benefits",     label: "Seller Benefits (Comparison)", desc: "Shows Instagram vs Big Marketplaces vs Banavoo.in table", icon: "💰" },
 ];
 
 type AdminBuyerWithCount = { _id: string; name: string; email: string; createdAt: string; orderCount: number };
@@ -519,9 +480,7 @@ function MailBuyersPanel() {
   }
 
   function toggleAll() {
-    setSelected(selected.size === buyers.length
-      ? new Set()
-      : new Set(buyers.map((b) => b._id)));
+    setSelected(selected.size === buyers.length ? new Set() : new Set(buyers.map((b) => b._id)));
   }
 
   async function sendMails() {
@@ -548,223 +507,160 @@ function MailBuyersPanel() {
   const chosenMailType = BUYER_MAIL_TYPES.find((m) => m.value === mailType)!;
 
   return (
-    <div className="space-y-6">
-
-      {/* Info banner */}
-      <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-2xl px-5 py-4 flex gap-3">
+    <div className="space-y-5">
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 flex gap-3">
         <span className="text-2xl shrink-0">💡</span>
         <div>
-          <p className="text-sm font-bold text-[#065f46] mb-0.5">Buyer → Seller Conversion Emails</p>
-          <p className="text-xs text-[#047857] leading-relaxed">
-            These emails are sent to buyers who joined Banavoo but never opened a seller account.
-            The goal is to gently let them know they can also <strong>create a shop, list products, and earn</strong> — completely free, no GSTN needed.
+          <p className="text-sm font-bold text-emerald-800 mb-0.5">Buyer → Seller Conversion Emails</p>
+          <p className="text-xs text-emerald-700 leading-relaxed">
+            These emails target buyers who joined Banavoo but never opened a seller account. Goal: let them know they can <strong>create a shop and earn</strong> — free, no GSTN needed.
           </p>
         </div>
       </div>
 
-      {/* Step 1 — Choose email type */}
-      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
-        <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest mb-3">
-          Step 1 — Choose Email Type
-        </p>
+      {/* Step 1 */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Step 1 — Choose Email Type</p>
         <div className="grid sm:grid-cols-3 gap-3">
           {BUYER_MAIL_TYPES.map((mt) => (
-            <button
-              key={mt.value}
-              onClick={() => setMailType(mt.value)}
+            <button key={mt.value} onClick={() => setMailType(mt.value)}
               className={`text-left rounded-xl border p-3.5 transition-all ${
-                mailType === mt.value
-                  ? "border-[#059669] bg-[#ecfdf5] ring-2 ring-[#059669]/20"
-                  : "border-[#e7e5e4] hover:border-[#059669]/40 hover:bg-[#f9fafb]"
-              }`}
-            >
+                mailType === mt.value ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20" : "border-gray-200 hover:border-emerald-300"
+              }`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{mt.icon}</span>
-                <span className="text-sm font-semibold text-[#1c1917]">{mt.label}</span>
-                {mailType === mt.value && <CheckCircle size={14} className="ml-auto text-[#059669]" />}
+                <span className="text-sm font-semibold text-gray-800">{mt.label}</span>
+                {mailType === mt.value && <CheckCircle size={14} className="ml-auto text-emerald-600" />}
               </div>
-              <p className="text-xs text-[#78716c] leading-relaxed">{mt.desc}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">{mt.desc}</p>
             </button>
           ))}
         </div>
-
-        {/* Subject preview */}
-        <div className="mt-4 bg-[#f5f5f4] rounded-xl px-4 py-3 flex items-start gap-2">
-          <Mail size={13} className="text-[#78716c] mt-0.5 shrink-0" />
+        <div className="mt-4 bg-gray-50 rounded-xl px-4 py-3 flex items-start gap-2">
+          <Mail size={13} className="text-gray-400 mt-0.5 shrink-0" />
           <div>
-            <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-0.5">Email Subject Preview</p>
-            <p className="text-xs text-[#374151] font-medium">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Email Subject Preview</p>
+            <p className="text-xs text-gray-700 font-medium">
               {mailType === "become_seller_intro" && "[Buyer Name], did you know you can also sell on Banavoo.in? 🌿"}
               {mailType === "become_seller_nudge" && "[Buyer Name], your craft deserves its own shop on Banavoo.in 🎨"}
               {mailType === "seller_benefits"     && "Turn your passion into income — sell on Banavoo.in, [Buyer Name] 💰"}
             </p>
           </div>
         </div>
-
-        {/* Personal note */}
         <div className="mt-4">
-          <label className="block text-xs font-medium text-[#78716c] mb-1.5">
-            Personal note to add at the bottom <span className="text-[#a8a29e]">(optional)</span>
-          </label>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Personal note (optional)</label>
           <textarea
-            className="w-full border border-[#e7e5e4] rounded-xl p-3 text-sm text-[#1c1917] resize-none focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20"
+            className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
             rows={2}
-            placeholder="e.g. I noticed you've been browsing jewellery — if you make any, I'd love to see your shop on Banavoo!"
+            placeholder="e.g. I noticed you've been browsing jewellery — if you make any, I'd love to see your shop!"
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Step 2 — Select Buyers */}
-      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
+      {/* Step 2 — Buyers table */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-          <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest">
-            Step 2 — Select Buyers
-          </p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 2 — Select Buyers</p>
           <div className="flex gap-1.5 flex-wrap">
             {(["all", "no_orders", "has_orders"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setBuyerFilter(f)}
+              <button key={f} onClick={() => setBuyerFilter(f)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  buyerFilter === f
-                    ? "bg-[#1c1917] text-white"
-                    : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+                  buyerFilter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 }`}>
                 {f === "all" ? "All Buyers" : f === "no_orders" ? "Never Ordered" : "Has Orders"}
               </button>
             ))}
-            <button
-              onClick={fetchBuyers}
-              className="p-1.5 text-[#78716c] border border-[#e7e5e4] hover:bg-[#f5f5f4] rounded-lg transition-colors">
+            <button onClick={fetchBuyers} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
               <RefreshCw size={13} />
             </button>
           </div>
         </div>
 
         {loadingBuyers ? (
-          <div className="space-y-2">
-            {[1,2,3].map((i) => <div key={i} className="skeleton h-14 rounded-xl" />)}
-          </div>
+          <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
         ) : buyers.length === 0 ? (
-          <div className="text-center py-10 text-[#78716c]">
-            <Users size={32} className="mx-auto mb-2 text-[#e7e5e4]" />
+          <div className="text-center py-10 text-gray-400">
+            <Users size={32} className="mx-auto mb-2 text-gray-200" />
             <p className="text-sm">No buyers match this filter</p>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={selected.size === buyers.length && buyers.length > 0}
-                  onChange={toggleAll}
-                  className="w-4 h-4 rounded border-[#e7e5e4] text-[#059669] focus:ring-[#059669]/30 cursor-pointer"
-                />
-                <span className="text-xs text-[#78716c] font-medium">
-                  {selected.size === buyers.length && buyers.length > 0
-                    ? `Deselect all (${buyers.length})`
-                    : `Select all ${buyers.length} buyer${buyers.length !== 1 ? "s" : ""}`}
+                <input type="checkbox" checked={selected.size === buyers.length && buyers.length > 0} onChange={toggleAll}
+                  className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/30 cursor-pointer" />
+                <span className="text-xs text-gray-500 font-medium">
+                  {selected.size === buyers.length && buyers.length > 0 ? `Deselect all (${buyers.length})` : `Select all ${buyers.length}`}
                 </span>
               </label>
               {selected.size > 0 && (
-                <span className="text-xs font-semibold text-[#059669] bg-[#ecfdf5] px-2.5 py-1 rounded-full">
-                  {selected.size} selected
-                </span>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{selected.size} selected</span>
               )}
             </div>
-
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-              {buyers.map((buyer) => (
-                <label
-                  key={buyer._id}
-                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-all ${
-                    selected.has(buyer._id)
-                      ? "border-[#059669] bg-[#f0fdf4]"
-                      : "border-[#e7e5e4] hover:border-[#059669]/40"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.has(buyer._id)}
-                    onChange={() => toggleBuyer(buyer._id)}
-                    className="w-4 h-4 rounded border-[#e7e5e4] text-[#059669] focus:ring-[#059669]/30 cursor-pointer shrink-0"
-                  />
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700 shrink-0">
-                    {buyer.name?.[0]?.toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#1c1917] truncate">{buyer.name}</p>
-                    <p className="text-xs text-[#78716c] truncate flex items-center gap-1">
-                      <Mail size={10} /> {buyer.email}
-                    </p>
-                  </div>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-                    buyer.orderCount === 0
-                      ? "bg-gray-100 text-gray-600"
-                      : "bg-amber-100 text-amber-700"
-                  }`}>
-                    {buyer.orderCount} order{buyer.orderCount !== 1 ? "s" : ""}
-                  </span>
-                </label>
-              ))}
+            <div className="overflow-x-auto rounded-xl border border-gray-200">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="w-8 px-3 py-2"></th>
+                    <th className="px-3 py-2 text-left font-semibold text-gray-500">Name</th>
+                    <th className="px-3 py-2 text-left font-semibold text-gray-500">Email</th>
+                    <th className="px-3 py-2 text-center font-semibold text-gray-500">Orders</th>
+                    <th className="px-3 py-2 text-left font-semibold text-gray-500">Joined</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {buyers.map((buyer) => (
+                    <tr key={buyer._id}
+                      onClick={() => toggleBuyer(buyer._id)}
+                      className={`cursor-pointer transition-colors ${selected.has(buyer._id) ? "bg-emerald-50" : "hover:bg-gray-50"}`}>
+                      <td className="px-3 py-2 text-center">
+                        <input type="checkbox" checked={selected.has(buyer._id)} onChange={() => toggleBuyer(buyer._id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/30 cursor-pointer" />
+                      </td>
+                      <td className="px-3 py-2 font-semibold text-gray-800">{buyer.name}</td>
+                      <td className="px-3 py-2 text-gray-500">{buyer.email}</td>
+                      <td className="px-3 py-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${buyer.orderCount === 0 ? "bg-gray-100 text-gray-500" : "bg-amber-100 text-amber-700"}`}>
+                          {buyer.orderCount}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-gray-400">{fmtDate(buyer.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
       </div>
 
-      {/* Step 3 — Send */}
-      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
-        <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest mb-4">
-          Step 3 — Send Email
-        </p>
-        <div className="bg-[#f5f5f4] rounded-xl px-4 py-3 mb-4 space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-[#78716c]">Email type</span>
-            <span className="font-semibold text-[#1c1917]">{chosenMailType.icon} {chosenMailType.label}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-[#78716c]">Recipients</span>
-            <span className="font-semibold text-[#1c1917]">{selected.size} buyer{selected.size !== 1 ? "s" : ""}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-[#78716c]">Personal note</span>
-            <span className="font-semibold text-[#1c1917]">{customNote.trim() ? "Yes" : "No"}</span>
-          </div>
+      {/* Step 3 */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Step 3 — Send Email</p>
+        <div className="bg-gray-50 rounded-xl px-4 py-3 mb-4 space-y-1">
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Email type</span><span className="font-semibold text-gray-800">{chosenMailType.icon} {chosenMailType.label}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Recipients</span><span className="font-semibold text-gray-800">{selected.size} buyer{selected.size !== 1 ? "s" : ""}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Personal note</span><span className="font-semibold text-gray-800">{customNote.trim() ? "Yes" : "No"}</span></div>
         </div>
-
-        <button
-          onClick={sendMails}
-          disabled={sending || selected.size === 0}
-          className="w-full bg-[#059669] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#047857] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
-          {sending ? (
-            <><RefreshCw size={15} className="animate-spin" /> Sending…</>
-          ) : (
-            <><Send size={15} /> Send Email to {selected.size} Buyer{selected.size !== 1 ? "s" : ""}</>
-          )}
+        <button onClick={sendMails} disabled={sending || selected.size === 0}
+          className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+          {sending ? <><RefreshCw size={15} className="animate-spin" /> Sending…</> : <><Send size={15} /> Send to {selected.size} Buyer{selected.size !== 1 ? "s" : ""}</>}
         </button>
-
         {result && (
           <div className="mt-4 space-y-2">
             {result.sent.length > 0 && (
-              <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3">
-                <p className="text-xs font-semibold text-[#065f46] mb-1 flex items-center gap-1.5">
-                  <CheckCircle size={13} /> {result.sent.length} email{result.sent.length !== 1 ? "s" : ""} sent successfully
-                </p>
-                {result.sent.map((s: any) => (
-                  <p key={s.id} className="text-xs text-[#374151]">✓ {s.name} · {s.email}</p>
-                ))}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-emerald-800 mb-1 flex items-center gap-1.5"><CheckCircle size={13} /> {result.sent.length} sent successfully</p>
+                {result.sent.map((s: any) => <p key={s.id} className="text-xs text-gray-700">✓ {s.name} · {s.email}</p>)}
               </div>
             )}
             {result.failed.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1.5">
-                  <XCircle size={13} /> {result.failed.length} failed
-                </p>
-                {result.failed.map((f: any) => (
-                  <p key={f.id} className="text-xs text-red-600">✗ {f.name || f.id} — {f.reason}</p>
-                ))}
+                <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1.5"><XCircle size={13} /> {result.failed.length} failed</p>
+                {result.failed.map((f: any) => <p key={f.id} className="text-xs text-red-600">✗ {f.name || f.id} — {f.reason}</p>)}
               </div>
             )}
           </div>
@@ -777,6 +673,7 @@ function MailBuyersPanel() {
 // ─── Seller Mail Types ────────────────────────────────────────────────────────
 
 const MAIL_TYPES = [
+<<<<<<< Updated upstream
   {
     value: "no_products",
     label: "Empty Shop",
@@ -812,6 +709,14 @@ const MAIL_TYPES = [
     color: "bg-green-50 text-green-700 border-green-200",
     icon: "💡",
   },
+=======
+  { value: "no_products",       label: "Empty Shop",          desc: "Seller registered but added 0 products",                      color: "bg-red-50 text-red-700 border-red-200",    icon: "🏪" },
+  { value: "one_product",       label: "Only 1 Product",       desc: "Nudge to add more products for first order",                  color: "bg-amber-50 text-amber-700 border-amber-200", icon: "📦" },
+  { value: "keep_going",        label: "Keep Going",           desc: "Motivational nudge for any seller",                           color: "bg-blue-50 text-blue-700 border-blue-200",  icon: "💪" },
+  { value: "share_shop",        label: "Share Shop Link",      desc: "Remind seller to share their shop on social media",           color: "bg-purple-50 text-purple-700 border-purple-200", icon: "🔗" },
+  { value: "tips",              label: "5 Tips to First Order",desc: "Actionable tips to get their first sale",                     color: "bg-green-50 text-green-700 border-green-200", icon: "💡" },
+  { value: "product_image_issue", label: "Fix Product Photos", desc: "Ask seller to delete blurry/wrong photos & upload clear images", color: "bg-amber-50 text-amber-700 border-amber-200", icon: "📸" },
+>>>>>>> Stashed changes
 ];
 
 type AdminSellerWithCount = User & { productCount: number };
@@ -819,14 +724,14 @@ type AdminSellerWithCount = User & { productCount: number };
 // ─── Mail Sellers Panel ───────────────────────────────────────────────────────
 
 function MailSellersPanel() {
-  const [sellerFilter,  setSellerFilter]  = useState<"all" | "no_products" | "one_product">("all");
-  const [sellers,       setSellers]       = useState<AdminSellerWithCount[]>([]);
+  const [sellerFilter,   setSellerFilter]   = useState<"all" | "no_products" | "one_product">("all");
+  const [sellers,        setSellers]        = useState<AdminSellerWithCount[]>([]);
   const [loadingSellers, setLoadingSellers] = useState(false);
-  const [selected,      setSelected]      = useState<Set<string>>(new Set());
-  const [mailType,      setMailType]      = useState("no_products");
-  const [customNote,    setCustomNote]    = useState("");
-  const [sending,       setSending]       = useState(false);
-  const [result,        setResult]        = useState<{ sent: any[]; failed: any[] } | null>(null);
+  const [selected,       setSelected]       = useState<Set<string>>(new Set());
+  const [mailType,       setMailType]       = useState("no_products");
+  const [customNote,     setCustomNote]     = useState("");
+  const [sending,        setSending]        = useState(false);
+  const [result,         setResult]         = useState<{ sent: any[]; failed: any[] } | null>(null);
 
   const fetchSellers = useCallback(async () => {
     setLoadingSellers(true);
@@ -853,11 +758,7 @@ function MailSellersPanel() {
   }
 
   function toggleAll() {
-    if (selected.size === sellers.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(sellers.map((s) => s._id)));
-    }
+    setSelected(selected.size === sellers.length ? new Set() : new Set(sellers.map((s) => s._id)));
   }
 
   async function sendMails() {
@@ -884,38 +785,29 @@ function MailSellersPanel() {
   const chosenMailType = MAIL_TYPES.find((m) => m.value === mailType)!;
 
   return (
-    <div className="space-y-6">
-
-      {/* Step 1 — Choose email type */}
-      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
-        <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest mb-3">
-          Step 1 — Choose Email Type
-        </p>
+    <div className="space-y-5">
+      {/* Step 1 */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Step 1 — Choose Email Type</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {MAIL_TYPES.map((mt) => (
-            <button
-              key={mt.value}
-              onClick={() => setMailType(mt.value)}
+            <button key={mt.value} onClick={() => setMailType(mt.value)}
               className={`text-left rounded-xl border p-3.5 transition-all ${
-                mailType === mt.value
-                  ? "border-[#059669] bg-[#ecfdf5] ring-2 ring-[#059669]/20"
-                  : "border-[#e7e5e4] hover:border-[#059669]/40 hover:bg-[#f9fafb]"
-              }`}
-            >
+                mailType === mt.value ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20" : "border-gray-200 hover:border-emerald-300"
+              }`}>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{mt.icon}</span>
-                <span className="text-sm font-semibold text-[#1c1917]">{mt.label}</span>
-                {mailType === mt.value && <CheckCircle size={14} className="ml-auto text-[#059669]" />}
+                <span className="text-sm font-semibold text-gray-800">{mt.label}</span>
+                {mailType === mt.value && <CheckCircle size={14} className="ml-auto text-emerald-600" />}
               </div>
-              <p className="text-xs text-[#78716c] leading-relaxed">{mt.desc}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">{mt.desc}</p>
             </button>
           ))}
         </div>
-
-        {/* Preview subject line */}
-        <div className="mt-4 bg-[#f5f5f4] rounded-xl px-4 py-3 flex items-start gap-2">
-          <Mail size={13} className="text-[#78716c] mt-0.5 shrink-0" />
+        <div className="mt-4 bg-gray-50 rounded-xl px-4 py-3 flex items-start gap-2">
+          <Mail size={13} className="text-gray-400 mt-0.5 shrink-0" />
           <div>
+<<<<<<< Updated upstream
             <p className="text-[11px] font-semibold text-[#a8a29e] uppercase tracking-wide mb-0.5">Email Subject Preview</p>
             <p className="text-xs text-[#374151] font-medium">
               {mailType === "no_products"  && "[Seller Name], your shop is empty — let's fix that 🛍️"}
@@ -923,185 +815,146 @@ function MailSellersPanel() {
               {mailType === "keep_going"   && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
               {mailType === "share_shop"   && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
               {mailType === "tips"         && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
+=======
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Email Subject Preview</p>
+            <p className="text-xs text-gray-700 font-medium">
+              {mailType === "no_products"          && "[Seller Name], your shop is empty — let's fix that 🛍️"}
+              {mailType === "one_product"          && "One product is a start, [Seller Name] — here's what happens next 🌱"}
+              {mailType === "keep_going"           && "[Seller Name], your Banavoo shop is growing — keep going 💪"}
+              {mailType === "share_shop"           && "[Seller Name], have you shared your Banavoo shop link yet? 🔗"}
+              {mailType === "tips"                 && "5 tips to get your first order on Banavoo.in, [Seller Name] 💡"}
+              {mailType === "product_image_issue"  && "⚠️ Action Required: Please update product photos on [Shop Name] 📸"}
+>>>>>>> Stashed changes
             </p>
           </div>
         </div>
-
-        {/* Optional personal note */}
         <div className="mt-4">
+<<<<<<< Updated upstream
           <label className="block text-xs font-medium text-[#78716c] mb-1.5">
             Personal note to add at the bottom of the email <span className="text-[#a8a29e]">(optional)</span>
+=======
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            Personal note / feedback for seller <span className="text-gray-400">(optional)</span>
+>>>>>>> Stashed changes
           </label>
           <textarea
-            className="w-full border border-[#e7e5e4] rounded-xl p-3 text-sm text-[#1c1917] resize-none focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20"
+            className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
             rows={2}
+<<<<<<< Updated upstream
             placeholder="e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"
+=======
+            placeholder={mailType === "product_image_issue"
+              ? "e.g. Please replace the low resolution photos with bright daylight pictures."
+              : "e.g. I personally reviewed your shop and think your products are beautiful. Just need more listings!"}
+>>>>>>> Stashed changes
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Step 2 — Filter & Select Sellers */}
-      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
+      {/* Step 2 — Sellers table */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-          <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest">
-            Step 2 — Select Sellers
-          </p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step 2 — Select Sellers</p>
           <div className="flex gap-1.5 flex-wrap">
             {(["all", "no_products", "one_product"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setSellerFilter(f)}
+              <button key={f} onClick={() => setSellerFilter(f)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  sellerFilter === f
-                    ? "bg-[#1c1917] text-white"
-                    : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+                  sellerFilter === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                 }`}>
                 {f === "all" ? "All Sellers" : f === "no_products" ? "0 Products" : "1 Product"}
               </button>
             ))}
-            <button
-              onClick={fetchSellers}
-              className="p-1.5 text-[#78716c] border border-[#e7e5e4] hover:bg-[#f5f5f4] rounded-lg transition-colors">
+            <button onClick={fetchSellers} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
               <RefreshCw size={13} />
             </button>
           </div>
         </div>
 
         {loadingSellers ? (
-          <div className="space-y-2">
-            {[1,2,3].map((i) => <div key={i} className="skeleton h-14 rounded-xl" />)}
-          </div>
+          <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
         ) : sellers.length === 0 ? (
-          <div className="text-center py-10 text-[#78716c]">
-            <Store size={32} className="mx-auto mb-2 text-[#e7e5e4]" />
+          <div className="text-center py-10 text-gray-400">
+            <Store size={32} className="mx-auto mb-2 text-gray-200" />
             <p className="text-sm">No sellers match this filter</p>
           </div>
         ) : (
           <>
-            {/* Select all bar */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={selected.size === sellers.length && sellers.length > 0}
-                  onChange={toggleAll}
-                  className="w-4 h-4 rounded border-[#e7e5e4] text-[#059669] focus:ring-[#059669]/30 cursor-pointer"
-                />
-                <span className="text-xs text-[#78716c] font-medium">
-                  {selected.size === sellers.length && sellers.length > 0
-                    ? `Deselect all (${sellers.length})`
-                    : `Select all ${sellers.length} seller${sellers.length !== 1 ? "s" : ""}`}
+                <input type="checkbox" checked={selected.size === sellers.length && sellers.length > 0} onChange={toggleAll}
+                  className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/30 cursor-pointer" />
+                <span className="text-xs text-gray-500 font-medium">
+                  {selected.size === sellers.length && sellers.length > 0 ? `Deselect all (${sellers.length})` : `Select all ${sellers.length}`}
                 </span>
               </label>
               {selected.size > 0 && (
-                <span className="text-xs font-semibold text-[#059669] bg-[#ecfdf5] px-2.5 py-1 rounded-full">
-                  {selected.size} selected
-                </span>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{selected.size} selected</span>
               )}
             </div>
-
-            {/* Seller list */}
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-              {sellers.map((seller) => (
-                <label
-                  key={seller._id}
-                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-all ${
-                    selected.has(seller._id)
-                      ? "border-[#059669] bg-[#f0fdf4]"
-                      : "border-[#e7e5e4] hover:border-[#059669]/40"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.has(seller._id)}
-                    onChange={() => toggleSeller(seller._id)}
-                    className="w-4 h-4 rounded border-[#e7e5e4] text-[#059669] focus:ring-[#059669]/30 cursor-pointer shrink-0"
-                  />
-                  <div className="w-8 h-8 rounded-full bg-[#d1fae5] flex items-center justify-center text-xs font-bold text-[#059669] shrink-0">
-                    {seller.name?.[0]?.toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#1c1917] truncate">
-                      {seller.name}
-                      {seller.sellerProfile?.shopName && (
-                        <span className="text-[#78716c] font-normal"> · {seller.sellerProfile.shopName}</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-[#78716c] truncate flex items-center gap-1">
-                      <Mail size={10} /> {seller.email}
-                    </p>
-                  </div>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-                    seller.productCount === 0
-                      ? "bg-red-100 text-red-700"
-                      : seller.productCount === 1
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-green-100 text-green-700"
-                  }`}>
-                    {seller.productCount} product{seller.productCount !== 1 ? "s" : ""}
-                  </span>
-                </label>
-              ))}
+            <div className="overflow-x-auto rounded-xl border border-gray-200">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="w-8 px-3 py-2"></th>
+                    <th className="px-3 py-2 text-left font-semibold text-gray-500">Name</th>
+                    <th className="px-3 py-2 text-left font-semibold text-gray-500">Shop</th>
+                    <th className="px-3 py-2 text-left font-semibold text-gray-500">Email</th>
+                    <th className="px-3 py-2 text-center font-semibold text-gray-500">Products</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {sellers.map((seller) => (
+                    <tr key={seller._id}
+                      onClick={() => toggleSeller(seller._id)}
+                      className={`cursor-pointer transition-colors ${selected.has(seller._id) ? "bg-emerald-50" : "hover:bg-gray-50"}`}>
+                      <td className="px-3 py-2 text-center">
+                        <input type="checkbox" checked={selected.has(seller._id)} onChange={() => toggleSeller(seller._id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/30 cursor-pointer" />
+                      </td>
+                      <td className="px-3 py-2 font-semibold text-gray-800">{seller.name}</td>
+                      <td className="px-3 py-2 text-gray-500">{seller.sellerProfile?.shopName || "—"}</td>
+                      <td className="px-3 py-2 text-gray-500">{seller.email}</td>
+                      <td className="px-3 py-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${
+                          seller.productCount === 0 ? "bg-red-100 text-red-700" : seller.productCount === 1 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"
+                        }`}>{seller.productCount}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
       </div>
 
-      {/* Step 3 — Send */}
-      <div className="bg-white rounded-2xl border border-[#e7e5e4] p-5">
-        <p className="text-xs font-bold text-[#a8a29e] uppercase tracking-widest mb-4">
-          Step 3 — Send Email
-        </p>
-
-        <div className="bg-[#f5f5f4] rounded-xl px-4 py-3 mb-4 space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-[#78716c]">Email type</span>
-            <span className="font-semibold text-[#1c1917]">{chosenMailType.icon} {chosenMailType.label}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-[#78716c]">Recipients</span>
-            <span className="font-semibold text-[#1c1917]">{selected.size} seller{selected.size !== 1 ? "s" : ""}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-[#78716c]">Personal note</span>
-            <span className="font-semibold text-[#1c1917]">{customNote.trim() ? "Yes" : "No"}</span>
-          </div>
+      {/* Step 3 */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Step 3 — Send Email</p>
+        <div className="bg-gray-50 rounded-xl px-4 py-3 mb-4 space-y-1">
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Email type</span><span className="font-semibold text-gray-800">{chosenMailType.icon} {chosenMailType.label}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Recipients</span><span className="font-semibold text-gray-800">{selected.size} seller{selected.size !== 1 ? "s" : ""}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-gray-500">Personal note</span><span className="font-semibold text-gray-800">{customNote.trim() ? "Yes" : "No"}</span></div>
         </div>
-
-        <button
-          onClick={sendMails}
-          disabled={sending || selected.size === 0}
-          className="w-full bg-[#059669] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#047857] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
-          {sending ? (
-            <><RefreshCw size={15} className="animate-spin" /> Sending…</>
-          ) : (
-            <><Send size={15} /> Send Email to {selected.size} Seller{selected.size !== 1 ? "s" : ""}</>
-          )}
+        <button onClick={sendMails} disabled={sending || selected.size === 0}
+          className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+          {sending ? <><RefreshCw size={15} className="animate-spin" /> Sending…</> : <><Send size={15} /> Send to {selected.size} Seller{selected.size !== 1 ? "s" : ""}</>}
         </button>
-
-        {/* Result */}
         {result && (
           <div className="mt-4 space-y-2">
             {result.sent.length > 0 && (
-              <div className="bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl px-4 py-3">
-                <p className="text-xs font-semibold text-[#065f46] mb-1 flex items-center gap-1.5">
-                  <CheckCircle size={13} /> {result.sent.length} email{result.sent.length !== 1 ? "s" : ""} sent successfully
-                </p>
-                {result.sent.map((s) => (
-                  <p key={s.id} className="text-xs text-[#374151]">✓ {s.name} · {s.email}</p>
-                ))}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-emerald-800 mb-1 flex items-center gap-1.5"><CheckCircle size={13} /> {result.sent.length} sent successfully</p>
+                {result.sent.map((s) => <p key={s.id} className="text-xs text-gray-700">✓ {s.name} · {s.email}</p>)}
               </div>
             )}
             {result.failed.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1.5">
-                  <XCircle size={13} /> {result.failed.length} failed
-                </p>
-                {result.failed.map((f) => (
-                  <p key={f.id} className="text-xs text-red-600">✗ {f.name || f.id} — {f.reason}</p>
-                ))}
+                <p className="text-xs font-semibold text-red-700 mb-1 flex items-center gap-1.5"><XCircle size={13} /> {result.failed.length} failed</p>
+                {result.failed.map((f) => <p key={f.id} className="text-xs text-red-600">✗ {f.name || f.id} — {f.reason}</p>)}
               </div>
             )}
           </div>
@@ -1141,71 +994,107 @@ function PayoutsPanel() {
 
   return (
     <div className="space-y-5">
-      {/* Info banner */}
-      <div className="bg-orange-50 border border-orange-200 rounded-2xl px-5 py-4 flex gap-3">
+      <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 flex gap-3">
         <Banknote size={20} className="text-orange-600 shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-bold text-orange-800 mb-0.5">Seller Payouts — Super Admin Control</p>
           <p className="text-xs text-orange-700 leading-relaxed">
             When an online (Razorpay) order is delivered, the buyer&apos;s payment is held by Banavoo.
-            The super admin verifies delivery and manually releases the payout to the seller.
-            Seller receives a notification email once payout is released.
+            Verify delivery and manually release the payout. Seller receives a notification email.
           </p>
         </div>
       </div>
 
-      {/* Filter + refresh */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex gap-1.5">
           {(["pending", "released"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setPayoutFilter(f)}
+            <button key={f} onClick={() => setPayoutFilter(f)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 payoutFilter === f
                   ? f === "pending" ? "bg-orange-500 text-white" : "bg-purple-600 text-white"
-                  : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}>
               {f === "pending" ? "Payout Pending" : "Payout Released"}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <p className="text-xs text-[#78716c]">{total} order{total !== 1 ? "s" : ""}</p>
-          <button onClick={() => fetchPayouts(1)}
-            className="p-1.5 text-[#78716c] border border-[#e7e5e4] hover:bg-[#f5f5f4] rounded-lg transition-colors">
+          <p className="text-xs text-gray-500">{total} order{total !== 1 ? "s" : ""}</p>
+          <button onClick={() => fetchPayouts(1)} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors">
             <RefreshCw size={13} />
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1,2,3].map((i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
-        </div>
+        <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}</div>
       ) : payouts.length === 0 ? (
-        <div className="text-center py-16 text-[#78716c]">
-          <Banknote size={40} className="mx-auto mb-3 text-[#e7e5e4]" />
+        <div className="text-center py-16 text-gray-400">
+          <Banknote size={40} className="mx-auto mb-3 text-gray-200" />
           <p className="text-sm">No {payoutFilter === "pending" ? "pending" : "released"} payouts found.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {payouts.map((o) => (
-            <OrderRow key={o._id} order={o} onNudge={() => {}} onPayoutReleased={() => fetchPayouts(page)} />
-          ))}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Order ID</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Date</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Buyer</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Seller(s)</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-500">Amount</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-500">Status</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-500">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {payouts.map((o) => {
+                const uniqueSellers = Array.from(
+                  new Map(o.items.map((i) => [i.seller?._id, i.seller])).values()
+                ).filter(Boolean) as AdminSeller[];
+                return (
+                  <tr key={o._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-mono font-bold text-gray-800">#{o._id.slice(-8).toUpperCase()}</td>
+                    <td className="px-4 py-3 text-gray-500">{fmtDate(o.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-gray-800">{o.buyer?.name ?? "—"}</p>
+                      <p className="text-gray-400">{o.buyer?.email ?? "—"}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      {uniqueSellers.map((s: any) => (
+                        <p key={s._id} className="font-semibold text-gray-800">{s.name}</p>
+                      ))}
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-emerald-700">
+                      ₹{o.itemsTotal?.toLocaleString("en-IN") ?? o.totalAmount.toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {o.sellerPaid ? (
+                        <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">Released</span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-semibold">Pending</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {!o.sellerPaid && (
+                        <PayoutReleaseButton order={o} onReleased={() => fetchPayouts(page)} />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
-      {/* Pagination */}
       {pages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
           {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
             <button key={p} onClick={() => fetchPayouts(p)}
               className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                page === p ? "bg-[#059669] text-white" : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
-              }`}>
-              {p}
-            </button>
+                page === p ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}>{p}</button>
           ))}
         </div>
       )}
@@ -1213,12 +1102,53 @@ function PayoutsPanel() {
   );
 }
 
+// Inline payout release button for the payouts table
+function PayoutReleaseButton({ order, onReleased }: { order: AdminOrder; onReleased: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [done,    setDone]    = useState(false);
+
+  async function release() {
+    if (!confirm(`Release payout of ₹${order.itemsTotal?.toLocaleString("en-IN")} for order #${order._id.slice(-8).toUpperCase()}?`)) return;
+    setLoading(true);
+    try {
+      await api.post(`/admin/orders/${order._id}/release-payout`);
+      setDone(true);
+      toast.success("Payout released — seller notified by email");
+      onReleased();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to release payout");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (done) return <span className="text-xs text-purple-600 font-semibold">Released ✓</span>;
+  return (
+    <button onClick={release} disabled={loading}
+      className="flex items-center gap-1 text-xs font-bold bg-orange-500 text-white px-2.5 py-1.5 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors">
+      {loading ? <RefreshCw size={11} className="animate-spin" /> : <Banknote size={11} />}
+      {loading ? "…" : "Release"}
+    </button>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
+
+type AdminTab = "orders" | "payouts" | "products" | "mail" | "mail_buyers";
+
+const NAV_ITEMS: { id: AdminTab; label: string; icon: any; badge?: string }[] = [
+  { id: "orders",      label: "Orders",             icon: Package },
+  { id: "payouts",     label: "Payouts",            icon: Banknote },
+  { id: "products",    label: "Product Photos",     icon: Camera },
+  { id: "mail",        label: "Mail Sellers",        icon: Send },
+  { id: "mail_buyers", label: "Mail Buyers",         icon: Users },
+];
 
 export default function AdminPage() {
   const { user, isLoading } = useAuthStore();
   const router = useRouter();
 
+<<<<<<< Updated upstream
   const [activeTab,   setActiveTab]   = useState<"orders" | "mail" | "mail_buyers" | "payouts">("orders");
   const [stats,   setStats]   = useState<AdminStats | null>(null);
   const [orders,  setOrders]  = useState<AdminOrder[]>([]);
@@ -1226,9 +1156,29 @@ export default function AdminPage() {
   const [page,    setPage]    = useState(1);
   const [pages,   setPages]   = useState(1);
   const [filter,  setFilter]  = useState("");
+=======
+  const [activeTab,   setActiveTab]   = useState<AdminTab>("orders");
+  const [stats,       setStats]       = useState<AdminStats | null>(null);
+  const [orders,      setOrders]      = useState<AdminOrder[]>([]);
+  const [total,       setTotal]       = useState(0);
+  const [page,        setPage]        = useState(1);
+  const [pages,       setPages]       = useState(1);
+  const [filter,      setFilter]      = useState("");
+>>>>>>> Stashed changes
   const [unresponded, setUnresponded] = useState(false);
-  const [fetching, setFetching] = useState(false);
-  const [nudgeOrder, setNudgeOrder] = useState<AdminOrder | null>(null);
+  const [fetching,    setFetching]    = useState(false);
+  const [nudgeOrder,  setNudgeOrder]  = useState<AdminOrder | null>(null);
+
+  // Products tab state
+  const [productsList,              setProductsList]              = useState<any[]>([]);
+  const [prodPage,                  setProdPage]                  = useState(1);
+  const [prodPages,                 setProdPages]                 = useState(1);
+  const [prodTotal,                 setProdTotal]                 = useState(0);
+  const [prodSearch,                setProdSearch]                = useState("");
+  const [prodLoading,               setProdLoading]               = useState(false);
+  const [selectedProductForModal,   setSelectedProductForModal]   = useState<any | null>(null);
+  const [productNoticeNote,         setProductNoticeNote]         = useState("");
+  const [sendingProductNotice,      setSendingProductNotice]      = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -1248,8 +1198,8 @@ export default function AdminPage() {
     setFetching(true);
     try {
       const params: Record<string, any> = { page: p, limit: 20 };
-      if (filter)      params.status       = filter;
-      if (unresponded) params.unresponded  = "true";
+      if (filter)      params.status      = filter;
+      if (unresponded) params.unresponded = "true";
       const { data } = await api.get("/admin/orders", { params });
       setOrders(data.orders);
       setTotal(data.total);
@@ -1259,6 +1209,26 @@ export default function AdminPage() {
     finally { setFetching(false); }
   }, [filter, unresponded]);
 
+<<<<<<< Updated upstream
+=======
+  const fetchAdminProducts = useCallback(async (p = 1) => {
+    setProdLoading(true);
+    try {
+      const { data } = await api.get("/admin/products", {
+        params: { page: p, limit: 20, search: prodSearch.trim() || undefined },
+      });
+      setProductsList(data.products);
+      setProdPage(data.page);
+      setProdPages(data.pages);
+      setProdTotal(data.total);
+    } catch {
+      toast.error("Failed to load products");
+    } finally {
+      setProdLoading(false);
+    }
+  }, [prodSearch]);
+
+>>>>>>> Stashed changes
   useEffect(() => {
     if (!user || user.role !== "admin") return;
     fetchStats();
@@ -1267,9 +1237,9 @@ export default function AdminPage() {
 
   if (isLoading || !user) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="skeleton h-20 rounded-2xl" />
+          <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -1278,6 +1248,7 @@ export default function AdminPage() {
   if (user.role !== "admin") return null;
 
   return (
+<<<<<<< Updated upstream
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
@@ -1365,83 +1336,359 @@ export default function AdminPage() {
 
       {/* ── ORDERS TAB ── */}
       {activeTab === "orders" && <>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-5 items-center">
-        <button
-          onClick={() => { setUnresponded(false); setFilter(""); }}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-            !unresponded && !filter ? "bg-[#1c1917] text-white" : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
-          }`}>
-          All Orders
-        </button>
-        <button
-          onClick={() => { setUnresponded(true); setFilter(""); }}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-            unresponded ? "bg-red-600 text-white" : "bg-red-50 text-red-600 hover:bg-red-100"
-          }`}>
-          <AlertTriangle size={10} /> Unresponded (&gt;24h)
-          {stats?.unrespondedOrders ? (
-            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-              unresponded ? "bg-white text-red-600" : "bg-red-600 text-white"
-            }`}>{stats.unrespondedOrders}</span>
-          ) : null}
-        </button>
-        {["pending","confirmed","processing","shipped","delivered","cancelled"].map((s) => (
-          <button key={s}
-            onClick={() => { setUnresponded(false); setFilter(s); }}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-              !unresponded && filter === s
-                ? "bg-[#059669] text-white"
-                : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
-            }`}>
-            {STATUS_META[s]?.label || s}
-          </button>
-        ))}
-      </div>
-
-      {/* Orders */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-[#78716c]">
-          {fetching ? "Loading…" : `${total} order${total !== 1 ? "s" : ""}`}
-        </p>
-      </div>
-
-      {fetching ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="skeleton h-24 rounded-2xl" />
-          ))}
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="text-center py-16 text-[#78716c]">
-          <Package size={40} className="mx-auto mb-3 text-[#e7e5e4]" />
-          No orders match the current filter.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {orders.map((o) => (
-            <OrderRow key={o._id} order={o} onNudge={setNudgeOrder} onPayoutReleased={() => fetchStats()} />
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {pages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-            <button key={p}
-              onClick={() => fetchOrders(p)}
-              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                page === p ? "bg-[#059669] text-white" : "bg-[#f5f5f4] text-[#78716c] hover:bg-[#e7e5e4]"
-              }`}>
-              {p}
+=======
+    <div className="min-h-screen bg-gray-50">
+      {/* Top header bar */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-gray-900 rounded-lg">
+              <ShieldCheck size={16} className="text-white" />
+            </div>
+            <div>
+              <span className="text-sm font-extrabold text-gray-900">Super Admin</span>
+              <span className="ml-2 text-xs text-gray-400 hidden sm:inline">Banavoo Control Panel</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {stats && stats.unrespondedOrders > 0 && (
+              <button
+                onClick={() => { setActiveTab("orders"); setUnresponded(true); setFilter(""); }}
+                className="flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
+                <AlertTriangle size={13} />
+                {stats.unrespondedOrders} unresponded
+              </button>
+            )}
+            <button
+              onClick={() => { fetchStats(); fetchOrders(1); }}
+              className="flex items-center gap-1.5 text-xs font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <RefreshCw size={13} /> Refresh
             </button>
-          ))}
+          </div>
         </div>
-      )}
+      </div>
 
-      </> /* end orders tab */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Stats row */}
+        {stats && (
+          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3 mb-6">
+            <StatCard label="Orders"      value={stats.totalOrders}       icon={Package} />
+            <StatCard label="Pending"     value={stats.pendingOrders}     icon={Clock} />
+            <StatCard label=">24h"        value={stats.unrespondedOrders} icon={AlertTriangle} warn={stats.unrespondedOrders > 0} />
+            <StatCard label="Delivered"   value={stats.deliveredOrders}   icon={CheckCircle} accent />
+            <StatCard label="Cancelled"   value={stats.cancelledOrders}   icon={XCircle} />
+            <StatCard label="Revenue"     value={`₹${(stats.totalRevenue/1000).toFixed(0)}k`} icon={TrendingUp} accent />
+            <StatCard label="Users"       value={stats.totalUsers}        icon={Users} />
+            <StatCard label="Sellers"     value={stats.totalSellers}      icon={ShoppingBag} />
+            <StatCard label="Products"    value={stats.totalProducts}     icon={Package} />
+          </div>
+        )}
+
+        <div className="flex gap-5">
+          {/* Sidebar nav */}
+          <nav className="w-44 shrink-0 hidden md:block">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden sticky top-20">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors border-b border-gray-100 last:border-b-0 text-left ${
+                    activeTab === item.id
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}>
+                  <item.icon size={15} />
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </nav>
+
+          {/* Mobile nav */}
+          <div className="md:hidden w-full mb-4 flex gap-1 overflow-x-auto pb-1">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  activeTab === item.id ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}>
+                <item.icon size={13} />
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+
+            {/* ── ORDERS TAB ── */}
+            {activeTab === "orders" && (
+              <div>
+                {/* Filter pills */}
+                <div className="flex flex-wrap gap-1.5 mb-4 items-center">
+                  <button onClick={() => { setUnresponded(false); setFilter(""); }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && !filter ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                    All
+                  </button>
+                  <button onClick={() => { setUnresponded(true); setFilter(""); }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+                      unresponded ? "bg-red-600 text-white" : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
+                    }`}>
+                    <AlertTriangle size={10} /> &gt;24h
+                    {stats?.unrespondedOrders ? (
+                      <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${unresponded ? "bg-white text-red-600" : "bg-red-600 text-white"}`}>
+                        {stats.unrespondedOrders}
+                      </span>
+                    ) : null}
+                  </button>
+                  {["pending","confirmed","processing","shipped","delivered","cancelled"].map((s) => (
+                    <button key={s} onClick={() => { setUnresponded(false); setFilter(s); }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        !unresponded && filter === s ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}>
+                      {STATUS_META[s]?.label || s}
+                    </button>
+                  ))}
+                  <span className="ml-auto text-xs text-gray-400">{fetching ? "Loading…" : `${total} order${total !== 1 ? "s" : ""}`}</span>
+                </div>
+
+                {/* Orders table */}
+                {fetching ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-20 bg-white rounded-xl border border-gray-200 text-gray-400">
+                    <Package size={40} className="mx-auto mb-3 text-gray-200" />
+                    No orders match the current filter.
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-3 py-3 text-left font-semibold text-gray-500">Order</th>
+                          <th className="px-3 py-3 text-left font-semibold text-gray-500">Status</th>
+                          <th className="px-3 py-3 text-left font-semibold text-gray-500">Buyer</th>
+                          <th className="px-3 py-3 text-left font-semibold text-gray-500">Seller(s)</th>
+                          <th className="px-3 py-3 text-right font-semibold text-gray-500">Amount</th>
+                          <th className="px-3 py-3 text-right font-semibold text-gray-500">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.map((o) => (
+                          <OrderTableRow key={o._id} order={o} onNudge={setNudgeOrder} onPayoutReleased={() => fetchStats()} />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {pages > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                      <button key={p} onClick={() => fetchOrders(p)}
+                        className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
+                          page === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                        }`}>{p}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── PAYOUTS TAB ── */}
+            {activeTab === "payouts" && <PayoutsPanel />}
+
+            {/* ── PRODUCT PHOTOS TAB ── */}
+            {activeTab === "products" && (
+              <div className="space-y-5">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex gap-3">
+                  <Camera size={22} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-900 mb-0.5">Product Image Moderation</p>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      Review photos uploaded by sellers. Click <strong>&quot;Request Photo Fix&quot;</strong> to email a seller about blurry or incorrect images.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="text"
+                    placeholder="Search by title or category…"
+                    value={prodSearch}
+                    onChange={(e) => setProdSearch(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") fetchAdminProducts(1); }}
+                    className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3.5 py-2 text-xs text-gray-800 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button onClick={() => fetchAdminProducts(1)}
+                    className="px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-xl hover:bg-gray-700 transition-colors shrink-0">
+                    Search
+                  </button>
+                  <button onClick={() => fetchAdminProducts(1)}
+                    className="p-2 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors">
+                    <RefreshCw size={13} />
+                  </button>
+                  <span className="text-xs text-gray-400">{prodTotal} products</span>
+                </div>
+
+                {/* Products table */}
+                {prodLoading ? (
+                  <div className="space-y-2">{[1,2,3,4,5].map((i) => <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+                ) : productsList.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-xl border border-gray-200 text-gray-400">
+                    <Camera size={36} className="mx-auto mb-2 text-gray-200" />
+                    <p className="text-sm">No products found</p>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-500">Photos</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-500">Product</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-500">Seller</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-500">Category</th>
+                          <th className="px-4 py-3 text-right font-semibold text-gray-500">Price</th>
+                          <th className="px-4 py-3 text-right font-semibold text-gray-500">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {productsList.map((prod) => (
+                          <tr key={prod._id} className="hover:bg-gray-50 transition-colors">
+                            {/* Thumbnail strip */}
+                            <td className="px-4 py-2">
+                              <div className="flex gap-1">
+                                {prod.images && prod.images.length > 0 ? (
+                                  prod.images.slice(0, 4).map((img: any, idx: number) => (
+                                    <div key={idx} className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shrink-0">
+                                      <img src={img.url} alt={`img ${idx+1}`} className="w-full h-full object-cover" />
+                                      {img.isMain && (
+                                        <span className="absolute bottom-0 left-0 right-0 bg-emerald-600 text-white text-[8px] font-bold text-center leading-3 py-0.5">✓</span>
+                                      )}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center">
+                                    <span className="text-red-400 text-[10px] font-bold">0</span>
+                                  </div>
+                                )}
+                                {prod.images && prod.images.length > 4 && (
+                                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-500">
+                                    +{prod.images.length - 4}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-2">
+                              <p className="font-semibold text-gray-800 max-w-[160px] truncate">{prod.name}</p>
+                              <p className="text-gray-400">{prod.images?.length || 0} image{prod.images?.length !== 1 ? "s" : ""}</p>
+                            </td>
+                            <td className="px-4 py-2">
+                              <p className="font-semibold text-gray-800">{prod.seller?.name || "Unknown"}</p>
+                              {prod.seller?.sellerProfile?.shopName && (
+                                <p className="text-gray-400">{prod.seller.sellerProfile.shopName}</p>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 text-gray-500">{prod.category}</td>
+                            <td className="px-4 py-2 text-right font-bold text-emerald-700">₹{prod.price}</td>
+                            <td className="px-4 py-2 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <a href={`/products/${prod._id}`} target="_blank" rel="noreferrer"
+                                  className="p-1.5 text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                                  <ExternalLink size={12} />
+                                </a>
+                                <button
+                                  onClick={() => { setSelectedProductForModal(prod); setProductNoticeNote(""); }}
+                                  className="flex items-center gap-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+                                  <Mail size={11} /> Fix
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {prodPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    {Array.from({ length: prodPages }, (_, i) => i + 1).map((p) => (
+                      <button key={p} onClick={() => fetchAdminProducts(p)}
+                        className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
+                          prodPage === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
+                        }`}>{p}</button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Modal for image fix notice */}
+                {selectedProductForModal && (
+                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
+                      <div className="flex items-center justify-between border-b pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">📸</span>
+                          <div>
+                            <h3 className="text-base font-bold text-gray-900">Send Product Image Issue Email</h3>
+                            <p className="text-xs text-gray-500">Alert seller to remove incorrect photos & upload proper images</p>
+                          </div>
+                        </div>
+                        <button onClick={() => setSelectedProductForModal(null)} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg">
+                          <XCircle size={18} />
+                        </button>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-3 text-xs space-y-1.5">
+                        <p><strong>Product:</strong> {selectedProductForModal.name}</p>
+                        <p><strong>Seller:</strong> {selectedProductForModal.seller?.name} ({selectedProductForModal.seller?.email})</p>
+                        <p><strong>Shop:</strong> {selectedProductForModal.seller?.sellerProfile?.shopName || "N/A"}</p>
+                        <p className="text-emerald-600">✓ Includes direct edit link for seller</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Specific feedback (optional)</label>
+                        <textarea
+                          rows={3}
+                          placeholder="e.g. The first image is very blurry. Please take a photo in natural daylight."
+                          value={productNoticeNote}
+                          onChange={(e) => setProductNoticeNote(e.target.value)}
+                          className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-800 focus:outline-none focus:border-emerald-500 resize-none"
+                        />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button onClick={() => setSelectedProductForModal(null)}
+                          className="flex-1 border border-gray-200 text-gray-500 text-xs font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors">
+                          Cancel
+                        </button>
+                        <button onClick={handleSendProductImageNotice} disabled={sendingProductNotice}
+                          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50">
+                          {sendingProductNotice ? <RefreshCw size={13} className="animate-spin" /> : <Send size={13} />}
+                          {sendingProductNotice ? "Sending…" : "Send Photo Fix Notice"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── MAIL SELLERS TAB ── */}
+            {activeTab === "mail" && <MailSellersPanel />}
+>>>>>>> Stashed changes
+
+            {/* ── MAIL BUYERS TAB ── */}
+            {activeTab === "mail_buyers" && <MailBuyersPanel />}
+
+          </div>{/* end main content */}
+        </div>{/* end flex */}
+      </div>{/* end container */}
 
       {/* Nudge modal */}
       {nudgeOrder && (
