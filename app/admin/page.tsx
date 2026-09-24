@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import {
   Package, Users, ShoppingBag, TrendingUp, AlertTriangle,
   CheckCircle, XCircle, Clock, Bell, ChevronDown,
   ChevronUp, Phone, Mail, RefreshCw, Send, Store, Banknote, ShieldCheck, Camera, ExternalLink,
+  Search, ClipboardList, UserCheck,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -273,7 +274,19 @@ function OrderTableRow({
           )}
         </td>
         <td className="px-3 py-3 whitespace-nowrap text-right">
-          <div className="flex items-center justify-end gap-1.5">
+          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+            <select
+              value={statusValue}
+              onChange={(e) => setStatusValue(e.target.value as any)}
+              title="Quick status override"
+              className="border border-gray-200 rounded-lg px-1.5 py-1 text-[11px] text-gray-700 focus:outline-none focus:border-emerald-500 bg-white max-w-[110px]">
+              {ALL_STATUSES.map((s) => <option key={s} value={s}>{STATUS_META[s]?.label || s}</option>)}
+            </select>
+            <button onClick={forceStatus} disabled={updating || statusValue === order.orderStatus}
+              title="Apply status change"
+              className="text-[11px] font-bold bg-gray-800 text-white px-2 py-1 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">
+              {updating ? "…" : "Set"}
+            </button>
             <button onClick={() => onNudge(order)} title="Email seller reminder"
               className="flex items-center gap-1 text-[11px] font-semibold text-orange-600 border border-orange-200 px-2 py-1 rounded-lg hover:bg-orange-50 transition-colors">
               <Bell size={11} /> Nudge
@@ -921,16 +934,409 @@ function PayoutReleaseButton({ order, onReleased }: { order: AdminOrder; onRelea
   );
 }
 
+// ─── Users Panel ──────────────────────────────────────────────────────────────
+
+type AdminUserEntry = {
+  _id: string; name: string; email: string; phone?: string;
+  isSeller: boolean; role: string; createdAt: string;
+  sellerProfile?: { shopName?: string; approved?: boolean };
+  orderCount?: number; productCount?: number;
+};
+
+function UsersPanel() {
+  const [userType,    setUserType]    = useState<"all" | "buyers" | "sellers">("all");
+  const [search,      setSearch]      = useState("");
+  const [users,       setUsers]       = useState<AdminUserEntry[]>([]);
+  const [loading,     setLoading]     = useState(false);
+  const [page,        setPage]        = useState(1);
+  const [pages,       setPages]       = useState(1);
+  const [total,       setTotal]       = useState(0);
+  const [expanded,    setExpanded]    = useState<string | null>(null);
+  const searchRef     = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const fetchUsers = useCallback(async (p = 1, q = search, type = userType) => {
+    setLoading(true);
+    try {
+      const params: Record<string, any> = { page: p, limit: 25 };
+      if (q.trim())       params.search  = q.trim();
+      if (type !== "all") params.type    = type;
+      const { data } = await api.get("/admin/users", { params });
+      setUsers(data.users ?? data); setPage(data.page ?? 1); setPages(data.pages ?? 1); setTotal(data.total ?? data.length);
+    } catch { toast.error("Failed to load users"); }
+    finally { setLoading(false); }
+  }, [search, userType]);
+
+  useEffect(() => { fetchUsers(1); }, [fetchUsers]);
+
+  function handleSearchChange(v: string) {
+    setSearch(v);
+    clearTimeout(searchRef.current);
+    searchRef.current = setTimeout(() => fetchUsers(1, v, userType), 400);
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 flex gap-3">
+        <Users size={20} className="text-blue-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-bold text-blue-800 mb-0.5">User Management</p>
+          <p className="text-xs text-blue-700 leading-relaxed">View all registered users — buyers and sellers. Search by name, email, or phone.</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex gap-1.5">
+          {(["all","buyers","sellers"] as const).map((t) => (
+            <button key={t} onClick={() => { setUserType(t); fetchUsers(1, search, t); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all capitalize ${userType === t ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+              {t}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 min-w-[180px]">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search name / email / phone…"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+        <button onClick={() => fetchUsers(1)} className="p-2 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors"><RefreshCw size={13} /></button>
+        <span className="text-xs text-gray-400 ml-auto">{total} user{total !== 1 ? "s" : ""}</span>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">{[1,2,3,4,5].map((i) => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+      ) : users.length === 0 ? (
+        <div className="text-center py-16 text-gray-400"><Users size={36} className="mx-auto mb-2 text-gray-200" /><p className="text-sm">No users match</p></div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">User</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Contact</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Type</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500 hidden sm:table-cell">Shop / Orders</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Joined</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {users.map((u) => (
+                <React.Fragment key={u._id}>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${u.isSeller ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                          {u.name?.[0]?.toUpperCase() || "?"}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800 max-w-[140px] truncate">{u.name}</p>
+                          {u.role === "admin" && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-bold">ADMIN</span>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-gray-600 max-w-[160px] truncate">{u.email}</p>
+                      {u.phone && <p className="text-gray-400 flex items-center gap-1"><Phone size={9} /> {u.phone}</p>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.isSeller ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
+                          <Store size={9} /> Seller
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                          <UserCheck size={9} /> Buyer
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      {u.isSeller && u.sellerProfile?.shopName ? (
+                        <p className="font-semibold text-gray-800 max-w-[130px] truncate">{u.sellerProfile.shopName}</p>
+                      ) : null}
+                      {u.orderCount !== undefined && <p className="text-gray-400">{u.orderCount} order{u.orderCount !== 1 ? "s" : ""}</p>}
+                      {u.productCount !== undefined && <p className="text-gray-400">{u.productCount} product{u.productCount !== 1 ? "s" : ""}</p>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">{fmtDate(u.createdAt)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <a href={`mailto:${u.email}`} title={`Email ${u.name}`}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors">
+                          <Mail size={12} />
+                        </a>
+                        <button onClick={() => setExpanded(expanded === u._id ? null : u._id)}
+                          className="p-1.5 text-gray-400 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                          {expanded === u._id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {expanded === u._id && (
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      <td colSpan={6} className="px-6 py-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                          <div><p className="text-gray-400 font-semibold uppercase tracking-wide text-[10px] mb-1">User ID</p><p className="font-mono text-gray-700">{u._id}</p></div>
+                          <div><p className="text-gray-400 font-semibold uppercase tracking-wide text-[10px] mb-1">Email</p><a href={`mailto:${u.email}`} className="text-emerald-600 hover:underline">{u.email}</a></div>
+                          {u.phone && <div><p className="text-gray-400 font-semibold uppercase tracking-wide text-[10px] mb-1">Phone</p><a href={`tel:${u.phone}`} className="text-emerald-600 hover:underline">{u.phone}</a></div>}
+                          {u.isSeller && <div><p className="text-gray-400 font-semibold uppercase tracking-wide text-[10px] mb-1">Seller Approved</p><p className={u.sellerProfile?.approved ? "text-emerald-600 font-semibold" : "text-orange-500 font-semibold"}>{u.sellerProfile?.approved ? "Yes" : "Pending"}</p></div>}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {pages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+            <button key={p} onClick={() => fetchUsers(p)}
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${page === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>{p}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Custom Requests Panel ────────────────────────────────────────────────────
+
+type AdminCustomRequest = {
+  _id: string; title: string; description: string; budget: number;
+  status: string; createdAt: string;
+  buyer: { _id: string; name: string; email: string; phone?: string };
+  bids: { _id: string; seller: { name: string; email?: string }; price: number; deliveryDays?: number; status: string; note?: string }[];
+  category?: string; deadline?: string; buyerPhone?: string;
+};
+
+const CR_STATUS_META: Record<string, { label: string; color: string }> = {
+  open:      { label: "Open",      color: "bg-emerald-100 text-emerald-700" },
+  closed:    { label: "Closed",    color: "bg-blue-100 text-blue-700" },
+  completed: { label: "Completed", color: "bg-purple-100 text-purple-700" },
+  cancelled: { label: "Cancelled", color: "bg-red-100 text-red-600" },
+};
+
+function CustomRequestsPanel() {
+  const [crStatus,   setCrStatus]   = useState<"all" | "open" | "closed" | "completed" | "cancelled">("all");
+  const [crSearch,   setCrSearch]   = useState("");
+  const [requests,   setRequests]   = useState<AdminCustomRequest[]>([]);
+  const [loading,    setLoading]    = useState(false);
+  const [page,       setPage]       = useState(1);
+  const [pages,      setPages]      = useState(1);
+  const [total,      setTotal]      = useState(0);
+  const [expanded,   setExpanded]   = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const crSearchRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const fetchRequests = useCallback(async (p = 1, q = crSearch) => {
+    setLoading(true);
+    try {
+      const params: Record<string, any> = { page: p, limit: 20 };
+      if (crStatus !== "all") params.status = crStatus;
+      if (q.trim()) params.search = q.trim();
+      const { data } = await api.get("/custom-requests", { params });
+      setRequests(data.requests ?? data); setPage(data.page ?? 1); setPages(data.pages ?? 1); setTotal(data.total ?? data.length);
+    } catch { toast.error("Failed to load custom requests"); }
+    finally { setLoading(false); }
+  }, [crStatus, crSearch]);
+
+  useEffect(() => { fetchRequests(1); }, [fetchRequests]);
+
+  function handleCrSearchChange(v: string) {
+    setCrSearch(v);
+    clearTimeout(crSearchRef.current);
+    crSearchRef.current = setTimeout(() => fetchRequests(1, v), 400);
+  }
+
+  async function adminCancelRequest(id: string, title: string) {
+    if (!confirm(`Force-cancel "${title}"? This will notify any bidding sellers.`)) return;
+    setCancelling(id);
+    try {
+      await api.delete(`/custom-requests/admin/${id}`);
+      toast.success("Request cancelled");
+      setRequests((prev) => prev.map((r) => r._id === id ? { ...r, status: "cancelled" } : r));
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to cancel");
+    } finally {
+      setCancelling(null);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-purple-50 border border-purple-200 rounded-xl px-5 py-4 flex gap-3">
+        <ClipboardList size={20} className="text-purple-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-bold text-purple-800 mb-0.5">Custom Request Management</p>
+          <p className="text-xs text-purple-700 leading-relaxed">All buyer custom requests. Monitor bids, force-cancel spam, and track activity.</p>
+        </div>
+      </div>
+
+      {/* Filters row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex gap-1.5 flex-wrap">
+          {(["all","open","closed","completed","cancelled"] as const).map((s) => (
+            <button key={s} onClick={() => setCrStatus(s)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all capitalize ${crStatus === s ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+              {s}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 min-w-[160px]">
+          <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input type="text" placeholder="Search title or buyer…" value={crSearch}
+            onChange={(e) => handleCrSearchChange(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:border-emerald-500" />
+        </div>
+        <button onClick={() => fetchRequests(1)} className="p-2 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors"><RefreshCw size={13} /></button>
+        <span className="text-xs text-gray-400">{total} request{total !== 1 ? "s" : ""}</span>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">{[1,2,3].map((i) => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+      ) : requests.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border border-gray-200 text-gray-400">
+          <ClipboardList size={36} className="mx-auto mb-2 text-gray-200" /><p className="text-sm">No custom requests found</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500 w-5"></th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Request</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Buyer</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Status</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-500">Budget</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-500">Bids</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-500">Date</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {requests.map((r) => {
+                const meta = CR_STATUS_META[r.status] || CR_STATUS_META.open;
+                const isExpanded = expanded === r._id;
+                return (
+                  <React.Fragment key={r._id}>
+                    <tr className={`hover:bg-gray-50 transition-colors ${r.status === "cancelled" ? "opacity-60" : ""}`}>
+                      <td className="pl-3 pr-1 py-3">
+                        <button onClick={() => setExpanded(isExpanded ? null : r._id)}
+                          className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors">
+                          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        </button>
+                      </td>
+                      <td className="px-3 py-3">
+                        <p className="font-semibold text-gray-800 max-w-[180px] truncate">{r.title}</p>
+                        {r.category && <p className="text-gray-400">{r.category}</p>}
+                      </td>
+                      <td className="px-3 py-3">
+                        <p className="font-semibold text-gray-800">{r.buyer?.name ?? "—"}</p>
+                        <p className="text-gray-400 max-w-[140px] truncate">{r.buyer?.email ?? "—"}</p>
+                        {r.buyerPhone && (
+                          <a href={`tel:${r.buyerPhone}`} className="text-emerald-600 flex items-center gap-1 hover:underline mt-0.5">
+                            <Phone size={9} /> {r.buyerPhone}
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${meta.color}`}>{meta.label}</span>
+                      </td>
+                      <td className="px-3 py-3 text-right font-bold text-emerald-700">
+                        {r.budget ? `₹${Number(r.budget).toLocaleString("en-IN")}` : "—"}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${r.bids.length > 0 ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-500"}`}>{r.bids.length}</span>
+                      </td>
+                      <td className="px-3 py-3 text-gray-400 whitespace-nowrap">{fmtDate(r.createdAt)}</td>
+                      <td className="px-3 py-3 text-right">
+                        {r.status !== "cancelled" && r.status !== "completed" && (
+                          <button
+                            onClick={() => adminCancelRequest(r._id, r.title)}
+                            disabled={cancelling === r._id}
+                            className="flex items-center gap-1 text-[11px] font-bold text-red-600 border border-red-200 px-2 py-1 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors ml-auto">
+                            {cancelling === r._id ? <RefreshCw size={10} className="animate-spin" /> : <XCircle size={10} />}
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <td colSpan={8} className="px-6 py-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+                            <div>
+                              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Description</p>
+                              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{r.description}</p>
+                              <div className="mt-3 flex flex-wrap gap-3 text-gray-500">
+                                {r.deadline && <p>Deadline: <span className="font-semibold text-gray-700">{fmtDate(r.deadline)}</span></p>}
+                                {r.buyerPhone && <p>Phone: <a href={`tel:${r.buyerPhone}`} className="font-semibold text-emerald-600 hover:underline">{r.buyerPhone}</a></p>}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Bids ({r.bids.length})</p>
+                              {r.bids.length === 0 ? <p className="text-gray-400">No bids yet</p> : (
+                                <div className="space-y-1.5">
+                                  {r.bids.map((b) => (
+                                    <div key={b._id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-200">
+                                      <div className="flex items-center justify-between mb-0.5">
+                                        <p className="font-semibold text-gray-800">{b.seller?.name || "Unknown"}</p>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-bold text-emerald-700">₹{Number(b.price).toLocaleString("en-IN")}</span>
+                                          {b.deliveryDays && <span className="text-gray-400">{b.deliveryDays}d</span>}
+                                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${b.status === "accepted" ? "bg-emerald-100 text-emerald-700" : b.status === "rejected" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>{b.status}</span>
+                                        </div>
+                                      </div>
+                                      {b.note && <p className="text-gray-500 italic text-[11px]">"{b.note}"</p>}
+                                      {b.seller?.email && <a href={`mailto:${b.seller.email}`} className="text-[11px] text-emerald-600 hover:underline">{b.seller.email}</a>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {pages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+            <button key={p} onClick={() => fetchRequests(p)}
+              className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${page === p ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"}`}>{p}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-type AdminTab = "orders" | "payouts" | "products" | "mail" | "mail_buyers";
+type AdminTab = "orders" | "payouts" | "products" | "users" | "custom_requests" | "mail" | "mail_buyers";
 
-const NAV_ITEMS: { id: AdminTab; label: string; icon: any }[] = [
-  { id: "orders",      label: "Orders",         icon: Package },
-  { id: "payouts",     label: "Payouts",         icon: Banknote },
-  { id: "products",    label: "Product Photos",  icon: Camera },
-  { id: "mail",        label: "Mail Sellers",    icon: Send },
-  { id: "mail_buyers", label: "Mail Buyers",     icon: Users },
+const NAV_ITEMS: { id: AdminTab; label: string; icon: any; badge?: string }[] = [
+  { id: "orders",          label: "Orders",           icon: Package },
+  { id: "payouts",         label: "Payouts",          icon: Banknote },
+  { id: "products",        label: "Product Photos",   icon: Camera },
+  { id: "users",           label: "Users",            icon: Users },
+  { id: "custom_requests", label: "Custom Requests",  icon: ClipboardList },
+  { id: "mail",            label: "Mail Sellers",     icon: Send },
+  { id: "mail_buyers",     label: "Mail Buyers",      icon: Mail },
 ];
 
 export default function AdminPage() {
@@ -944,6 +1350,7 @@ export default function AdminPage() {
   const [page,        setPage]        = useState(1);
   const [pages,       setPages]       = useState(1);
   const [filter,      setFilter]      = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
   const [unresponded, setUnresponded] = useState(false);
   const [fetching,    setFetching]    = useState(false);
   const [nudgeOrder,  setNudgeOrder]  = useState<AdminOrder | null>(null);
@@ -972,13 +1379,14 @@ export default function AdminPage() {
     setFetching(true);
     try {
       const params: Record<string, any> = { page: p, limit: 20 };
-      if (filter)      params.status      = filter;
-      if (unresponded) params.unresponded = "true";
+      if (filter)           params.status      = filter;
+      if (unresponded)      params.unresponded = "true";
+      if (orderSearch.trim()) params.search    = orderSearch.trim();
       const { data } = await api.get("/admin/orders", { params });
       setOrders(data.orders); setTotal(data.total); setPage(data.page); setPages(data.pages);
     } catch {}
     finally { setFetching(false); }
-  }, [filter, unresponded]);
+  }, [filter, unresponded, orderSearch]);
 
   const fetchAdminProducts = useCallback(async (p = 1) => {
     setProdLoading(true);
@@ -1064,14 +1472,19 @@ export default function AdminPage() {
 
         <div className="flex gap-5">
           {/* Sidebar nav — desktop */}
-          <nav className="w-44 shrink-0 hidden md:block">
+          <nav className="w-48 shrink-0 hidden md:block">
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden sticky top-20">
               {NAV_ITEMS.map((item) => (
                 <button key={item.id} onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium transition-colors border-b border-gray-100 last:border-b-0 text-left ${
+                  className={`w-full flex items-center gap-2.5 px-4 py-3 text-xs font-semibold transition-colors border-b border-gray-100 last:border-b-0 text-left ${
                     activeTab === item.id ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"
                   }`}>
-                  <item.icon size={15} /> {item.label}
+                  <item.icon size={14} className="shrink-0" /> <span className="truncate">{item.label}</span>
+                  {item.id === "orders" && stats?.unrespondedOrders ? (
+                    <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${activeTab === "orders" ? "bg-white text-red-600" : "bg-red-100 text-red-600"}`}>{stats.unrespondedOrders}</span>
+                  ) : item.id === "payouts" && stats?.pendingOrders ? (
+                    <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${activeTab === "payouts" ? "bg-white text-orange-600" : "bg-orange-100 text-orange-600"}`}>{stats.pendingOrders}</span>
+                  ) : null}
                 </button>
               ))}
             </div>
@@ -1095,25 +1508,42 @@ export default function AdminPage() {
             {/* ── ORDERS TAB ── */}
             {activeTab === "orders" && (
               <div>
-                <div className="flex flex-wrap gap-1.5 mb-4 items-center">
-                  <button onClick={() => { setUnresponded(false); setFilter(""); }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && !filter ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
-                    All
-                  </button>
-                  <button onClick={() => { setUnresponded(true); setFilter(""); }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${unresponded ? "bg-red-600 text-white" : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"}`}>
-                    <AlertTriangle size={10} /> &gt;24h
-                    {stats?.unrespondedOrders ? (
-                      <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${unresponded ? "bg-white text-red-600" : "bg-red-600 text-white"}`}>{stats.unrespondedOrders}</span>
-                    ) : null}
-                  </button>
-                  {["pending","confirmed","processing","shipped","delivered","cancelled"].map((s) => (
-                    <button key={s} onClick={() => { setUnresponded(false); setFilter(s); }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && filter === s ? "bg-emerald-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
-                      {STATUS_META[s]?.label || s}
+                {/* Search + status filters */}
+                <div className="bg-white rounded-xl border border-gray-200 p-3 mb-4 space-y-3">
+                  <div className="relative">
+                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search by buyer name, email, or order ID…"
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") fetchOrders(1); }}
+                      className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    <button onClick={() => { setUnresponded(false); setFilter(""); fetchOrders(1); }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && !filter ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                      All
                     </button>
-                  ))}
-                  <span className="ml-auto text-xs text-gray-400">{fetching ? "Loading…" : `${total} order${total !== 1 ? "s" : ""}`}</span>
+                    <button onClick={() => { setUnresponded(true); setFilter(""); fetchOrders(1); }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${unresponded ? "bg-red-600 text-white" : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"}`}>
+                      <AlertTriangle size={10} /> &gt;24h
+                      {stats?.unrespondedOrders ? (
+                        <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${unresponded ? "bg-white text-red-600" : "bg-red-600 text-white"}`}>{stats.unrespondedOrders}</span>
+                      ) : null}
+                    </button>
+                    {["pending","confirmed","processing","shipped","delivered","cancelled"].map((s) => (
+                      <button key={s} onClick={() => { setUnresponded(false); setFilter(s); fetchOrders(1); }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!unresponded && filter === s ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                        {STATUS_META[s]?.label || s}
+                      </button>
+                    ))}
+                    <div className="ml-auto flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{fetching ? "Loading…" : `${total} order${total !== 1 ? "s" : ""}`}</span>
+                      <button onClick={() => fetchOrders(1)} className="p-1.5 text-gray-500 border border-gray-200 hover:bg-gray-100 rounded-lg transition-colors"><RefreshCw size={12} /></button>
+                    </div>
+                  </div>
                 </div>
 
                 {fetching ? (
@@ -1133,7 +1563,7 @@ export default function AdminPage() {
                           <th className="px-3 py-3 text-left font-semibold text-gray-500">Buyer</th>
                           <th className="px-3 py-3 text-left font-semibold text-gray-500">Seller(s)</th>
                           <th className="px-3 py-3 text-right font-semibold text-gray-500">Amount</th>
-                          <th className="px-3 py-3 text-right font-semibold text-gray-500">Actions</th>
+                          <th className="px-3 py-3 text-right font-semibold text-gray-500">Status · Nudge · Pay</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1155,6 +1585,12 @@ export default function AdminPage() {
                 )}
               </div>
             )}
+
+            {/* ── USERS TAB ── */}
+            {activeTab === "users" && <UsersPanel />}
+
+            {/* ── CUSTOM REQUESTS TAB ── */}
+            {activeTab === "custom_requests" && <CustomRequestsPanel />}
 
             {/* ── PAYOUTS TAB ── */}
             {activeTab === "payouts" && <PayoutsPanel />}

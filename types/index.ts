@@ -172,3 +172,41 @@ export interface PaginatedResponse<T> {
   pages: number;
   total: number;
 }
+
+// ─── Custom Request / Bid feature ────────────────────────────────────────────
+
+export type BidStatus = "pending" | "accepted" | "rejected";
+export type CustomRequestStatus = "open" | "closed" | "completed" | "cancelled";
+
+export interface Bid {
+  _id: string;
+  seller: { _id: string; name: string; email?: string; phone?: string; sellerProfile?: SellerProfile } | string;
+  price: number;
+  deliveryDays: number;
+  note?: string;
+  status: BidStatus;
+  acceptedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CustomRequest {
+  _id: string;
+  buyer: { _id: string; name: string; avatar?: string; createdAt?: string } | string;
+  title: string;
+  description: string;
+  category: string;
+  budget?: number | null;
+  deadline?: string | null;
+  buyerPhone?: string;
+  images: { url: string; publicId?: string }[];
+  status: CustomRequestStatus;
+  bids: Bid[];
+  acceptedBid?: string | null;
+  acceptedSeller?: { _id: string; name: string; phone?: string; email?: string; sellerProfile?: SellerProfile } | null;
+  viewCount: number;
+  createdAt: string;
+  updatedAt?: string;
+  // Annotated by seller-side API
+  myBid?: Bid | null;
+}
