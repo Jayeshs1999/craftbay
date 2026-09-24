@@ -14,7 +14,7 @@ import Button from "@/components/Button";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 import toast from "react-hot-toast";
 
-type Tab = "overview" | "products" | "orders" | "settings";
+type Tab = "overview" | "products" | "orders" | "custom_requests" | "settings";
 
 /** Buyer is populated by the API with name/email/phone */
 interface PopulatedBuyer {
@@ -563,12 +563,14 @@ export default function SellerDashboardPage() {
 
       {/* Tab nav */}
       <div className="flex border-b border-[#e7e5e4] mb-8 overflow-x-auto">
-        {(["overview","products","orders","settings"] as Tab[]).map((t) => (
+        {(["overview","products","orders","custom_requests","settings"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={"px-5 py-3 text-sm font-medium capitalize border-b-2 -mb-px transition-colors whitespace-nowrap " +
               (tab === t ? "border-[#059669] text-[#059669]" : "border-transparent text-[#78716c] hover:text-[#1c1917]")}>
             {t === "settings" ? (
               <span className="flex items-center gap-1.5"><Settings size={13} />Settings</span>
+            ) : t === "custom_requests" ? (
+              <span className="flex items-center gap-1.5"><ClipboardList size={13} />Custom Requests ✨</span>
             ) : t}
             {t === "orders" && stats.pendingOrders > 0 && (
               <span className="ml-1.5 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
@@ -779,6 +781,42 @@ export default function SellerDashboardPage() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* CUSTOM REQUESTS */}
+          {tab === "custom_requests" && (
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-[#1c1917] flex items-center gap-2">
+                    <ClipboardList size={18} className="text-[#059669]" /> Custom Requests
+                  </h2>
+                  <p className="text-sm text-[#78716c]">Buyers post custom orders — bid on the ones you can fulfill.</p>
+                </div>
+                <Link href="/seller/custom-requests">
+                  <button className="flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+                    <Plus size={14} /> Open Full View
+                  </button>
+                </Link>
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-sm text-amber-800">
+                <p className="font-semibold mb-1">✨ How it works</p>
+                <ul className="space-y-1 text-xs text-amber-700 list-disc list-inside">
+                  <li>Buyers post a request with budget, description &amp; deadline</li>
+                  <li>You submit a bid with your price and delivery estimate</li>
+                  <li>If buyer accepts your bid, you both connect directly on WhatsApp</li>
+                </ul>
+              </div>
+              <div className="mt-5 text-center py-12 bg-white rounded-2xl border border-[#e7e5e4]">
+                <ClipboardList size={40} className="mx-auto mb-3 text-[#d6d3d1]" />
+                <p className="text-[#78716c] font-medium mb-3">Browse open buyer requests</p>
+                <Link href="/seller/custom-requests">
+                  <button className="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+                    <ClipboardList size={14} /> View All Requests &amp; My Bids
+                  </button>
+                </Link>
+              </div>
             </div>
           )}
 

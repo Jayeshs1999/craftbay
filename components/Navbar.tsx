@@ -1,15 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, Heart, Store, Menu, X, Search, LayoutDashboard, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Heart, Store, Menu, X, Search, LayoutDashboard, LogOut, ChevronDown, ShieldCheck, ClipboardList } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCartStore } from "@/store/cartStore";
 
 const NAV_LINKS = [
-  { href: "/shops",         label: "Shops" },
-  { href: "/products",      label: "All Products" },
-  { href: "/become-seller", label: "Sell" },
+  { href: "/shops",    label: "Shops" },
+  { href: "/products", label: "All Products" },
 ];
 
 export default function Navbar() {
@@ -62,6 +61,29 @@ export default function Navbar() {
             </Link>
           ))}
 
+          {/* Custom Requests — only for non-seller buyers who are logged in */}
+          {user && !user.isSeller && (
+            <Link href="/custom-requests/my"
+              className={"text-sm font-semibold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 " +
+                (pathname.startsWith("/custom-requests")
+                  ? "text-amber-700 bg-amber-50"
+                  : "text-[#64748b] hover:text-amber-700 hover:bg-amber-50")}>
+              <ClipboardList size={14} />
+              Custom Order
+            </Link>
+          )}
+
+          {/* Sell link — only for non-sellers */}
+          {(!user || !user.isSeller) && (
+            <Link href="/become-seller"
+              className={"text-sm font-semibold px-3 py-2 rounded-lg transition-colors " +
+                (pathname.startsWith("/become-seller")
+                  ? "text-[#059669] bg-[#ecfdf5]"
+                  : "text-[#64748b] hover:text-[#059669] hover:bg-[#ecfdf5]")}>
+              Sell
+            </Link>
+          )}
+
           {/* Cart */}
           <Link href="/cart"
             className={"relative p-2 rounded-xl transition-colors " +
@@ -112,6 +134,17 @@ export default function Navbar() {
                         onClick={() => setDropOpen(false)}>
                         <LayoutDashboard size={14} className="text-[#64748b]" /> My Orders
                       </Link>
+
+                      {/* Custom Requests — buyers only */}
+                      {!user.isSeller && (
+                        <Link href="/custom-requests/my"
+                          className={"flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors " +
+                            (pathname.startsWith("/custom-requests") ? "bg-amber-50 text-amber-700 font-medium" : "hover:bg-amber-50 text-[#0f172a]")}
+                          onClick={() => setDropOpen(false)}>
+                          <ClipboardList size={14} className="text-amber-600" /> Custom Orders ✨
+                        </Link>
+                      )}
+
                       {user.role === "admin" && (
                         <Link href="/admin"
                           className={"flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors " +
@@ -200,6 +233,15 @@ export default function Navbar() {
 
           {user ? (
             <>
+              {/* Custom Requests — buyers only */}
+              {!user.isSeller && (
+                <Link href="/custom-requests/my"
+                  className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors " +
+                    (pathname.startsWith("/custom-requests") ? "bg-amber-50 text-amber-700 font-medium" : "text-[#0f172a] hover:bg-amber-50")}>
+                  <ClipboardList size={15} className="text-amber-600" /> Custom Orders ✨
+                </Link>
+              )}
+
               <div className="flex items-center gap-3 px-3 py-3 my-1 bg-[#ecfdf5] rounded-xl">
                 <div className="w-8 h-8 rounded-full bg-[#059669] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-xs">
                   {user.name[0].toUpperCase()}

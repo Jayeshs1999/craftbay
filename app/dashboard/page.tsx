@@ -97,18 +97,38 @@ export default function DashboardPage() {
         <p className="text-[#78716c] text-sm">Hello, {user.name} 👋</p>
       </div>
 
-      {/* Quick links */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-        {[
-          ["Browse Products", "/products"],
-          ["My Wishlist",     "/wishlist"],
-          ["Start Selling",   "/become-seller"],
-        ].map(([label, href]) => (
-          <Link key={href} href={href}
+      {/* Quick links — role-aware */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <Link href="/products"
+          className="bg-white rounded-2xl border border-[#e7e5e4] p-4 flex items-center gap-2 hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-sm font-medium text-[#1c1917]">
+          Browse Products
+        </Link>
+        <Link href="/wishlist"
+          className="bg-white rounded-2xl border border-[#e7e5e4] p-4 flex items-center gap-2 hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-sm font-medium text-[#1c1917]">
+          My Wishlist
+        </Link>
+        {user.isSeller ? (
+          <Link href="/seller"
             className="bg-white rounded-2xl border border-[#e7e5e4] p-4 flex items-center gap-2 hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-sm font-medium text-[#1c1917]">
-            {label}
+            Seller Dashboard
           </Link>
-        ))}
+        ) : (
+          <Link href="/custom-requests/my"
+            className="border-amber-200 bg-amber-50 hover:border-emerald-400 rounded-2xl border p-4 flex items-center gap-2 hover:bg-[#ecfdf5] transition-all text-sm font-medium text-[#1c1917]">
+            Custom Orders ✨
+          </Link>
+        )}
+        {user.isSeller ? (
+          <Link href="/seller/custom-requests"
+            className="bg-white rounded-2xl border border-[#e7e5e4] p-4 flex items-center gap-2 hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-sm font-medium text-[#1c1917]">
+            Custom Requests
+          </Link>
+        ) : (
+          <Link href="/become-seller"
+            className="bg-white rounded-2xl border border-[#e7e5e4] p-4 flex items-center gap-2 hover:border-[#059669] hover:bg-[#ecfdf5] transition-all text-sm font-medium text-[#1c1917]">
+            Start Selling
+          </Link>
+        )}
       </div>
 
       {/* Status filters */}

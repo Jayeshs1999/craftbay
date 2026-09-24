@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Palette, Store, ShieldCheck, Star, MapPin, Heart } from "lucide-react";
+import { ArrowRight, Palette, Store, ShieldCheck, Star, MapPin, Heart, ClipboardList, Banknote, MessageSquare } from "lucide-react";
 
 const CATEGORIES = [
   { name: "Jewellery",  emoji: "💍", color: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -139,6 +139,61 @@ export default function HomePage() {
               Browse All Products
             </button>
           </Link>
+        </div>
+      </section>
+
+      {/* ── CUSTOM ORDERS FEATURE ── */}
+      <section className="py-16 px-4 bg-white border-b border-[#e2e8f0]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold px-4 py-1.5 rounded-full mb-4 uppercase tracking-wide">
+              ✨ New Feature
+            </span>
+            <h2 className="text-3xl font-extrabold text-[#0f172a] mb-2">Can&apos;t find it? Request it.</h2>
+            <p className="text-[#64748b] max-w-xl mx-auto leading-relaxed">
+              Post a custom order request — describe exactly what you need, set your budget, and let sellers bid to make it for you.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6 mb-10">
+            {[
+              {
+                icon: ClipboardList,
+                title: "Describe what you want",
+                desc: "Post a request with your design, size, colour, and budget. Add reference photos to help sellers understand.",
+                color: "bg-amber-50 text-amber-600",
+              },
+              {
+                icon: MessageSquare,
+                title: "Sellers bid for you",
+                desc: "Active sellers on Banavoo.in review your request and submit their best price and delivery timeline.",
+                color: "bg-emerald-50 text-emerald-600",
+              },
+              {
+                icon: Banknote,
+                title: "Accept the best bid",
+                desc: "Review bids, accept the one you like. Contact details are shared so you can coordinate directly.",
+                color: "bg-blue-50 text-blue-600",
+              },
+            ].map((item) => (
+              <div key={item.title} className="bg-[#f8faf8] rounded-2xl p-6 border border-[#e2e8f0]">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${item.color}`}>
+                  <item.icon size={20} />
+                </div>
+                <h3 className="font-bold text-[#0f172a] mb-1.5">{item.title}</h3>
+                <p className="text-sm text-[#64748b] leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link href="/custom-requests/my">
+              <button className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm shadow-md hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer">
+                <ClipboardList size={16} /> Post a Custom Order Request
+              </button>
+            </Link>
+            <p className="text-xs text-[#94a3b8] mt-3">Free to post · No commitment until you accept a bid</p>
+          </div>
         </div>
       </section>
 
