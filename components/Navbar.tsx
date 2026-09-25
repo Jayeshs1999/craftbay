@@ -61,8 +61,8 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Custom Requests — only for non-seller buyers who are logged in */}
-          {user && !user.isSeller && (
+          {/* Custom Requests — visible to everyone except sellers */}
+          {!user?.isSeller && (
             <Link href="/custom-requests/my"
               className={"text-sm font-semibold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 " +
                 (pathname.startsWith("/custom-requests")
@@ -231,16 +231,17 @@ export default function Navbar() {
             🛍️ All Products
           </Link>
 
+          {/* Custom Requests — visible to everyone except sellers (outside user block) */}
+          {!user?.isSeller && (
+            <Link href="/custom-requests/my"
+              className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors " +
+                (pathname.startsWith("/custom-requests") ? "bg-amber-50 text-amber-700 font-medium" : "text-[#0f172a] hover:bg-amber-50")}>
+              <ClipboardList size={15} className="text-amber-600" /> Custom Orders ✨
+            </Link>
+          )}
+
           {user ? (
             <>
-              {/* Custom Requests — buyers only */}
-              {!user.isSeller && (
-                <Link href="/custom-requests/my"
-                  className={"flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors " +
-                    (pathname.startsWith("/custom-requests") ? "bg-amber-50 text-amber-700 font-medium" : "text-[#0f172a] hover:bg-amber-50")}>
-                  <ClipboardList size={15} className="text-amber-600" /> Custom Orders ✨
-                </Link>
-              )}
 
               <div className="flex items-center gap-3 px-3 py-3 my-1 bg-[#ecfdf5] rounded-xl">
                 <div className="w-8 h-8 rounded-full bg-[#059669] flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-xs">
