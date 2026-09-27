@@ -274,7 +274,15 @@ export default function HomePage() {
             </p>
           </div>
           <div className="relative w-full rounded-2xl overflow-hidden border border-[#e2e8f0] shadow-lg" style={{ paddingBottom: "56.25%" }}>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/GW7Kjjs0kWc?si=A3gVEI0c6hS_J7Xy" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <iframe 
+              className="absolute top-0 left-0 w-full h-full"
+              src="https://www.youtube.com/embed/GW7Kjjs0kWc?si=A3gVEI0c6hS_J7Xy" 
+              title="YouTube video player" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              referrerPolicy="strict-origin-when-cross-origin" 
+              allowFullScreen 
+              />
           </div>
           <div className="text-center mt-8">
             <Link href="/become-seller">
