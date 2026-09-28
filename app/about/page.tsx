@@ -110,7 +110,7 @@ export default function AboutPage() {
         <p className="text-sm text-[#64748b] mb-4">Questions, feedback, or partnership ideas? We&apos;d love to hear from you.</p>
         <a href="mailto:jayeshsevatkar55@gmail.com"
           className="inline-flex items-center gap-2 bg-[#059669] text-white font-semibold px-6 py-3 rounded-xl text-sm hover:bg-[#047857] transition-colors">
-          hello@banavoo.in
+          jayeshsevatkar55@gmail.com
         </a>
       </div>
 

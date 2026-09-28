@@ -38,7 +38,7 @@ export default function Footer() {
             </p>
             <a href="mailto:jayeshsevatkar55@gmail.com"
               className="inline-flex items-center gap-1.5 text-xs text-[#64748b] hover:text-[#059669] transition-colors">
-              <Mail size={13} /> hello@banavoo.in
+              <Mail size={13} /> jayeshsevatkar55@gmail.com
             </a>
           </div>
 

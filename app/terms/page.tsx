@@ -124,7 +124,7 @@ export default function TermsPage() {
       <Section id="contact" title="10. Contact Us">
         <p>
           For questions about these Terms, reach us at:{" "}
-          <a href="mailto:jayeshsevatkar55@gmail.com" className="text-[#059669] underline hover:text-[#047857]">hello@banavoo.in</a>
+          <a href="mailto:jayeshsevatkar55@gmail.com" className="text-[#059669] underline hover:text-[#047857]">jayeshsevatkar55@gmail.com</a>
         </p>
       </Section>
 
