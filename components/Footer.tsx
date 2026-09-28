@@ -13,10 +13,11 @@ const FOOTER_LINKS = {
     { href: "/privacy",       label: "Privacy Policy" },
   ],
   Account: [
-    { href: "/login",         label: "Login" },
-    { href: "/register",      label: "Create Account" },
-    { href: "/dashboard",     label: "My Orders" },
-    { href: "/seller",        label: "Seller Dashboard" },
+    { href: "/login",           label: "Login" },
+    { href: "/register",        label: "Create Account" },
+    { href: "/dashboard",       label: "My Orders" },
+    { href: "/seller",          label: "Seller Dashboard" },
+    { href: "/delete-account",  label: "Delete Account" },
   ],
 };
 

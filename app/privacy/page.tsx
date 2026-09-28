@@ -283,10 +283,18 @@ export default function PrivacyPage() {
       <Section id="delete" title="7. Delete Your Personal Data">
         <p>You have the right to delete or request that We assist in deleting the Personal Data that We have collected about You.</p>
         <p>
-          Our Service may give You the ability to delete certain information about You from within the Service. You may update, amend,
-          or delete Your information at any time by signing in to Your Account and visiting the account settings section that allows
-          You to manage Your personal information. You may also contact Us to request access to, correct, or delete any Personal Data
-          that You have provided to Us.
+          You can permanently delete Your account and all associated personal data at any time by visiting Our{" "}
+          <a href="/delete-account" className="text-[#059669] underline hover:text-[#047857] font-medium">
+            Account Deletion page
+          </a>
+          . This will remove Your profile, addresses, wishlist, and shop data (if applicable).
+        </p>
+        <p>
+          You may also contact Us at{" "}
+          <a href="mailto:jayeshsevatkar55@gmail.com" className="text-[#059669] underline hover:text-[#047857]">
+            jayeshsevatkar55@gmail.com
+          </a>{" "}
+          to request access to, correct, or delete any Personal Data that You have provided to Us.
         </p>
         <p>Please note, however, that We may need to retain certain information when We have a legal obligation or lawful basis to do so.</p>
       </Section>
