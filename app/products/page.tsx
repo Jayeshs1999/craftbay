@@ -11,6 +11,7 @@ const CATEGORIES = [
   "Candles","Bags","Skincare","Toys","Stationery","Other",
 ];
 const SORT_OPTIONS = [
+  { value: "random",     label: "✦ Shuffle" },
   { value: "newest",     label: "Newest" },
   { value: "popular",    label: "Most Popular" },
   { value: "price-asc",  label: "Price: Low to High" },
@@ -51,7 +52,7 @@ function ProductsPageInner() {
   const [qInput,   setQInput]   = useState(searchParams.get("q")        || "");
   const [q,        setQ]        = useState(searchParams.get("q")        || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
-  const [sort,     setSort]     = useState("newest");
+  const [sort,     setSort]     = useState("random");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
