@@ -11,7 +11,6 @@ const CATEGORIES = [
   "Candles","Bags","Skincare","Toys","Stationery","Other",
 ];
 const SORT_OPTIONS = [
-  { value: "random",     label: "✦ Shuffle" },
   { value: "newest",     label: "Newest" },
   { value: "popular",    label: "Most Popular" },
   { value: "price-asc",  label: "Price: Low to High" },
@@ -52,7 +51,7 @@ function ProductsPageInner() {
   const [qInput,   setQInput]   = useState(searchParams.get("q")        || "");
   const [q,        setQ]        = useState(searchParams.get("q")        || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
-  const [sort,     setSort]     = useState("random");
+  const [sort,     setSort]     = useState("newest");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
@@ -69,11 +68,19 @@ function ProductsPageInner() {
 
   // ---------- fetch ----------
   const fetchPage = useCallback(async (pg: number, replace: boolean) => {
-    if (pg === 1) setLoading(true); else setLoadingMore(true);
+    if (pg === 1) {
+      setLoading(true);
+      // Clear existing products immediately so the old order never flashes
+      // before the skeleton appears when a fresh page-1 fetch starts.
+      setProducts([]);
+    } else {
+      setLoadingMore(true);
+    }
     try {
       const params: Record<string, string> = {
-        page: String(pg), limit: String(PAGE_LIMIT), sort,
+        page: String(pg), limit: String(PAGE_LIMIT),
       };
+      if (sort) params.sort = sort;
       if (q.trim()) params.q        = q.trim();
       if (category) params.category = category;
       if (minPrice) params.minPrice = minPrice;
