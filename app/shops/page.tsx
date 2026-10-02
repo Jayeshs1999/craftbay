@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import api from "@/services/api";
 import { Store, MapPin, Package, Search, X, ArrowRight } from "lucide-react";
@@ -123,14 +123,19 @@ function ShopCard({ shop }: { shop: SellerCard }) {
 }
 
 export default function ShopsPage() {
-  const [shops,      setShops]      = useState<SellerCard[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [loadingMore,setLoadingMore]= useState(false);
-  const [page,       setPage]       = useState(1);
-  const [hasMore,    setHasMore]    = useState(false);
-  const [total,      setTotal]      = useState(0);
-  const [q,          setQ]          = useState("");
-  const [qInput,     setQInput]     = useState("");
+  const [shops,       setShops]       = useState<SellerCard[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page,        setPage]        = useState(1);
+  const [hasMore,     setHasMore]     = useState(false);
+  const [total,       setTotal]       = useState(0);
+  const [q,           setQ]           = useState("");
+  const [qInput,      setQInput]      = useState("");
+
+  // Sentinel div that IntersectionObserver watches
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  // Prevent double-firing while a fetch is already in flight
+  const fetchingRef = useRef(false);
 
   // Debounce search
   useEffect(() => {
@@ -139,20 +144,45 @@ export default function ShopsPage() {
   }, [qInput]);
 
   const fetchPage = useCallback(async (pg: number, replace: boolean) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     if (pg === 1) setLoading(true); else setLoadingMore(true);
     try {
       const params: Record<string, string> = { page: String(pg), limit: "12" };
       if (q.trim()) params.q = q.trim();
       const { data } = await api.get("/sellers", { params });
       setShops((prev) => replace ? data.sellers : [...prev, ...data.sellers]);
-      setTotal(data.total);
+      if (replace) setTotal(data.total);   // set once on first load; don't overwrite on append pages
       setPage(data.page);
       setHasMore(data.page < data.pages);
     } catch { /* silent */ }
-    finally { setLoading(false); setLoadingMore(false); }
+    finally {
+      setLoading(false);
+      setLoadingMore(false);
+      fetchingRef.current = false;
+    }
   }, [q]);
 
+  // Reset to page 1 whenever search query changes
   useEffect(() => { fetchPage(1, true); }, [fetchPage]);
+
+  // IntersectionObserver — fires when the sentinel scrolls into view
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !fetchingRef.current) {
+          fetchPage(page + 1, false);
+        }
+      },
+      { rootMargin: "200px" }   // start loading 200 px before the bottom
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, page, fetchPage]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -212,17 +242,15 @@ export default function ShopsPage() {
             {shops.map((shop) => <ShopCard key={shop._id} shop={shop} />)}
           </div>
 
-          {hasMore && (
-            <div className="text-center mt-10">
-              <button
-                onClick={() => fetchPage(page + 1, false)}
-                disabled={loadingMore}
-                className="inline-flex items-center gap-2 bg-white border border-[#e2e8f0] text-[#0f172a] font-semibold px-6 py-2.5 rounded-xl text-sm hover:border-[#059669] hover:text-[#059669] transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {loadingMore ? "Loading..." : "Load More Shops"}
-              </button>
+          {/* Skeleton rows shown while fetching the next page */}
+          {loadingMore && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-5">
+              {Array.from({ length: 4 }).map((_, i) => <ShopCardSkeleton key={i} />)}
             </div>
           )}
+
+          {/* Invisible sentinel — IntersectionObserver target */}
+          <div ref={sentinelRef} className="h-1" />
 
           {!hasMore && shops.length > 0 && (
             <p className="text-center text-sm text-[#94a3b8] mt-8">

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star, Instagram } from "lucide-react";
 import { useState } from "react";
 import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
@@ -96,6 +96,21 @@ export default function ProductCard({ product, onWishlist, wishlisted, priority 
         >
           <Heart size={15} className={wishlisted ? "fill-red-500 text-red-500" : "text-[#64748b]"} />
         </button>
+      )}
+
+      {/* Instagram badge */}
+      {product.instagramUrl && (
+        <a
+          href={product.instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className={"absolute p-1.5 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] shadow hover:scale-110 transition-transform z-20 " + (onWishlist ? "top-10 right-2" : "top-2 right-2")}
+          aria-label="View on Instagram"
+          title="View on Instagram"
+        >
+          <Instagram size={13} className="text-white" />
+        </a>
       )}
 
       {/* Info */}

@@ -83,6 +83,7 @@ export interface Product {
   isCustomizable: boolean;
   customizationDays: number;
   customizationNote?: string;
+  instagramUrl?: string;
   weight?: number;
   freeShipping: boolean;
   shippingCharge: number;

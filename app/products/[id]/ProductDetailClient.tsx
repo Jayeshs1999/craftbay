@@ -7,6 +7,7 @@ import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail, Settings2, Clock } from "lucide-react";
+import InstagramEmbed from "@/components/InstagramEmbed";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
 
@@ -137,6 +138,7 @@ export default function ProductDetailClient({ initialProduct, id }: ProductDetai
               ))}
             </div>
           )}
+          {product.instagramUrl && <InstagramEmbed url={product.instagramUrl} />}
         </div>
         <div>
           <p className="text-xs text-[#78716c] font-medium mb-1 uppercase tracking-wide">{product.category}</p>

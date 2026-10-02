@@ -7,7 +7,8 @@ import api from "@/services/api";
 import { Product, DeliveryConfig } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
-import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail, Ruler, Weight, Tag, Sparkles, BadgeCheck, Settings2, Clock } from "lucide-react";
+import { ShoppingCart, Heart, Star, Truck, ShieldCheck, Package, ChevronLeft, ChevronRight, Share2, Copy, Check, Mail, Ruler, Weight, Tag, Sparkles, BadgeCheck, Settings2, Clock, Instagram } from "lucide-react";
+import InstagramEmbed from "@/components/InstagramEmbed";
 import Button from "@/components/Button";
 import toast from "react-hot-toast";
 
@@ -110,6 +111,20 @@ export default function ProductDetailPage() {
               <button onClick={() => setMainImg((i) => (i + 1) % product.images.length)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 rounded-full p-1.5 shadow z-10"><ChevronRight size={16} /></button>
             </>)}
+            {product.instagramUrl && (
+              <a
+                href={product.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full pl-1.5 pr-2.5 py-1 shadow hover:shadow-md hover:bg-white transition-all group"
+                title="View on Instagram"
+              >
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] shrink-0">
+                  <Instagram size={11} className="text-white" />
+                </span>
+                <span className="text-[11px] font-semibold text-[#1c1917] leading-none">Instagram</span>
+              </a>
+            )}
           </div>
           {product.images.length > 1 && (
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
@@ -121,6 +136,7 @@ export default function ProductDetailPage() {
               ))}
             </div>
           )}
+          {product.instagramUrl && <InstagramEmbed url={product.instagramUrl} />}
         </div>
         <div>
           {/* Badges row */}

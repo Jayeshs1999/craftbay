@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/services/api";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import { Upload, X, Plus, Settings2 } from "lucide-react";
+import { Upload, X, Plus, Settings2, Instagram } from "lucide-react";
 import toast from "react-hot-toast";
 import FieldLabel from "@/components/FieldLabel";
 
@@ -26,6 +26,7 @@ export default function NewProductPage() {
     isCustomizable: false,
     customizationDays: "",
     customizationNote: "",
+    instagramUrl: "",
   });
   const [images,   setImages]   = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -243,6 +244,39 @@ export default function NewProductPage() {
               Buyers will see &quot;Free shipping&quot; on this product, overriding your shop-level delivery charge.
             </p>
           )}
+        </div>
+
+        {/* Instagram */}
+        <div className="bg-white rounded-2xl border border-[#e7e5e4] p-6 space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Instagram size={18} className="text-[#e1306c]" />
+            <h2 className="font-bold text-[#1c1917]">Instagram Post / Reel</h2>
+            <span className="ml-auto text-xs text-[#78716c] bg-[#f5f5f4] px-2 py-0.5 rounded-full">Optional</span>
+          </div>
+          <p className="text-xs text-[#78716c] -mt-2">
+            Already showcased this product on Instagram? Paste the post or reel link below and it will be displayed on your product page so buyers can see it in action.
+          </p>
+          <Input
+            label="Instagram Post / Reel URL"
+            name="instagramUrl"
+            value={form.instagramUrl}
+            onChange={handleChange}
+            placeholder="https://www.instagram.com/p/XXXXXX/ or /reel/XXXXXX/"
+            helpText="Paste the full Instagram link (post or reel). It will appear as an embed below your product images."
+          />
+          {form.instagramUrl && (() => {
+            try {
+              const u = new URL(form.instagramUrl.trim());
+              const ok = u.hostname.includes("instagram.com") && /^\/(p|reel|tv)\//.test(u.pathname);
+              return ok ? (
+                <p className="text-xs text-[#059669] flex items-center gap-1.5">
+                  <Instagram size={12} /> Valid Instagram URL detected — embed will appear on your product page.
+                </p>
+              ) : (
+                <p className="text-xs text-red-500">Please enter a valid Instagram post or reel URL.</p>
+              );
+            } catch { return <p className="text-xs text-red-500">Please enter a valid URL.</p>; }
+          })()}
         </div>
 
         <div className="flex gap-3">
