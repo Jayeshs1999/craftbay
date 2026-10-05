@@ -9,7 +9,7 @@ import {
   Tag, Calendar, Banknote, Clock, MessageSquare,
   RefreshCw, ChevronDown, ChevronUp, Send, CheckCircle,
   XCircle, Pencil, Trash2, Loader2, X, Phone,
-  ShoppingBag,
+  ShoppingBag, ImageIcon,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -308,6 +308,23 @@ function SellerRequestCard({
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Full Description</p>
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{req.description}</p>
             </div>
+
+            {/* Reference images uploaded by buyer */}
+            {req.images && req.images.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                  <ImageIcon size={11} /> Reference Images
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {req.images.map((img, i) => (
+                    <a key={i} href={img.url} target="_blank" rel="noreferrer"
+                      className="block w-24 h-24 rounded-xl overflow-hidden border border-gray-200 hover:border-emerald-400 hover:ring-2 hover:ring-emerald-500/20 transition-all shrink-0">
+                      <img src={img.url} alt={`Reference ${i + 1}`} className="w-full h-full object-cover" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-1.5">

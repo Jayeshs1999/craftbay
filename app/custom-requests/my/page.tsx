@@ -537,7 +537,7 @@ function RequestCard({
         </div>
       </div>
 
-      {/* Expanded — full description + bids */}
+      {/* Expanded — full description + images + bids */}
       {expanded && (
         <div className="border-t border-gray-100 bg-gray-50 px-5 py-4 space-y-4">
           {/* Full description */}
@@ -545,6 +545,23 @@ function RequestCard({
             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Full Description</p>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{req.description}</p>
           </div>
+
+          {/* Reference images */}
+          {req.images && req.images.length > 0 && (
+            <div>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                Reference Images
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {req.images.map((img, i) => (
+                  <a key={i} href={img.url} target="_blank" rel="noreferrer"
+                    className="block w-24 h-24 rounded-xl overflow-hidden border border-gray-200 hover:border-emerald-400 hover:ring-2 hover:ring-emerald-500/20 transition-all shrink-0">
+                    <img src={img.url} alt={`Reference ${i + 1}`} className="w-full h-full object-cover" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Bids */}
           <div>
