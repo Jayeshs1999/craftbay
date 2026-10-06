@@ -467,15 +467,21 @@ export default function SellerDashboardPage() {
     try {
       await api.put("/products/" + id, { isActive: !current });
       setProducts((ps) => ps.map((p) => p._id === id ? { ...p, isActive: !current } : p));
-    } catch { }
+      toast.success(current ? "Product deactivated" : "Product activated");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update product");
+    }
   }
 
   async function deleteProduct(id: string) {
-    if (!confirm("Remove this product?")) return;
+    if (!confirm("Remove this product? This cannot be undone.")) return;
     try {
       await api.delete("/products/" + id);
       setProducts((ps) => ps.filter((p) => p._id !== id));
-    } catch { }
+      toast.success("Product removed");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete product");
+    }
   }
 
   async function updateOrderStatus(id: string, status: string, opts?: { trackingNumber?: string; courier?: string; note?: string }) {
