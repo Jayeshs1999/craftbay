@@ -9,6 +9,7 @@ const FOOTER_LINKS = {
   ],
   Support: [
     { href: "/about",         label: "About Us" },
+    { href: "/services",      label: "Build a Project With Us" },
     { href: "/terms",         label: "Terms & Conditions" },
     { href: "/privacy",       label: "Privacy Policy" },
   ],

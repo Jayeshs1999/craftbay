@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import SellerConflictModal from "./SellerConflictModal";
 
-const AUTH_ROUTES = ["/login", "/register"];
+const AUTH_ROUTES = ["/login", "/register", "/services"];
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
